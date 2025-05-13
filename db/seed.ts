@@ -1,7 +1,7 @@
-import { db } from "./index";
+import { db, pool } from "./index";
 import * as schema from "@shared/schema";
 import { createSlug } from "../server/utils/slugify";
-import { eq } from "drizzle-orm";
+import { eq, sql } from "drizzle-orm";
 import { scrypt, randomBytes } from "crypto";
 import { promisify } from "util";
 
@@ -38,6 +38,274 @@ type MenuItem = {
 
 async function seed() {
   try {
+    console.log("Starting database seeding...");
+    await pool.query('SELECT 1'); // Test connection
+
+    // Create tables
+    console.log("Creating tables if they don't exist...");
+    await db.execute(sql`
+    
+    CREATE TABLE IF NOT EXISTS sessions (
+      sid TEXT PRIMARY KEY,
+      sess JSON NOT NULL,
+      expire TIMESTAMP WITH TIME ZONE NOT NULL
+  );
+  CREATE TABLE IF NOT EXISTS users (
+      id SERIAL PRIMARY KEY,
+      username TEXT NOT NULL UNIQUE,
+      password TEXT NOT NULL,
+      email TEXT NOT NULL UNIQUE,
+      full_name TEXT,
+      is_admin BOOLEAN NOT NULL DEFAULT FALSE,
+      is_approved BOOLEAN NOT NULL DEFAULT FALSE,
+      created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+      updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+  );
+  CREATE TABLE IF NOT EXISTS categories (
+      id SERIAL PRIMARY KEY,
+      name TEXT NOT NULL,
+      slug TEXT NOT NULL UNIQUE,
+      description TEXT,
+      type TEXT NOT NULL, -- activity, blog, product
+      created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+  );
+  CREATE TABLE IF NOT EXISTS activities (
+      id SERIAL PRIMARY KEY,
+      title TEXT NOT NULL,
+      slug TEXT NOT NULL UNIQUE,
+      description TEXT NOT NULL,
+      image TEXT NOT NULL,
+      price DOUBLE PRECISION NOT NULL DEFAULT 0,
+      category_id INTEGER REFERENCES categories(id),
+      featured BOOLEAN NOT NULL DEFAULT FALSE,
+      location TEXT,
+      duration TEXT,
+      difficulty TEXT,
+      max_group_size INTEGER,
+      included_items JSONB,
+      excluded_items JSONB,
+      created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+      updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+  );
+  CREATE TABLE IF NOT EXISTS youtube_channels (
+      id SERIAL PRIMARY KEY,
+      channel_id TEXT NOT NULL UNIQUE,
+      name TEXT NOT NULL,
+      description TEXT,
+      image TEXT,
+      subscribers INTEGER NOT NULL DEFAULT 0,
+      video_count INTEGER NOT NULL DEFAULT 0,
+      last_import TIMESTAMP,
+      created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+      updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+  );
+  CREATE TABLE IF NOT EXISTS sliders (
+      id SERIAL PRIMARY KEY,
+      title TEXT NOT NULL,
+      description TEXT NOT NULL,
+      background_image TEXT NOT NULL,
+      video_url TEXT,
+      youtube_url TEXT,
+      video_id TEXT,
+      cta_text TEXT NOT NULL,
+      cta_link TEXT NOT NULL,
+      year TEXT,
+      rating TEXT,
+      tags TEXT[],
+      subtitles TEXT[],
+      is_active BOOLEAN DEFAULT TRUE,
+      "order" INTEGER NOT NULL DEFAULT 0,
+      created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+      updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+  );
+
+  CREATE TABLE IF NOT EXISTS blog_posts (
+      id SERIAL PRIMARY KEY,
+      title TEXT NOT NULL,
+      slug TEXT NOT NULL UNIQUE,
+      content TEXT NOT NULL,
+      excerpt TEXT NOT NULL,
+      featured_image TEXT NOT NULL,
+      category_id INTEGER REFERENCES categories(id),
+      author_id INTEGER REFERENCES users(id),
+      status TEXT NOT NULL DEFAULT 'draft', -- draft, published, scheduled
+      published_at TIMESTAMP,
+      scheduled_at TIMESTAMP,
+      tags JSONB DEFAULT '[]',
+      created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+      updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+  );
+
+  CREATE TABLE IF NOT EXISTS youtube_videos (
+      id SERIAL PRIMARY KEY,
+      video_id TEXT NOT NULL UNIQUE,
+      title TEXT NOT NULL,
+      description TEXT,
+      thumbnail TEXT,
+      published_at TIMESTAMP NOT NULL,
+      channel_id INTEGER REFERENCES youtube_channels(id),
+      transcript TEXT,
+      import_status TEXT NOT NULL DEFAULT 'pending',
+      blog_post_id INTEGER REFERENCES blog_posts(id),
+      error_message TEXT,
+      created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+      updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+  );
+  CREATE TABLE IF NOT EXISTS products (
+      id SERIAL PRIMARY KEY,
+      title TEXT NOT NULL,
+      slug TEXT NOT NULL UNIQUE,
+      description TEXT NOT NULL,
+      image TEXT NOT NULL,
+      price DOUBLE PRECISION NOT NULL,
+      original_price DOUBLE PRECISION,
+      category_id INTEGER REFERENCES categories(id),
+      featured BOOLEAN NOT NULL DEFAULT FALSE,
+      shopify_id TEXT,
+      shopify_data JSONB,
+      rating DOUBLE PRECISION NOT NULL DEFAULT 0,
+      review_count INTEGER NOT NULL DEFAULT 0,
+      is_new BOOLEAN NOT NULL DEFAULT FALSE,
+      is_sale BOOLEAN NOT NULL DEFAULT FALSE,
+      inventory INTEGER NOT NULL DEFAULT 0,
+      created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+      updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+  );
+  CREATE TABLE IF NOT EXISTS testimonials (
+      id SERIAL PRIMARY KEY,
+      content TEXT NOT NULL,
+      author_name TEXT NOT NULL,
+      author_title TEXT NOT NULL,
+      author_avatar TEXT NOT NULL,
+      rating INTEGER NOT NULL,
+      is_active BOOLEAN NOT NULL DEFAULT TRUE,
+      created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+  );
+  CREATE TABLE IF NOT EXISTS newsletter_subscribers (
+      id SERIAL PRIMARY KEY,
+      full_name TEXT NOT NULL,
+      email TEXT NOT NULL UNIQUE,
+      interests TEXT DEFAULT 'all' NOT NULL,
+      is_active BOOLEAN NOT NULL DEFAULT TRUE,
+      created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+  );
+  CREATE TABLE IF NOT EXISTS orders (
+      id SERIAL PRIMARY KEY,
+      user_id INTEGER REFERENCES users(id),
+      shopify_order_id TEXT,
+      status TEXT NOT NULL,
+      total DOUBLE PRECISION NOT NULL,
+      email TEXT NOT NULL,
+      shipping_address JSONB,
+      billing_address JSONB,
+      created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+      updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+  );
+  CREATE TABLE IF NOT EXISTS order_items (
+      id SERIAL PRIMARY KEY,
+      order_id INTEGER REFERENCES orders(id) NOT NULL,
+      product_id INTEGER REFERENCES products(id) NOT NULL,
+      quantity INTEGER NOT NULL,
+      price DOUBLE PRECISION NOT NULL,
+      total DOUBLE PRECISION NOT NULL,
+      created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+  );
+  CREATE TABLE IF NOT EXISTS carts (
+      id SERIAL PRIMARY KEY,
+      user_id INTEGER REFERENCES users(id),
+      session_id TEXT NOT NULL,
+      created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+      updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+  );
+  CREATE TABLE IF NOT EXISTS cart_items (
+      id SERIAL PRIMARY KEY,
+      cart_id INTEGER REFERENCES carts(id) NOT NULL,
+      product_id INTEGER REFERENCES products(id) NOT NULL,
+      quantity INTEGER NOT NULL,
+      created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+      updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+  );
+  CREATE TABLE IF NOT EXISTS admin_stats (
+      id SERIAL PRIMARY KEY,
+      date TIMESTAMP NOT NULL,
+      orders INTEGER NOT NULL DEFAULT 0,
+      revenue DOUBLE PRECISION NOT NULL DEFAULT 0,
+      page_views INTEGER NOT NULL DEFAULT 0,
+      users INTEGER NOT NULL DEFAULT 0,
+      blog_posts INTEGER NOT NULL DEFAULT 0,
+      videos INTEGER NOT NULL DEFAULT 0,
+      created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+  );
+  CREATE TABLE IF NOT EXISTS header_configs (
+      id SERIAL PRIMARY KEY,
+      category TEXT NOT NULL UNIQUE,
+      logo_src TEXT NOT NULL,
+      logo_text TEXT NOT NULL,
+      primary_color TEXT NOT NULL,
+      banner_text TEXT,
+      created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+      updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+  );
+  CREATE TABLE IF NOT EXISTS header_menu_items (
+      id SERIAL PRIMARY KEY,
+      header_config_id INTEGER REFERENCES header_configs(id) ON DELETE CASCADE NOT NULL,
+      label TEXT NOT NULL,
+      path TEXT NOT NULL,
+      "order" INTEGER NOT NULL,
+      has_mega_menu BOOLEAN DEFAULT FALSE,
+      created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+  );
+  CREATE TABLE IF NOT EXISTS mega_menu_categories (
+      id SERIAL PRIMARY KEY,
+      menu_item_id INTEGER REFERENCES header_menu_items(id) ON DELETE CASCADE NOT NULL,
+      title TEXT NOT NULL,
+      "order" INTEGER NOT NULL,
+      created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+  );
+  CREATE TABLE IF NOT EXISTS mega_menu_items (
+      id SERIAL PRIMARY KEY,
+      category_id INTEGER REFERENCES mega_menu_categories(id) ON DELETE CASCADE NOT NULL,
+      label TEXT NOT NULL,
+      path TEXT NOT NULL,
+      "order" INTEGER NOT NULL,
+      featured_item BOOLEAN DEFAULT FALSE,
+      created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+  );
+  CREATE TABLE IF NOT EXISTS sidebar_configs (
+      id SERIAL PRIMARY KEY,
+      category TEXT NOT NULL UNIQUE,
+      title TEXT NOT NULL,
+      description TEXT,
+      created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+      updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+  );
+  CREATE TABLE IF NOT EXISTS sidebar_items (
+      id SERIAL PRIMARY KEY,
+      sidebar_id INTEGER REFERENCES sidebar_configs(id) ON DELETE CASCADE NOT NULL,
+      title TEXT NOT NULL,
+      content TEXT NOT NULL,
+      image_url TEXT,
+      link_url TEXT,
+      link_text TEXT,
+      "order" INTEGER NOT NULL,
+      created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+  );
+  CREATE TABLE IF NOT EXISTS category_styles (
+      id SERIAL PRIMARY KEY,
+      category TEXT NOT NULL UNIQUE,
+      primary_color TEXT NOT NULL DEFAULT '#3B82F6',
+      primary_color_hsl TEXT,
+      accent_color TEXT,
+      button_radius TEXT,
+      heading_font TEXT,
+      body_font TEXT,
+      navigation_font TEXT,
+      button_font TEXT,
+      display_font TEXT,
+      created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+      updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+  );
+  `);
     console.log("Seeding database...");
 
     // Seed admin user
