@@ -44,7 +44,7 @@ async function seed() {
     // Create tables
     console.log("Creating tables if they don't exist...");
     await db.execute(sql`
-    
+
     CREATE TABLE IF NOT EXISTS sessions (
       sid TEXT PRIMARY KEY,
       sess JSON NOT NULL,
@@ -1194,7 +1194,7 @@ Happy fishing!
         description: "Resources for all outdoor adventures"
       },
       {
-        category: "4x4",
+        category: "four-x-four",
         title: "Off-Road Resources",
         description: "Guides for off-road and 4x4 adventures"
       }

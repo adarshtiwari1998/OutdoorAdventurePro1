@@ -189,8 +189,8 @@ const HeaderMenusAdmin = () => {
     mutationFn: async (config: HeaderConfig) => {
       if (config.id) {
         const response = await apiRequest(
-          `/api/admin/header-configs/${config.id}`,
           'PATCH',
+          `/api/admin/header-configs/${config.id}`,
           config
         );
         return await response.json();
@@ -270,8 +270,8 @@ const HeaderMenusAdmin = () => {
       }
       
       const response = await apiRequest(
-        `/api/admin/header-configs/${configId}`,
         'PATCH',
+        `/api/admin/header-configs/${configId}`,
         updatedConfig
       );
       return await response.json();
@@ -330,8 +330,8 @@ const HeaderMenusAdmin = () => {
       updatedConfig.menuItems[menuItemIndex].hasMegaMenu = true;
       
       const response = await apiRequest(
-        `/api/admin/header-configs/${configId}`,
         'PATCH',
+        `/api/admin/header-configs/${configId}`,
         updatedConfig
       );
       return await response.json();
@@ -392,8 +392,8 @@ const HeaderMenusAdmin = () => {
       }
       
       const response = await apiRequest(
-        `/api/admin/header-configs/${configId}`,
         'PATCH',
+        `/api/admin/header-configs/${configId}`,
         updatedConfig
       );
       return await response.json();
@@ -461,8 +461,8 @@ const HeaderMenusAdmin = () => {
       }
       
       const response = await apiRequest(
-        `/api/admin/header-configs/${configId}`,
         'PATCH',
+        `/api/admin/header-configs/${configId}`,
         updatedConfig
       );
       return await response.json();

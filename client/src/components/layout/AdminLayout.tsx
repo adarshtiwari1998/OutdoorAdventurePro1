@@ -128,9 +128,9 @@ const AdminLayout = ({ children, title }: AdminLayoutProps) => {
       )}>
         <div className="flex flex-col h-full">
           <div className="mb-6">
-            <h2 className="text-xl font-bold text-[hsl(var(--theme-primary))]">
+            <nav className="text-xl font-bold text-[hsl(var(--theme-primary))]">
               Admin Dashboard
-            </h2>
+            </nav>
           </div>
 
           <nav className="space-y-1 flex-1">

@@ -146,7 +146,7 @@ const SidebarConfigs = () => {
     if (!currentConfig) return;
     
     try {
-      await apiRequest(`/api/admin/sidebar-configs/${currentConfig.id}`, 'PATCH', data);
+      await apiRequest('PATCH', `/api/admin/sidebar-configs/${currentConfig.id}`, data);
       
       toast({
         title: "Sidebar configuration updated",
@@ -172,7 +172,7 @@ const SidebarConfigs = () => {
     if (!currentConfig) return;
     
     try {
-      await apiRequest(`/api/admin/sidebar-configs/${currentConfig.id}`, 'DELETE');
+      await apiRequest('DELETE', `/api/admin/sidebar-configs/${currentConfig.id}`);
       
       toast({
         title: "Sidebar configuration deleted",
@@ -344,7 +344,7 @@ const SidebarConfigs = () => {
                           <SelectItem value="fishing">Fishing</SelectItem>
                           <SelectItem value="cruising">Cruising</SelectItem>
                           <SelectItem value="outdoors">Outdoors</SelectItem>
-                          <SelectItem value="4x4">4x4</SelectItem>
+                          <SelectItem value="four-x-four">four-x-four</SelectItem>
                         </SelectContent>
                       </Select>
                       <FormDescription>
@@ -581,7 +581,7 @@ const SidebarConfigs = () => {
                           <SelectItem value="fishing">Fishing</SelectItem>
                           <SelectItem value="cruising">Cruising</SelectItem>
                           <SelectItem value="outdoors">Outdoors</SelectItem>
-                          <SelectItem value="4x4">4x4</SelectItem>
+                          <SelectItem value="four-x-four">four-x-four</SelectItem>
                         </SelectContent>
                       </Select>
                       <FormDescription>

@@ -69,7 +69,7 @@ const CategoryHeadersAdmin = () => {
         }))
       };
       console.log('Sending clean config:', cleanConfig);
-      const response = await apiRequest(`/api/admin/header-configs/${config.id}`, 'PATCH', cleanConfig);
+      const response = await apiRequest('PATCH',`/api/admin/header-configs/${config.id}`, cleanConfig);
       return await response.json();
     },
     onSuccess: () => {
