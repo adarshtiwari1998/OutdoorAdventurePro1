@@ -17,9 +17,9 @@ import videoService from "./services/videoService";
 export async function registerRoutes(app: Express): Promise<Server> {
   // Set up authentication
   setupAuth(app);
-  
+
   const apiPrefix = "/api";
-  
+
   // Category Styles Routes
   app.get(`${apiPrefix}/category-styles`, async (req, res) => {
     try {
@@ -30,25 +30,25 @@ export async function registerRoutes(app: Express): Promise<Server> {
       return res.status(500).json({ error: "Failed to fetch category styles" });
     }
   });
-  
+
   app.get(`${apiPrefix}/category-styles/:category`, async (req, res) => {
     try {
       const { category } = req.params;
       const style = await db.query.categoryStyles.findFirst({
         where: eq(schema.categoryStyles.category, category)
       });
-      
+
       if (!style) {
         return res.status(404).json({ error: "Category style not found" });
       }
-      
+
       return res.json(style);
     } catch (error) {
       console.error(`Error fetching style for category ${req.params.category}:`, error);
       return res.status(500).json({ error: "Failed to fetch category style" });
     }
   });
-  
+
   app.post(`${apiPrefix}/category-styles`, async (req, res) => {
     try {
       const { 
@@ -60,47 +60,47 @@ export async function registerRoutes(app: Express): Promise<Server> {
         buttonFont, 
         displayFont 
       } = req.body;
-      
+
       if (!category) {
         return res.status(400).json({ error: "Category is required" });
       }
-      
+
       // Calculate HSL value from hex color if provided
       let primaryColorHSL = null;
       if (primaryColor) {
         primaryColorHSL = hexToHSL(primaryColor);
       }
-      
+
       // Check if this category already has a style
       const existingStyle = await db.query.categoryStyles.findFirst({
         where: eq(schema.categoryStyles.category, category)
       });
-      
+
       if (existingStyle) {
         // Build update object with only provided values
         const updateObject: any = { updatedAt: new Date() };
-        
+
         if (primaryColor) {
           updateObject.primaryColor = primaryColor;
           updateObject.primaryColorHSL = primaryColorHSL;
         }
-        
+
         // Add font fields if provided
         if (headingFont !== undefined) updateObject.headingFont = headingFont;
         if (bodyFont !== undefined) updateObject.bodyFont = bodyFont;
         if (navigationFont !== undefined) updateObject.navigationFont = navigationFont;
         if (buttonFont !== undefined) updateObject.buttonFont = buttonFont;
         if (displayFont !== undefined) updateObject.displayFont = displayFont;
-        
+
         // Update existing style
         await db.update(schema.categoryStyles)
           .set(updateObject)
           .where(eq(schema.categoryStyles.id, existingStyle.id));
-        
+
         const updatedStyle = await db.query.categoryStyles.findFirst({
           where: eq(schema.categoryStyles.id, existingStyle.id)
         });
-        
+
         return res.json(updatedStyle);
       } else {
         // Create new style with all fields
@@ -109,24 +109,24 @@ export async function registerRoutes(app: Express): Promise<Server> {
           createdAt: new Date(),
           updatedAt: new Date(),
         };
-        
+
         // Add color fields if provided
         if (primaryColor) {
           insertObject.primaryColor = primaryColor;
           insertObject.primaryColorHSL = primaryColorHSL;
         }
-        
+
         // Add font fields if provided
         if (headingFont !== undefined) insertObject.headingFont = headingFont;
         if (bodyFont !== undefined) insertObject.bodyFont = bodyFont;
         if (navigationFont !== undefined) insertObject.navigationFont = navigationFont;
         if (buttonFont !== undefined) insertObject.buttonFont = buttonFont;
         if (displayFont !== undefined) insertObject.displayFont = displayFont;
-        
+
         const [newStyle] = await db.insert(schema.categoryStyles)
           .values(insertObject)
           .returning();
-        
+
         return res.status(201).json(newStyle);
       }
     } catch (error) {
@@ -134,12 +134,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
       return res.status(500).json({ error: "Failed to save category style" });
     }
   });
-  
+
   // Helper function to convert hex to HSL
   function hexToHSL(hex: string): string {
     // Remove the # if present
     hex = hex.replace('#', '');
-    
+
     // Convert to RGB first
     let r = 0, g = 0, b = 0;
     if (hex.length === 3) {
@@ -151,21 +151,21 @@ export async function registerRoutes(app: Express): Promise<Server> {
       g = parseInt(hex.substring(2, 4), 16);
       b = parseInt(hex.substring(4, 6), 16);
     }
-    
+
     // Normalize RGB values
     r /= 255;
     g /= 255;
     b /= 255;
-    
+
     // Find min and max values to calculate hue and saturation
     const max = Math.max(r, g, b);
     const min = Math.min(r, g, b);
     let h = 0, s = 0, l = (max + min) / 2;
-    
+
     if (max !== min) {
       const d = max - min;
       s = l > 0.5 ? d / (2 - max - min) : d / (max + min);
-      
+
       if (max === r) {
         h = (g - b) / d + (g < b ? 6 : 0);
       } else if (max === g) {
@@ -173,15 +173,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
       } else if (max === b) {
         h = (r - g) / d + 4;
       }
-      
+
       h /= 6;
     }
-    
+
     // Convert to HSL format
     h = Math.round(h * 360);
     s = Math.round(s * 100);
     l = Math.round(l * 100);
-    
+
     return `${h} ${s}% ${l}%`;
   }
   const httpServer = createServer(app);
@@ -243,7 +243,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(500).json({ message: "Failed to fetch testimonials" });
     }
   });
-  
+
   // Sliders API routes for homepage
   app.get(`${apiPrefix}/sliders`, async (req, res) => {
     try {
@@ -272,14 +272,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const { category, searchQuery, page = 1 } = req.query;
       const pageSize = 6;
-      
+
       const result = await storage.getBlogPosts({
         category: category as string,
         searchQuery: searchQuery as string,
         page: Number(page),
         pageSize
       });
-      
+
       res.json(result);
     } catch (error) {
       console.error("Error fetching blog posts:", error);
@@ -302,7 +302,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const { category, searchQuery, page = 1, sortBy = 'newest' } = req.query;
       const pageSize = 8;
-      
+
       const result = await storage.getProducts({
         category: category as string,
         searchQuery: searchQuery as string,
@@ -310,7 +310,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         pageSize,
         sortBy: sortBy as string
       });
-      
+
       res.json(result);
     } catch (error) {
       console.error("Error fetching products:", error);
@@ -344,10 +344,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const { productId, quantity } = req.body;
       const sessionId = req.sessionID || 'anonymous';
-      
+
       await storage.addToCart(sessionId, productId, quantity);
       const count = await storage.getCartItemCount(sessionId);
-      
+
       res.json({ success: true, cartCount: count });
     } catch (error) {
       console.error("Error adding to cart:", error);
@@ -359,11 +359,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post(`${apiPrefix}/newsletter/subscribe`, async (req, res) => {
     try {
       const { fullName, email, interests } = req.body;
-      
+
       if (!fullName || !email) {
         return res.status(400).json({ message: "Full name and email are required" });
       }
-      
+
       await storage.addNewsletterSubscriber(fullName, email, interests);
       res.json({ success: true });
     } catch (error) {
@@ -394,7 +394,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(500).json({ message: "Failed to fetch admin charts" });
     }
   });
-  
+
   // Admin Sliders Management
   app.get(`${apiPrefix}/admin/sliders`, async (req, res) => {
     try {
@@ -405,27 +405,27 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(500).json({ message: "Failed to fetch sliders" });
     }
   });
-  
+
   app.get(`${apiPrefix}/admin/sliders/:id`, async (req, res) => {
     try {
       const { id } = req.params;
       const slider = await storage.getSliderById(parseInt(id));
-      
+
       if (!slider) {
         return res.status(404).json({ message: "Slider not found" });
       }
-      
+
       res.json(slider);
     } catch (error) {
       console.error(`Error fetching slider ${req.params.id}:`, error);
       res.status(500).json({ message: "Failed to fetch slider" });
     }
   });
-  
+
   app.post(`${apiPrefix}/admin/sliders`, async (req, res) => {
     try {
       const { title, description, backgroundImage, videoUrl, youtubeUrl, ctaText, ctaLink, isActive } = req.body;
-      
+
       const slider = await storage.createSlider({
         title,
         description,
@@ -437,19 +437,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
         isActive: isActive !== undefined ? isActive : true,
         order: 999, // Default to end of list
       });
-      
+
       res.status(201).json(slider);
     } catch (error) {
       console.error("Error creating slider:", error);
       res.status(500).json({ message: "Failed to create slider" });
     }
   });
-  
+
   app.patch(`${apiPrefix}/admin/sliders/:id`, async (req, res) => {
     try {
       const { id } = req.params;
       const sliderData = req.body;
-      
+
       const updatedSlider = await storage.updateSlider(parseInt(id), sliderData);
       res.json(updatedSlider);
     } catch (error) {
@@ -457,7 +457,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(500).json({ message: "Failed to update slider" });
     }
   });
-  
+
   app.delete(`${apiPrefix}/admin/sliders/:id`, async (req, res) => {
     try {
       const { id } = req.params;
@@ -468,47 +468,47 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(500).json({ message: "Failed to delete slider" });
     }
   });
-  
+
   // Process YouTube URL for slider videos
   app.post(`${apiPrefix}/admin/process-youtube-url`, async (req, res) => {
     try {
       const { youtubeUrl, sliderId } = req.body;
-      
+
       if (!youtubeUrl) {
         return res.status(400).json({ message: "YouTube URL is required" });
       }
-      
+
       console.log("Processing YouTube URL:", youtubeUrl);
       const videoInfo = await videoService.processYoutubeUrl(youtubeUrl);
       console.log("Video info result:", videoInfo);
-      
+
       if (!videoInfo) {
         return res.status(400).json({ message: "Invalid YouTube URL or could not extract video ID" });
       }
-      
+
       // Extract video ID to potentially download it
       const videoId = videoInfo.videoId;
-      
+
       // Create a timeout promise that rejects after 10 seconds
       const timeoutPromise = new Promise((_, reject) => {
         setTimeout(() => reject(new Error('YouTube download timed out after 10 seconds')), 10000);
       });
-      
+
       try {
         // Try to download and process the video with timeout - using our new direct approach
         const downloadPromise = videoService.downloadYouTubeVideoDirectly(videoId, sliderId ? parseInt(sliderId) : undefined);
-        
+
         try {
           // Race the download against the timeout
           const mp4Url = await Promise.race([downloadPromise, timeoutPromise]) as string;
           console.log(`Video download and upload complete: ${mp4Url}`);
-          
+
           // Update the videoInfo with the direct mp4 URL before sending the response
           videoInfo.directVideoUrl = mp4Url;
         } catch (timeoutErr) {
           console.error("Video processing timed out:", timeoutErr);
           // If timeout happens, still return a response but keep processing in the background
-          
+
           // Continue the download in the background without blocking the response
           downloadPromise
             .then(mp4Url => {
@@ -525,7 +525,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         console.error("Failed to process video:", err);
         // We continue anyway since we have the video info
       }
-      
+
       // Return the response immediately, even if video is still processing
       // The client can poll for updates or update when the user refreshes
       res.json(videoInfo);
@@ -535,16 +535,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(500).json({ message: "Failed to process YouTube URL" });
     }
   });
-  
+
   app.patch(`${apiPrefix}/admin/sliders/:id/order`, async (req, res) => {
     try {
       const { id } = req.params;
       const { order } = req.body;
-      
+
       if (order === undefined) {
         return res.status(400).json({ message: "Order is required" });
       }
-      
+
       await storage.updateSliderOrder(parseInt(id), parseInt(order));
       res.json({ success: true });
     } catch (error) {
@@ -552,7 +552,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(500).json({ message: "Failed to update slider order" });
     }
   });
-  
+
 
 
   // Blog management
@@ -560,7 +560,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const { page = 1, status, category, search } = req.query;
       const pageSize = 10;
-      
+
       const result = await storage.getAdminBlogPosts({
         page: Number(page),
         pageSize,
@@ -568,7 +568,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         categoryId: category as string,
         searchQuery: search as string
       });
-      
+
       res.json(result);
     } catch (error) {
       console.error("Error fetching admin blog posts:", error);
@@ -623,30 +623,41 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post(`${apiPrefix}/admin/blog/import/wordpress`, async (req, res) => {
     try {
       const { wordpressUrl, username, password, postsCount } = req.body;
-      
+
+      console.log("Starting WordPress import from:", wordpressUrl);
+
       const posts = await wordpressService.importPosts({
         url: wordpressUrl,
         username,
-        password,
+        applicationPassword: password,
         count: postsCount
       });
-      
+
+      console.log(`Successfully fetched ${posts.length} posts from WordPress`);
+
+      const importedPosts = [];
       for (const post of posts) {
-        await storage.createBlogPost({
-          title: post.title,
-          content: post.content,
-          excerpt: post.excerpt,
-          featuredImage: post.featuredImage,
-          categoryId: post.categoryId || '1', // Default category
-          status: 'published',
-          tags: post.tags
-        });
+        try {
+          const newPost = await storage.createBlogPost({
+            title: post.title,
+            content: post.content,
+            excerpt: post.excerpt,
+            featuredImage: post.featuredImage,
+            categoryId: post.categoryId || '1',
+            status: 'published',
+            tags: post.tags
+          });
+          importedPosts.push(newPost);
+        } catch (err) {
+          console.error("Failed to import post:", post.title, err);
+        }
       }
-      
-      res.json({ success: true, count: posts.length });
+
+      res.json({ success: true, count: importedPosts.length });
     } catch (error) {
       console.error("Error importing WordPress posts:", error);
-      res.status(500).json({ message: "Failed to import WordPress posts" });
+      const errorMessage = error instanceof Error ? error.message : "Unknown error";
+      res.status(500).json({ message: `Failed to import WordPress posts: ${errorMessage}` });
     }
   });
 
@@ -664,11 +675,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get(`${apiPrefix}/admin/youtube/videos`, async (req, res) => {
     try {
       const { channelId } = req.query;
-      
+
       if (!channelId) {
         return res.status(400).json({ message: "Channel ID is required" });
       }
-      
+
       const videos = await storage.getYoutubeVideosByChannel(channelId as string);
       res.json(videos);
     } catch (error) {
@@ -680,14 +691,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post(`${apiPrefix}/admin/youtube/channels`, async (req, res) => {
     try {
       const { channelId, channelName } = req.body;
-      
+
       if (!channelId || !channelName) {
         return res.status(400).json({ message: "Channel ID and name are required" });
       }
-      
+
       // Get channel details from YouTube API
       const channelDetails = await youtubeService.getChannelDetails(channelId);
-      
+
       // Save to database
       const newChannel = await storage.createYoutubeChannel({
         channelId,
@@ -697,7 +708,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         subscribers: channelDetails.subscriberCount,
         videoCount: channelDetails.videoCount
       });
-      
+
       res.status(201).json(newChannel);
     } catch (error) {
       console.error("Error adding YouTube channel:", error);
@@ -708,14 +719,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post(`${apiPrefix}/admin/youtube/videos`, async (req, res) => {
     try {
       const { videoId, title, description } = req.body;
-      
+
       if (!videoId) {
         return res.status(400).json({ message: "Video ID is required" });
       }
-      
+
       // Get video details from YouTube API
       const videoDetails = await youtubeService.getVideoDetails(videoId);
-      
+
       // Save to database
       const newVideo = await storage.createYoutubeVideo({
         videoId,
@@ -725,7 +736,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         publishedAt: videoDetails.publishedAt,
         channelId: videoDetails.channelId
       });
-      
+
       res.status(201).json(newVideo);
     } catch (error) {
       console.error("Error adding YouTube video:", error);
@@ -737,14 +748,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const { id } = req.params;
       const channel = await storage.getYoutubeChannelById(parseInt(id));
-      
+
       if (!channel) {
         return res.status(404).json({ message: "Channel not found" });
       }
-      
+
       // Get latest videos from YouTube API
       const videos = await youtubeService.getChannelVideos(channel.channelId, 10);
-      
+
       // Save videos to database
       for (const video of videos) {
         try {
@@ -760,10 +771,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
           console.error(`Error saving video ${video.id}:`, error);
         }
       }
-      
+
       // Update channel's lastImport date
       await storage.updateYoutubeChannelLastImport(parseInt(id));
-      
+
       res.json({ success: true, count: videos.length });
     } catch (error) {
       console.error(`Error importing videos for channel ${req.params.id}:`, error);
@@ -792,7 +803,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(500).json({ message: "Failed to delete YouTube video" });
     }
   });
-  
+
   // Header Configuration API Routes
   app.get(`${apiPrefix}/admin/header-configs`, async (req, res) => {
     try {
@@ -819,7 +830,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       return res.status(500).json({ message: "Failed to fetch header configurations" });
     }
   });
-  
+
   app.get(`${apiPrefix}/admin/header-configs/:id`, async (req, res) => {
     try {
       const { id } = req.params;
@@ -841,18 +852,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
           }
         },
       });
-      
+
       if (!headerConfig) {
         return res.status(404).json({ message: "Header configuration not found" });
       }
-      
+
       // Log for debugging
       console.log(`Fetched header config ${id} with ${headerConfig.menuItems?.length || 0} menu items`);
       if (headerConfig.menuItems) {
         headerConfig.menuItems.forEach((item, i) => {
           const categoriesCount = item.megaMenuCategories?.length || 0;
           console.log(`  Menu item ${i+1}: ${item.label} (${categoriesCount} categories)`);
-          
+
           if (item.megaMenuCategories) {
             item.megaMenuCategories.forEach((cat, j) => {
               const itemsCount = cat.items?.length || 0;
@@ -861,14 +872,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
           }
         });
       }
-      
+
       return res.json(headerConfig);
     } catch (error) {
       console.error("Error fetching header config:", error);
       return res.status(500).json({ message: "Failed to fetch header configuration" });
     }
   });
-  
+
   app.get(`${apiPrefix}/header-configs/category/:category`, async (req, res) => {
     try {
       const { category } = req.params;
@@ -890,29 +901,29 @@ export async function registerRoutes(app: Express): Promise<Server> {
           }
         },
       });
-      
+
       if (!headerConfig) {
         return res.status(404).json({ message: "Header configuration not found for this category" });
       }
-      
+
       return res.json(headerConfig);
     } catch (error) {
       console.error(`Error fetching header config for category ${req.params.category}:`, error);
       return res.status(500).json({ message: "Failed to fetch header configuration" });
     }
   });
-  
+
   app.post(`${apiPrefix}/admin/header-configs`, async (req, res) => {
     try {
       const validatedData = schema.insertHeaderConfigSchema.parse(req.body);
-      
+
       const [newConfig] = await db.insert(schema.headerConfigs)
         .values({
           ...validatedData,
           updatedAt: new Date()
         })
         .returning();
-      
+
       if (req.body.menuItems && Array.isArray(req.body.menuItems)) {
         const menuItems = req.body.menuItems.map((item: any, index: number) => ({
           headerConfigId: newConfig.id,
@@ -920,10 +931,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
           path: item.path,
           order: index
         }));
-        
+
         await db.insert(schema.headerMenuItems).values(menuItems);
       }
-      
+
       const createdConfig = await db.query.headerConfigs.findFirst({
         where: eq(schema.headerConfigs.id, newConfig.id),
         with: {
@@ -932,7 +943,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           }
         },
       });
-      
+
       return res.status(201).json(createdConfig);
     } catch (error) {
       if (error instanceof z.ZodError) {
@@ -942,27 +953,27 @@ export async function registerRoutes(app: Express): Promise<Server> {
       return res.status(500).json({ message: "Failed to create header configuration" });
     }
   });
-  
+
   app.patch(`${apiPrefix}/admin/header-configs/:id`, async (req, res) => {
     try {
       const { id } = req.params;
       const headerConfigId = parseInt(id, 10);
-      
+
       console.log(`Processing update for header config ${headerConfigId}`);
       console.log("Request body:", req.body);
-      
+
       if (!req.body || Object.keys(req.body).length === 0) {
         console.error("Empty request body received");
         return res.status(400).json({ message: "Empty request body" });
       }
-      
+
       // Create a clean copy of the data without problematic fields
       const {
         createdAt, updatedAt, menuItems, megaMenuCategories, ...cleanData
       } = req.body;
-      
+
       console.log("Clean data to update:", JSON.stringify(cleanData));
-      
+
       // Update header config with clean data
       await db.update(schema.headerConfigs)
         .set({
@@ -970,12 +981,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
           updatedAt: new Date()
         })
         .where(eq(schema.headerConfigs.id, headerConfigId));
-      
+
       // Handle menu items update if provided
       if (menuItems && Array.isArray(menuItems)) {
         try {
           console.log("Updating menu items for header config:", headerConfigId);
-          
+
           // First, find all existing mega menu categories and items to preserve IDs
           const existingMenuItems = await db.query.headerMenuItems.findMany({
             where: eq(schema.headerMenuItems.headerConfigId, headerConfigId),
@@ -987,30 +998,30 @@ export async function registerRoutes(app: Express): Promise<Server> {
               }
             }
           });
-          
+
           // Store existing items ID mapping
           const existingItemMapping = new Map();
           const existingCategoryMapping = new Map();
-          
+
           // Create mappings for existing items
           existingMenuItems.forEach(menuItem => {
             existingItemMapping.set(menuItem.id, menuItem);
-            
+
             if (menuItem.megaMenuCategories) {
               menuItem.megaMenuCategories.forEach(category => {
                 existingCategoryMapping.set(category.id, category);
               });
             }
           });
-          
+
           // Process each menu item to preserve IDs and relationships
           for (const menuItem of menuItems) {
             // Clean the menu item by removing createdAt and updatedAt
             const { id, createdAt, updatedAt, megaMenuCategories, ...cleanMenuItem } = menuItem;
-            
+
             const menuItemId = Number(id);
             const isNewMenuItem = isNaN(menuItemId) || !existingItemMapping.has(menuItemId);
-            
+
             if (isNewMenuItem) {
               // Insert new menu item
               const insertResult = await db.insert(schema.headerMenuItems).values({
@@ -1020,29 +1031,29 @@ export async function registerRoutes(app: Express): Promise<Server> {
                 order: cleanMenuItem.order || 0,
                 hasMegaMenu: cleanMenuItem.hasMegaMenu || false
               }).returning();
-              
+
               // Process mega menu categories for the new item
               if (megaMenuCategories && megaMenuCategories.length > 0 && insertResult.length > 0) {
                 const newMenuItemId = insertResult[0].id;
-                
+
                 // Insert categories
                 for (const category of megaMenuCategories) {
                   const { id: categoryId, createdAt, updatedAt, items, ...cleanCategory } = category;
-                  
+
                   const categoryInsertResult = await db.insert(schema.megaMenuCategories).values({
                     menuItemId: newMenuItemId,
                     title: cleanCategory.title,
                     order: cleanCategory.order || 0
                   }).returning();
-                  
+
                   // Process items
                   if (items && items.length > 0 && categoryInsertResult.length > 0) {
                     const newCategoryId = categoryInsertResult[0].id;
-                    
+
                     // Insert items
                     for (const item of items) {
                       const { id, createdAt, updatedAt, ...cleanItem } = item;
-                      
+
                       await db.insert(schema.megaMenuItems).values({
                         categoryId: newCategoryId,
                         label: cleanItem.label,
@@ -1064,16 +1075,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
                   hasMegaMenu: cleanMenuItem.hasMegaMenu || false
                 })
                 .where(eq(schema.headerMenuItems.id, menuItemId));
-              
+
               // Process mega menu categories
               if (megaMenuCategories) {
                 // Handle each category
                 for (const category of megaMenuCategories) {
                   const { id: categoryId, createdAt, updatedAt, items, ...cleanCategory } = category;
-                  
+
                   const categoryIdNum = Number(categoryId);
                   const isNewCategory = isNaN(categoryIdNum) || !existingCategoryMapping.has(categoryIdNum);
-                  
+
                   if (isNewCategory) {
                     // Insert new category
                     const categoryInsertResult = await db.insert(schema.megaMenuCategories).values({
@@ -1081,15 +1092,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
                       title: cleanCategory.title,
                       order: cleanCategory.order || 0
                     }).returning();
-                    
+
                     // Process items
                     if (items && items.length > 0 && categoryInsertResult.length > 0) {
                       const newCategoryId = categoryInsertResult[0].id;
-                      
+
                       // Insert items
                       for (const item of items) {
                         const { id, createdAt, updatedAt, ...cleanItem } = item;
-                        
+
                         await db.insert(schema.megaMenuItems).values({
                           categoryId: newCategoryId,
                           label: cleanItem.label,
@@ -1107,17 +1118,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
                         order: cleanCategory.order || 0
                       })
                       .where(eq(schema.megaMenuCategories.id, categoryIdNum));
-                    
+
                     // Process items
                     if (items) {
                       // First delete existing items
                       await db.delete(schema.megaMenuItems)
                         .where(eq(schema.megaMenuItems.categoryId, categoryIdNum));
-                      
+
                       // Then insert new items
                       for (const item of items) {
                         const { id, createdAt, updatedAt, ...cleanItem } = item;
-                        
+
                         await db.insert(schema.megaMenuItems).values({
                           categoryId: categoryIdNum,
                           label: cleanItem.label,
@@ -1132,14 +1143,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
               }
             }
           }
-          
+
           console.log("Menu items updated successfully");
         } catch (error) {
           console.error("Error updating menu items:", error);
           throw error;
         }
       }
-      
+
       // Fetch the updated config with full menu structure
       const updatedConfig = await db.query.headerConfigs.findFirst({
         where: eq(schema.headerConfigs.id, headerConfigId),
@@ -1159,44 +1170,44 @@ export async function registerRoutes(app: Express): Promise<Server> {
           }
         },
       });
-      
+
       return res.json(updatedConfig);
     } catch (error) {
       console.error("Error updating header config:", error);
       return res.status(500).json({ message: "Failed to update header configuration" });
     }
   });
-  
+
   app.delete(`${apiPrefix}/admin/header-configs/:id`, async (req, res) => {
     try {
       const { id } = req.params;
       const headerConfigId = parseInt(id, 10);
-      
+
       // Check if config exists
       const existingConfig = await db.query.headerConfigs.findFirst({
         where: eq(schema.headerConfigs.id, headerConfigId)
       });
-      
+
       if (!existingConfig) {
         return res.status(404).json({ message: "Header configuration not found" });
       }
-      
+
       // Delete config (will cascade delete menu items)
       await db.delete(schema.headerConfigs)
         .where(eq(schema.headerConfigs.id, headerConfigId));
-      
+
       return res.json({ message: "Header configuration deleted successfully" });
     } catch (error) {
       console.error("Error deleting header config:", error);
       return res.status(500).json({ message: "Failed to delete header configuration" });
     }
   });
-  
+
   // Sidebar Config API Routes
   app.get(`${apiPrefix}/sidebar-configs/:category`, async (req, res) => {
     try {
       const { category } = req.params;
-      
+
       const sidebarConfig = await db.query.sidebarConfigs.findFirst({
         where: eq(schema.sidebarConfigs.category, category),
         with: {
@@ -1205,18 +1216,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
           }
         },
       });
-      
+
       if (!sidebarConfig) {
         return res.status(404).json({ message: "Sidebar configuration not found for this category" });
       }
-      
+
       return res.json(sidebarConfig);
     } catch (error) {
       console.error(`Error fetching sidebar config for category ${req.params.category}:`, error);
       return res.status(500).json({ message: "Failed to fetch sidebar configuration" });
     }
   });
-  
+
   app.get(`${apiPrefix}/admin/sidebar-configs`, async (req, res) => {
     try {
       const sidebarConfigs = await db.query.sidebarConfigs.findMany({
@@ -1226,14 +1237,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
           }
         },
       });
-      
+
       return res.json(sidebarConfigs);
     } catch (error) {
       console.error("Error fetching sidebar configs:", error);
       return res.status(500).json({ message: "Failed to fetch sidebar configurations" });
     }
   });
-  
+
   app.get(`${apiPrefix}/admin/sidebar-configs/:id`, async (req, res) => {
     try {
       const { id } = req.params;
@@ -1245,29 +1256,29 @@ export async function registerRoutes(app: Express): Promise<Server> {
           }
         },
       });
-      
+
       if (!sidebarConfig) {
         return res.status(404).json({ message: "Sidebar configuration not found" });
       }
-      
+
       return res.json(sidebarConfig);
     } catch (error) {
       console.error("Error fetching sidebar config:", error);
       return res.status(500).json({ message: "Failed to fetch sidebar configuration" });
     }
   });
-  
+
   app.post(`${apiPrefix}/admin/sidebar-configs`, async (req, res) => {
     try {
       const validatedData = schema.insertSidebarConfigSchema.parse(req.body);
-      
+
       const [newConfig] = await db.insert(schema.sidebarConfigs)
         .values({
           ...validatedData,
           updatedAt: new Date()
         })
         .returning();
-      
+
       if (req.body.items && Array.isArray(req.body.items)) {
         const sidebarItems = req.body.items.map((item: any, index: number) => ({
           sidebarId: newConfig.id,
@@ -1278,10 +1289,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
           linkText: item.linkText,
           order: index
         }));
-        
+
         await db.insert(schema.sidebarItems).values(sidebarItems);
       }
-      
+
       const createdConfig = await db.query.sidebarConfigs.findFirst({
         where: eq(schema.sidebarConfigs.id, newConfig.id),
         with: {
@@ -1290,7 +1301,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           }
         },
       });
-      
+
       return res.status(201).json(createdConfig);
     } catch (error) {
       if (error instanceof z.ZodError) {
@@ -1300,17 +1311,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
       return res.status(500).json({ message: "Failed to create sidebar configuration" });
     }
   });
-  
+
   app.patch(`${apiPrefix}/admin/sidebar-configs/:id`, async (req, res) => {
     try {
       const { id } = req.params;
       const sidebarConfigId = parseInt(id, 10);
-      
+
       // Create a clean copy of the data without problematic fields
       const {
         createdAt, updatedAt, items, ...cleanData
       } = req.body;
-      
+
       // Update sidebar config with clean data
       await db.update(schema.sidebarConfigs)
         .set({
@@ -1318,24 +1329,24 @@ export async function registerRoutes(app: Express): Promise<Server> {
           updatedAt: new Date()
         })
         .where(eq(schema.sidebarConfigs.id, sidebarConfigId));
-      
+
       // Handle items update if provided
       if (items && Array.isArray(items)) {
         // Get existing items to determine which ones to delete
         const existingItems = await db.query.sidebarItems.findMany({
           where: eq(schema.sidebarItems.sidebarId, sidebarConfigId),
         });
-        
+
         const existingItemIds = existingItems.map(item => item.id);
         const newItemIds = items.filter(item => item.id).map(item => item.id);
-        
+
         // Delete items that are no longer in the list
         const itemsToDelete = existingItemIds.filter(id => !newItemIds.includes(id));
         if (itemsToDelete.length > 0) {
           await db.delete(schema.sidebarItems)
             .where(inArray(schema.sidebarItems.id, itemsToDelete));
         }
-        
+
         // Update or insert items
         for (let index = 0; index < items.length; index++) {
           const item = items[index];
@@ -1366,7 +1377,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           }
         }
       }
-      
+
       // Fetch the updated config
       const updatedConfig = await db.query.sidebarConfigs.findFirst({
         where: eq(schema.sidebarConfigs.id, sidebarConfigId),
@@ -1376,32 +1387,32 @@ export async function registerRoutes(app: Express): Promise<Server> {
           }
         },
       });
-      
+
       return res.json(updatedConfig);
     } catch (error) {
       console.error("Error updating sidebar config:", error);
       return res.status(500).json({ message: "Failed to update sidebar configuration" });
     }
   });
-  
+
   app.delete(`${apiPrefix}/admin/sidebar-configs/:id`, async (req, res) => {
     try {
       const { id } = req.params;
       const sidebarConfigId = parseInt(id, 10);
-      
+
       // Check if config exists
       const existingConfig = await db.query.sidebarConfigs.findFirst({
         where: eq(schema.sidebarConfigs.id, sidebarConfigId)
       });
-      
+
       if (!existingConfig) {
         return res.status(404).json({ message: "Sidebar configuration not found" });
       }
-      
+
       // Delete config (will cascade delete items)
       await db.delete(schema.sidebarConfigs)
         .where(eq(schema.sidebarConfigs.id, sidebarConfigId));
-      
+
       return res.json({ message: "Sidebar configuration deleted successfully" });
     } catch (error) {
       console.error("Error deleting sidebar config:", error);
@@ -1426,11 +1437,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const categoryStyle = await db.query.categoryStyles.findFirst({
         where: eq(schema.categoryStyles.id, Number(id))
       });
-      
+
       if (!categoryStyle) {
         return res.status(404).json({ message: "Category style not found" });
       }
-      
+
       res.json(categoryStyle);
     } catch (error) {
       console.error("Error fetching category style:", error);
@@ -1441,7 +1452,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post(`${apiPrefix}/admin/category-styles`, async (req, res) => {
     try {
       const validated = schema.insertCategoryStyleSchema.parse(req.body);
-      
+
       const newCategoryStyle = await db.insert(schema.categoryStyles)
         .values({
           ...validated,
@@ -1449,7 +1460,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           updatedAt: new Date(),
         })
         .returning();
-      
+
       res.status(201).json(newCategoryStyle[0]);
     } catch (error) {
       console.error("Error creating category style:", error);
@@ -1463,15 +1474,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.patch(`${apiPrefix}/admin/category-styles/:id`, async (req, res) => {
     try {
       const { id } = req.params;
-      
+
       const existingStyle = await db.query.categoryStyles.findFirst({
         where: eq(schema.categoryStyles.id, Number(id))
       });
-      
+
       if (!existingStyle) {
         return res.status(404).json({ message: "Category style not found" });
       }
-      
+
       const updatedCategoryStyle = await db.update(schema.categoryStyles)
         .set({
           ...req.body,
@@ -1479,7 +1490,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         })
         .where(eq(schema.categoryStyles.id, Number(id)))
         .returning();
-      
+
       res.json(updatedCategoryStyle[0]);
     } catch (error) {
       console.error("Error updating category style:", error);
@@ -1493,20 +1504,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post(`${apiPrefix}/admin/youtube/videos/convert`, async (req, res) => {
     try {
       const { videoId, categoryId, title, summary, tags } = req.body;
-      
+
       // Get video details
       const video = await storage.getYoutubeVideoById(parseInt(videoId));
-      
+
       if (!video) {
         return res.status(404).json({ message: "Video not found" });
       }
-      
+
       // Get transcript from YouTube
       const transcript = await youtubeService.getVideoTranscript(video.videoId);
-      
+
       // Save transcript to video
       await storage.updateYoutubeVideoTranscript(parseInt(videoId), transcript);
-      
+
       // Convert to blog post using Gemini AI
       const blogContent = await geminiService.convertTranscriptToBlogPost({
         title: title || video.title,
@@ -1514,7 +1525,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         includeSummary: summary,
         generateTags: tags
       });
-      
+
       // Create blog post
       const blogPost = await storage.createBlogPost({
         title: title || video.title,
@@ -1525,10 +1536,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
         status: 'published',
         tags: blogContent.tags
       });
-      
+
       // Link blog post to video
       await storage.linkYoutubeVideoToBlogPost(parseInt(videoId), blogPost.id);
-      
+
       res.json({
         success: true,
         blogPostId: blogPost.id

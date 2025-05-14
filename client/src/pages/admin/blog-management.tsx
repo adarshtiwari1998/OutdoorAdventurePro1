@@ -101,6 +101,12 @@ const BlogManagement = () => {
 
   const { data: categories } = useQuery<{id: string, name: string}[]>({
     queryKey: ['/api/admin/blog/categories'],
+    queryFn: async () => {
+      const response = await fetch('/api/admin/blog/categories');
+      if (!response.ok) throw new Error('Failed to fetch categories');
+      const data = await response.json();
+      return data.filter((cat: any) => cat.type === 'blog');
+    }
   });
 
   // Form setup for create/edit post
@@ -124,6 +130,19 @@ const BlogManagement = () => {
       username: "",
       password: "",
       postsCount: 10
+    },
+    validate: {
+      wordpressUrl: (value) => {
+        if (!value) return "WordPress URL is required";
+        try {
+          new URL(value);
+          return true;
+        } catch {
+          return "Please enter a valid URL";
+        }
+      },
+      username: (value) => value ? true : "WordPress username is required",
+      password: (value) => value ? true : "WordPress application password is required",
     }
   });
 
@@ -467,13 +486,16 @@ const BlogManagement = () => {
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="password">Password</Label>
+                  <Label htmlFor="password">Application Password</Label>
                   <Input 
                     id="password" 
                     type="password" 
-                    placeholder="WordPress password" 
+                    placeholder="WordPress application password" 
                     {...importForm.register("password")}
                   />
+                  <div className="text-xs text-muted-foreground mt-1">
+                    Generate this in WordPress under Users profile Application Passwords
+                  </div>
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="postsCount">Number of Posts</Label>
@@ -762,7 +784,20 @@ const BlogManagement = () => {
                   <FormItem>
                     <FormLabel>Content</FormLabel>
                     <FormControl>
-                      <Textarea placeholder="Post content" {...field} rows={8} />
+                      <div className="space-y-4">
+                        <Textarea 
+                          placeholder="Post content" 
+                          {...field} 
+                          rows={12}
+                          className="font-mono text-sm"
+                        />
+                        {field.value && field.value.includes('iframe') && (
+                          <div className="p-4 border rounded-lg bg-neutral-50">
+                            <h4 className="text-sm font-medium mb-2">Embedded Content Preview</h4>
+                            <div dangerouslySetInnerHTML={{ __html: field.value }} />
+                          </div>
+                        )}
+                      </div>
                     </FormControl>
                     <FormMessage />
                   </FormItem>

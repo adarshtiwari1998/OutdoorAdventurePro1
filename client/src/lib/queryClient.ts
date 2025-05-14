@@ -43,8 +43,15 @@ export async function apiRequest(
     
     if (!res.ok) {
       const text = await res.text();
-      console.error(`API Error (${res.status}):`, text);
-      throw new Error(text || `Request failed with status ${res.status}`);
+      let errorMessage;
+      try {
+        const errorJson = JSON.parse(text);
+        errorMessage = errorJson.message || text;
+      } catch {
+        errorMessage = text;
+      }
+      console.error(`API Error (${res.status}):`, errorMessage);
+      throw new Error(errorMessage);
     }
     
     return resClone;

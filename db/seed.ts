@@ -357,11 +357,11 @@ async function seed() {
     const hikingCategory = await db.query.categories.findFirst({
       where: eq(schema.categories.slug, "hiking"),
     });
-    
+
     const fishingCategory = await db.query.categories.findFirst({
       where: eq(schema.categories.slug, "fishing"),
     });
-    
+
     const campingCategory = await db.query.categories.findFirst({
       where: eq(schema.categories.slug, "camping"),
     });
@@ -372,6 +372,11 @@ async function seed() {
 
     const gearCategory = await db.query.categories.findFirst({
       where: eq(schema.categories.slug, "gear"),
+    });
+
+    // Retrieve the "blog" category
+    const blogCategory = await db.query.categories.findFirst({
+      where: eq(schema.categories.type, "blog"),
     });
 
     // Seed activities
@@ -594,7 +599,7 @@ With these tips in mind, you're ready to start your hiking journey. Remember, th
         `,
         excerpt: "New to hiking? Learn these essential tips to ensure your first hiking adventures are safe, enjoyable, and memorable.",
         featuredImage: "https://images.unsplash.com/photo-1551632811-561732d1e306?ixlib=rb-4.0.3&auto=format&fit=crop&w=1470&q=80",
-        categoryId: outdoorTipsCategory?.id,
+        categoryId: blogCategory.id,
         status: "published",
         publishedAt: new Date(),
         tags: JSON.stringify(["hiking", "beginners", "outdoor tips", "safety", "gear"]),
@@ -663,7 +668,7 @@ Happy fishing!
         `,
         excerpt: "Confused about what fishing gear to buy? This comprehensive guide breaks down everything from rods and reels to lines and lures for beginners.",
         featuredImage: "https://images.unsplash.com/photo-1516399662004-ee8259d135ee?ixlib=rb-4.0.3&auto=format&fit=crop&w=1470&q=80",
-        categoryId: outdoorTipsCategory?.id,
+        categoryId: blogCategory.id,
         status: "published",
         publishedAt: new Date(Date.now() - 86400000), // Yesterday
         tags: JSON.stringify(["fishing", "gear guide", "beginners", "equipment"]),
@@ -1127,7 +1132,7 @@ Happy fishing!
       if (!existingConfig) {
         console.log(`Creating header config for: ${config.category}`);
         const [newConfig] = await db.insert(schema.headerConfigs).values(config).returning();
-        
+
         // Insert menu items for this config
         const categoryMenuItems = menuItems[config.category];
         for (const menuItem of categoryMenuItems) {
@@ -1138,7 +1143,7 @@ Happy fishing!
             order: menuItem.order,
             hasMegaMenu: menuItem.hasMegaMenu || false
           }).returning();
-          
+
           // If this menu item has megaMenuCategories, create them
           if (menuItem.hasMegaMenu && menuItem.megaMenuCategories) {
             for (const category of menuItem.megaMenuCategories) {
@@ -1147,7 +1152,7 @@ Happy fishing!
                 title: category.title,
                 order: category.order
               }).returning();
-              
+
               // Create items for this category
               if (category.items && category.items.length > 0) {
                 for (const item of category.items) {

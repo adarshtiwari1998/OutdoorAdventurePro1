@@ -809,7 +809,10 @@ export const storage = {
       }
       
       // Set publication date if status is published
-      const publishedAt = postData.status === 'published' ? new Date().toISOString() : null;
+      const publishedAt = postData.status === 'published' ? new Date() : null;
+      
+      // If there's a date from WordPress, use it instead of current date
+      const finalPublishedAt = postData.date ? new Date(postData.date) : publishedAt;
       
       // Prepare data for insertion
       const blogPostData: any = {
@@ -821,7 +824,7 @@ export const storage = {
         categoryId: parseInt(postData.categoryId),
         authorId: 1, // Default to first user, would be replaced with actual user ID in real app
         status: postData.status,
-        publishedAt,
+        publishedAt: finalPublishedAt,
         tags,
       };
       
