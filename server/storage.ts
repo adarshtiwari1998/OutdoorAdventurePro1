@@ -28,6 +28,8 @@ import session from 'express-session';
 import connectPg from 'connect-pg-simple';
 import { Pool } from 'pg';
 import { pool } from '@db';
+// Prepare data for insertion
+      import { decode } from 'html-entities';
 
 const PostgresSessionStore = connectPg(session);
 const sessionStore = new PostgresSessionStore({ 
@@ -86,7 +88,7 @@ export const storage = {
       throw error;
     }
   },
-  
+
   async updateUserPassword(userId: number, newPassword: string) {
     try {
       await db.update(users)
@@ -95,7 +97,7 @@ export const storage = {
           updatedAt: new Date()
         })
         .where(eq(users.id, userId));
-        
+
       return true;
     } catch (error) {
       console.error(`Error updating password for user ${userId}:`, error);
@@ -105,7 +107,7 @@ export const storage = {
 
   // Expose the session store for passport
   sessionStore,
-  
+
   // Activities
   async getFeaturedActivities() {
     try {
@@ -220,7 +222,7 @@ export const storage = {
     try {
       // First, delete all videos associated with this channel
       await db.delete(youtubeVideos).where(eq(youtubeVideos.channelId, id));
-      
+
       // Then delete the channel
       await db.delete(youtubeChannels).where(eq(youtubeChannels.id, id));
     } catch (error) {
@@ -338,25 +340,25 @@ export const storage = {
   async getProducts({ category, searchQuery, page, pageSize, sortBy }: any) {
     try {
       let query = db.select().from(products);
-      
+
       // Apply category filter
       if (category && category !== 'all') {
         const categoryObj = await db.query.categories.findFirst({
           where: eq(categories.slug, category),
         });
-        
+
         if (categoryObj) {
           query = query.where(eq(products.categoryId, categoryObj.id));
         }
       }
-      
+
       // Apply search filter
       if (searchQuery) {
         query = query.where(
           sql`(${products.title} ILIKE ${`%${searchQuery}%`} OR ${products.description} ILIKE ${`%${searchQuery}%`})`
         );
       }
-      
+
       // Apply sorting
       if (sortBy === 'price-low') {
         query = query.orderBy(asc(products.price));
@@ -368,38 +370,38 @@ export const storage = {
         // Default to newest
         query = query.orderBy(desc(products.createdAt));
       }
-      
+
       // Count total results for pagination
       const countQuery = db.select({
         count: sql<number>`count(*)`,
       }).from(products);
-      
+
       // Apply the same filters to count query
       if (category && category !== 'all') {
         const categoryObj = await db.query.categories.findFirst({
           where: eq(categories.slug, category),
         });
-        
+
         if (categoryObj) {
           countQuery.where(eq(products.categoryId, categoryObj.id));
         }
       }
-      
+
       if (searchQuery) {
         countQuery.where(
           sql`(${products.title} ILIKE ${`%${searchQuery}%`} OR ${products.description} ILIKE ${`%${searchQuery}%`})`
         );
       }
-      
+
       const [{ count }] = await countQuery;
       const totalPages = Math.ceil(count / pageSize);
-      
+
       // Apply pagination
       query = query.limit(pageSize).offset((page - 1) * pageSize);
-      
+
       // Execute query
       const result = await query;
-      
+
       return {
         products: result.map(product => ({
           id: product.id.toString(),
@@ -587,7 +589,7 @@ export const storage = {
             slug: "fly-tying-fundamentals-beginners",
           },
         ];
-        
+
         // Add fishing posts until we reach the limit
         for (let i = 0; i < limit - resultPosts.length; i++) {
           if (fishingPosts[i]) {
@@ -607,64 +609,64 @@ export const storage = {
     try {
       // Featured post query (always first one in results)
       const featuredPost = await this.getFeaturedBlogPost().catch(() => null);
-      
+
       // Regular posts query
       let query = db.select().from(blogPosts)
         .where(eq(blogPosts.status, 'published'));
-      
+
       // Apply category filter
       if (category && category !== 'all') {
         const categoryObj = await db.query.categories.findFirst({
           where: eq(categories.slug, category),
         });
-        
+
         if (categoryObj) {
           query = query.where(eq(blogPosts.categoryId, categoryObj.id));
         }
       }
-      
+
       // Apply search filter
       if (searchQuery) {
         query = query.where(
           sql`(${blogPosts.title} ILIKE ${`%${searchQuery}%`} OR ${blogPosts.content} ILIKE ${`%${searchQuery}%`})`
         );
       }
-      
+
       // Exclude featured post from regular results
       if (featuredPost) {
         query = query.where(not(eq(blogPosts.id, parseInt(featuredPost.id))));
       }
-      
+
       // Count total results for pagination
       const countQuery = db.select({
         count: sql<number>`count(*)`,
       }).from(blogPosts).where(eq(blogPosts.status, 'published'));
-      
+
       // Apply the same filters to count query
       if (category && category !== 'all') {
         const categoryObj = await db.query.categories.findFirst({
           where: eq(categories.slug, category),
         });
-        
+
         if (categoryObj) {
           countQuery.where(eq(blogPosts.categoryId, categoryObj.id));
         }
       }
-      
+
       if (searchQuery) {
         countQuery.where(
           sql`(${blogPosts.title} ILIKE ${`%${searchQuery}%`} OR ${blogPosts.content} ILIKE ${`%${searchQuery}%`})`
         );
       }
-      
+
       const [{ count }] = await countQuery;
       const totalPages = Math.ceil(count / pageSize);
-      
+
       // Apply sorting and pagination
       query = query.orderBy(desc(blogPosts.publishedAt))
         .limit(pageSize)
         .offset((page - 1) * pageSize);
-      
+
       // Execute query with joins
       const regularPosts = await db.query.blogPosts.findMany({
         where: query.where as any,
@@ -676,7 +678,7 @@ export const storage = {
           author: true,
         },
       });
-      
+
       // Format posts
       const formattedRegularPosts = regularPosts.map(post => ({
         id: post.id.toString(),
@@ -696,7 +698,7 @@ export const storage = {
         publishedAt: post.publishedAt || new Date().toISOString(),
         slug: post.slug,
       }));
-      
+
       return {
         featured: featuredPost,
         posts: formattedRegularPosts,
@@ -719,33 +721,33 @@ export const storage = {
     }
   },
 
-  async getAdminBlogPosts({ page, pageSize, status, categoryId, searchQuery }: any) {
+  async getAdminBlogPosts({ page, pageSize, status, categoryId, searchQuery, includeContent = false }: any) {
     try {
       // Build where conditions separately
       const whereConditions = [];
-      
+
       // Apply status filter
       if (status && status !== 'all') {
         whereConditions.push(eq(blogPosts.status, status));
       }
-      
+
       // Apply category filter
       if (categoryId && categoryId !== 'all') {
         whereConditions.push(eq(blogPosts.categoryId, parseInt(categoryId)));
       }
-      
+
       // Apply search filter
       if (searchQuery) {
         whereConditions.push(
           sql`(${blogPosts.title} ILIKE ${`%${searchQuery}%`} OR ${blogPosts.content} ILIKE ${`%${searchQuery}%`})`
         );
       }
-      
+
       // Combine conditions with AND
       const whereClause = whereConditions.length > 0 
         ? and(...whereConditions) 
         : undefined;
-      
+
       // Count total results for pagination
       const countResult = await db.select({
         count: sql<number>`count(*)`,
@@ -753,10 +755,10 @@ export const storage = {
       .from(blogPosts)
       .where(whereClause)
       .execute();
-      
+
       const count = countResult[0]?.count || 0;
       const totalPages = Math.ceil(count / pageSize);
-      
+
       // Execute query with joins directly with all conditions
       const posts = await db.query.blogPosts.findMany({
         where: whereClause,
@@ -768,11 +770,12 @@ export const storage = {
           author: true,
         },
       });
-      
+
       return {
         posts: posts.map(post => ({
           id: post.id.toString(),
           title: post.title,
+          content: post.content || '',
           excerpt: post.excerpt,
           featuredImage: post.featuredImage,
           category: {
@@ -801,25 +804,25 @@ export const storage = {
     try {
       // Generate slug from title
       const slug = createSlug(postData.title);
-      
+
       // Convert tags from string or array
       let tags = postData.tags;
       if (typeof tags === 'string') {
         tags = tags.split(',').map(tag => tag.trim()).filter(tag => tag);
       }
-      
+
       // Set publication date if status is published
       const publishedAt = postData.status === 'published' ? new Date() : null;
-      
+
       // If there's a date from WordPress, use it instead of current date
       const finalPublishedAt = postData.date ? new Date(postData.date) : publishedAt;
-      
-      // Prepare data for insertion
+
+
       const blogPostData: any = {
-        title: postData.title,
+        title: decode(postData.title || ''),
         slug,
-        content: postData.content,
-        excerpt: postData.excerpt,
+        content: decode(postData.content || ''),
+        excerpt: decode(postData.excerpt || ''),
         featuredImage: postData.featuredImage,
         categoryId: parseInt(postData.categoryId),
         authorId: 1, // Default to first user, would be replaced with actual user ID in real app
@@ -827,14 +830,14 @@ export const storage = {
         publishedAt: finalPublishedAt,
         tags,
       };
-      
+
       // Add scheduled date if provided
       if (postData.status === 'scheduled' && postData.scheduledDate) {
         blogPostData.scheduledAt = new Date(postData.scheduledDate).toISOString();
       }
-      
+
       const [newPost] = await db.insert(blogPosts).values(blogPostData).returning();
-      
+
       return newPost;
     } catch (error) {
       console.error('Error creating blog post:', error);
@@ -846,18 +849,18 @@ export const storage = {
     try {
       // Prepare update data
       const updateData: any = {};
-      
+
       if (postData.title) {
         updateData.title = postData.title;
         updateData.slug = createSlug(postData.title);
       }
-      
+
       if (postData.content) updateData.content = postData.content;
       if (postData.excerpt) updateData.excerpt = postData.excerpt;
       if (postData.featuredImage) updateData.featuredImage = postData.featuredImage;
       if (postData.categoryId) updateData.categoryId = parseInt(postData.categoryId);
       if (postData.status) updateData.status = postData.status;
-      
+
       // Handle tags
       if (postData.tags) {
         let tags = postData.tags;
@@ -866,30 +869,30 @@ export const storage = {
         }
         updateData.tags = tags;
       }
-      
+
       // Update published date if status changes to published
       if (postData.status === 'published') {
         const currentPost = await db.query.blogPosts.findFirst({
           where: eq(blogPosts.id, id),
         });
-        
+
         if (currentPost && currentPost.status !== 'published') {
           updateData.publishedAt = new Date().toISOString();
         }
       }
-      
+
       // Handle scheduled date
       if (postData.status === 'scheduled' && postData.scheduledDate) {
         updateData.scheduledAt = new Date(postData.scheduledDate).toISOString();
       } else if (postData.status !== 'scheduled') {
         updateData.scheduledAt = null;
       }
-      
+
       const [updatedPost] = await db.update(blogPosts)
         .set(updateData)
         .where(eq(blogPosts.id, id))
         .returning();
-      
+
       return updatedPost;
     } catch (error) {
       console.error(`Error updating blog post ${id}:`, error);
@@ -938,14 +941,14 @@ export const storage = {
         where: eq(sliders.isActive, true),
         orderBy: [asc(sliders.order), desc(sliders.createdAt)],
       });
-      
+
       return activeSliders;
     } catch (error) {
       console.error('Error getting home sliders:', error);
       throw error;
     }
   },
-  
+
   async getAllSliders() {
     try {
       return await db.query.sliders.findMany({
@@ -956,7 +959,7 @@ export const storage = {
       throw error;
     }
   },
-  
+
   async getSliderById(id: number) {
     try {
       return await db.query.sliders.findFirst({
@@ -967,13 +970,13 @@ export const storage = {
       throw error;
     }
   },
-  
+
   async createSlider(sliderData: InsertSlider) {
     try {
       // Process YouTube URL if provided
       // Process videoId first if a YouTube URL is provided
       let youtubeVideoId = null;
-      
+
       if (sliderData.youtubeUrl) {
         const videoInfo = await videoService.processYoutubeUrl(sliderData.youtubeUrl);
         if (videoInfo) {
@@ -981,27 +984,27 @@ export const storage = {
           if (!sliderData.backgroundImage) {
             sliderData.backgroundImage = videoInfo.thumbnailUrl;
           }
-          
+
           // Set the direct video URL
           sliderData.videoUrl = videoInfo.directVideoUrl;
-          
+
           // Store the videoId for later uploads to Cloudinary
           youtubeVideoId = videoInfo.videoId;
           sliderData.videoId = youtubeVideoId;
         }
       }
-      
+
       // Create the slider entry
       const [slider] = await db.insert(sliders).values({
         ...sliderData,
         createdAt: new Date(),
         updatedAt: new Date(),
       }).returning();
-      
+
       // If this slider has a youtubeUrl, start the background process to upload to Cloudinary
       if (youtubeVideoId) {
         console.log(`Starting background upload process for YouTube video ${youtubeVideoId} for slider ${slider.id}`);
-        
+
         // Start a non-blocking async process to upload the video to Cloudinary
         videoService.downloadYouTubeVideo(youtubeVideoId)
           .then(cloudinaryUrl => {
@@ -1013,18 +1016,18 @@ export const storage = {
           })
           .catch(err => console.error(`Error downloading/uploading video for slider ${slider.id}:`, err));
       }
-      
+
       return slider;
     } catch (error) {
       console.error('Error creating slider:', error);
       throw error;
     }
   },
-  
+
   async updateSlider(id: number, sliderData: Partial<InsertSlider>) {
     try {
       const existingSlider = await this.getSliderById(id);
-      
+
       // Process YouTube URL if it was updated
       if (sliderData.youtubeUrl) {
         const videoInfo = await videoService.processYoutubeUrl(sliderData.youtubeUrl);
@@ -1033,22 +1036,22 @@ export const storage = {
           if (!sliderData.backgroundImage) {
             sliderData.backgroundImage = videoInfo.thumbnailUrl;
           }
-          
+
           // Set the direct video URL - always use the embed URL for YouTube videos
           sliderData.videoUrl = videoInfo.embedUrl;
-          
+
           // Store the videoId for later processing
           sliderData.videoId = videoInfo.videoId;
-          
+
           console.log(`Updating slider ${id} with YouTube embed URL: ${videoInfo.embedUrl}`);
         }
       } else if (sliderData.videoUrl) {
         // If videoUrl is provided directly without a youtubeUrl
-        
+
         // Special handling for embed URLs to make sure we don't lose them
         if (sliderData.videoUrl.includes('youtube.com/embed/')) {
           console.log(`Preserving YouTube embed URL during update: ${sliderData.videoUrl}`);
-          
+
           // Extract video ID from the embed URL if possible
           const match = sliderData.videoUrl.match(/embed\/([^?&]+)/);
           if (match && match[1]) {
@@ -1059,7 +1062,7 @@ export const storage = {
           sliderData.videoId = existingSlider.videoId;
         }
       }
-      
+
       // Update the slider entry
       await db.update(sliders)
         .set({
@@ -1067,14 +1070,14 @@ export const storage = {
           updatedAt: new Date(),
         })
         .where(eq(sliders.id, id));
-      
+
       return await this.getSliderById(id);
     } catch (error) {
       console.error(`Error updating slider ${id}:`, error);
       throw error;
     }
   },
-  
+
   async deleteSlider(id: number) {
     try {
       await db.delete(sliders).where(eq(sliders.id, id));
@@ -1084,7 +1087,7 @@ export const storage = {
       throw error;
     }
   },
-  
+
   async updateSliderOrder(id: number, newOrder: number) {
     try {
       await db.update(sliders)
@@ -1093,20 +1096,20 @@ export const storage = {
           updatedAt: new Date(),
         })
         .where(eq(sliders.id, id));
-      
+
       return true;
     } catch (error) {
       console.error(`Error updating slider order for ${id}:`, error);
       throw error;
     }
   },
-  
+
   async updateSliderVideoUrl(id: number, videoUrl: string) {
     try {
       console.log(`Updating slider ${id} with video URL: ${videoUrl}`);
-      
+
       const slider = await this.getSliderById(id);
-      
+
       // Make sure we don't lose the video URL when updating the slider
       // This makes sure YouTube embed URLs are preserved properly
       if (videoUrl.includes('youtube.com/embed/')) {
@@ -1116,7 +1119,7 @@ export const storage = {
         console.log(`Converting relative video path to absolute: ${videoUrl}`);
         // Keep the relative path as is, it will be handled on the frontend
       }
-      
+
       await db.update(sliders)
         .set({ 
           videoUrl,
@@ -1125,11 +1128,11 @@ export const storage = {
           updatedAt: new Date()
         })
         .where(eq(sliders.id, id));
-      
+
       // Double check that the URL was saved correctly
       const updatedSlider = await this.getSliderById(id);
       console.log(`Verified slider ${id} video URL is now: ${updatedSlider?.videoUrl}`);
-      
+
       return true;
     } catch (error) {
       console.error(`Error updating slider video URL ${id}:`, error);
@@ -1229,7 +1232,7 @@ export const storage = {
       // Determine date range based on period
       let daysAgo: number;
       let compareDaysAgo: number;
-      
+
       switch (period) {
         case '7d':
           daysAgo = 7;
@@ -1245,11 +1248,11 @@ export const storage = {
           compareDaysAgo = 60;
           break;
       }
-      
+
       const startDate = subDays(new Date(), daysAgo);
       const compareStartDate = subDays(new Date(), compareDaysAgo);
       const compareEndDate = subDays(new Date(), daysAgo + 1);
-      
+
       // Get stats from adminStats table
       const currentStatsQuery = db.select({
         totalOrders: sql<number>`SUM(${adminStats.orders})`,
@@ -1260,7 +1263,7 @@ export const storage = {
       }).from(adminStats).where(
         sql`${adminStats.date} >= ${startDate.toISOString()}`
       );
-      
+
       const compareStatsQuery = db.select({
         totalOrders: sql<number>`SUM(${adminStats.orders})`,
         totalRevenue: sql<number>`SUM(${adminStats.revenue})`,
@@ -1270,36 +1273,36 @@ export const storage = {
       }).from(adminStats).where(
         sql`${adminStats.date} >= ${compareStartDate.toISOString()} AND ${adminStats.date} <= ${compareEndDate.toISOString()}`
       );
-      
+
       const [currentStats] = await currentStatsQuery;
       const [compareStats] = await compareStatsQuery;
-      
+
       // Calculate trends
       const ordersTrend = calculateTrend(
         currentStats.totalOrders || 0, 
         compareStats.totalOrders || 0
       );
-      
+
       const revenueTrend = calculateTrend(
         currentStats.totalRevenue || 0, 
         compareStats.totalRevenue || 0
       );
-      
+
       const blogPostsTrend = calculateTrend(
         currentStats.totalBlogPosts || 0, 
         compareStats.totalBlogPosts || 0
       );
-      
+
       const videosTrend = calculateTrend(
         currentStats.totalVideos || 0, 
         compareStats.totalVideos || 0
       );
-      
+
       const usersTrend = calculateTrend(
         currentStats.totalUsers || 0, 
         compareStats.totalUsers || 0
       );
-      
+
       return {
         orders: currentStats.totalOrders || 0,
         revenue: currentStats.totalRevenue || 0,
@@ -1323,7 +1326,7 @@ export const storage = {
       // Determine date range based on period
       let daysAgo: number;
       let groupBy: string;
-      
+
       switch (period) {
         case '7d':
           daysAgo = 7;
@@ -1339,24 +1342,24 @@ export const storage = {
           groupBy = 'week';
           break;
       }
-      
+
       const startDate = subDays(new Date(), daysAgo);
-      
+
       // Sample data for charts
       const sales = [];
       const traffic = [];
-      
+
       if (groupBy === 'day') {
         // Daily data for 7 days
         for (let i = 6; i >= 0; i--) {
           const date = subDays(new Date(), i);
           const formattedDate = format(date, 'E');
-          
+
           sales.push({
             name: formattedDate,
             revenue: Math.floor(Math.random() * 5000) + 1000,
           });
-          
+
           traffic.push({
             name: formattedDate,
             users: Math.floor(Math.random() * 500) + 100,
@@ -1368,12 +1371,12 @@ export const storage = {
           const weekStart = subDays(new Date(), i * 7 + 7);
           const weekEnd = subDays(new Date(), i * 7);
           const formattedWeek = `${format(weekStart, 'MMM d')} - ${format(weekEnd, 'MMM d')}`;
-          
+
           sales.push({
             name: `Week ${4-i}`,
             revenue: Math.floor(Math.random() * 20000) + 5000,
           });
-          
+
           traffic.push({
             name: `Week ${4-i}`,
             users: Math.floor(Math.random() * 2000) + 500,
@@ -1384,19 +1387,19 @@ export const storage = {
         for (let i = 2; i >= 0; i--) {
           const month = subDays(new Date(), i * 30);
           const formattedMonth = format(month, 'MMM');
-          
+
           sales.push({
             name: formattedMonth,
             revenue: Math.floor(Math.random() * 50000) + 10000,
           });
-          
+
           traffic.push({
             name: formattedMonth,
             users: Math.floor(Math.random() * 5000) + 1000,
           });
         }
       }
-      
+
       return { sales, traffic };
     } catch (error) {
       console.error(`Error getting admin charts for period ${period}:`, error);

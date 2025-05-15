@@ -3,6 +3,7 @@ import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { db } from "@db";
 import * as schema from "@shared/schema";
+import { blogPosts } from "@shared/schema";
 import { eq, asc, inArray } from "drizzle-orm";
 import { z } from "zod";
 import { setupAuth } from "./auth";
@@ -566,7 +567,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         pageSize,
         status: status as string,
         categoryId: category as string,
-        searchQuery: search as string
+        searchQuery: search as string,
+        includeContent: true
       });
       
       res.json(result);
@@ -620,18 +622,26 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post(`${apiPrefix}/admin/blog/import/wordpress`, async (req, res) => {
-    try {
-      const { wordpressUrl, username, password, postsCount } = req.body;
-      
+app.post(`${apiPrefix}/admin/blog/import/wordpress`, async (req, res) => {
+  try {
+    const { wordpressUrl, username, password, postsCount } = req.body;
+
     const posts = await wordpressService.importPosts({
-        url: wordpressUrl,
-        username,
-        applicationPassword: password,
-        count: postsCount
+      url: wordpressUrl,
+      username,
+      applicationPassword: password,
+      count: postsCount
+    });
+
+    let importedCount = 0;
+    for (const post of posts) {
+      // First check if post with same slug exists
+      const existingPost = await db.query.blogPosts.findFirst({
+        where: eq(blogPosts.slug, post.slug),
       });
-      
-      for (const post of posts) {
+
+      if (!existingPost) {
+        // Only import if slug doesn't exist
         await storage.createBlogPost({
           title: post.title,
           content: post.content,
@@ -639,16 +649,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
           featuredImage: post.featuredImage,
           categoryId: post.categoryId || '1', // Default category
           status: 'published',
-          tags: post.tags
+          tags: post.tags,
+          slug: post.slug // Use the post's slug directly
         });
+        importedCount++; // Increment here to count the imported posts
       }
-      
-      res.json({ success: true, count: posts.length });
-    } catch (error) {
-      console.error("Error importing WordPress posts:", error);
-      res.status(500).json({ message: "Failed to import WordPress posts" });
     }
-  });
+
+    res.json({ success: true, count: importedCount });
+  } catch (error) {
+    console.error("Error importing WordPress posts:", error);
+    res.status(500).json({ message: "Failed to import WordPress posts" });
+  }
+});
 
   // YouTube management
   app.get(`${apiPrefix}/admin/youtube/channels`, async (req, res) => {

@@ -271,7 +271,7 @@ const BlogManagement = () => {
     setEditingPost(post);
     form.reset({
       title: post.title,
-      content: "", // This would need to be loaded from the full post content
+      content: post.content || '',
       excerpt: post.excerpt,
       categoryId: post.category.id,
       featuredImage: post.featuredImage,
@@ -788,8 +788,8 @@ const BlogManagement = () => {
                         <Textarea 
                           placeholder="Post content" 
                           {...field} 
-                          rows={12}
-                          className="font-mono text-sm"
+                          rows={8}
+                          className="font-mono text-sm max-h-[400px] overflow-y-auto"
                         />
                         {field.value && field.value.includes('iframe') && (
                           <div className="p-4 border rounded-lg bg-neutral-50">
