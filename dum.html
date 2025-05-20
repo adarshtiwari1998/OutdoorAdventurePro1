@@ -1,0 +1,275 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>EZBio® Product Showcase</title>
+  <style>
+    /* General container styles */
+    #compatible-container {
+      font-family: Arial, sans-serif;
+      margin: 0;
+      padding: 0;
+      background-color: #f4f4f4;
+      color: #333;
+      position: relative;
+      overflow: hidden; /* Ensure lines stay within the container */
+    }
+    #compatible-container .container {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 0 20px;
+    }
+    /* Product showcase layout */
+    #compatible-container .product-showcase {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 40px;
+      align-items: center;
+      padding: 60px 0;
+      min-height: 80vh;
+      justify-content: center; /* Center items horizontally */
+    }
+    /* Product information styles */
+    #compatible-container .product-info {
+      flex: 1;
+      min-width: 300px;
+      padding: 20px;
+      background-color: white;
+      border-radius: 8px;
+      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+      text-align: center;
+    }
+    #compatible-container .product-title {
+      color: #0071ce;
+      font-size: 1.5em;
+      margin-bottom: 20px;
+    }
+    #compatible-container .product-image {
+      max-width: 100%;
+      height: auto;
+      object-fit: contain;
+      border-radius: 8px;
+      box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+      margin-bottom: 15px;
+    }
+    /* Collections container styles */
+    #compatible-container .collections-container {
+      flex: 2;
+      min-width: 300px;
+    }
+    #compatible-container .collections-title {
+      color: #0071ce;
+      font-size: 1.3em;
+      margin-bottom: 20px;
+      text-align: center;
+    }
+    #compatible-container .collections-list {
+      list-style: none;
+      padding: 0;
+    }
+    /* Collection item styles */
+    #compatible-container .collection-item {
+      background-color: white;
+      margin-bottom: 20px;
+      border-radius: 8px;
+      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+      transition: transform 0.3s, box-shadow 0.3s;
+      overflow: hidden;
+    }
+    #compatible-container .collection-item:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
+    }
+    #compatible-container .collection-link {
+      display: flex;
+      align-items: center;
+      padding: 20px;
+      text-decoration: none;
+      color: #333;
+    }
+    #compatible-container .collection-image {
+      width: 80px;
+      height: 80px;
+      object-fit: cover;
+      border-radius: 8px;
+      margin-right: 20px;
+    }
+    #compatible-container .collection-content {
+      flex: 1;
+    }
+    #compatible-container .collection-name {
+      font-size: 1.1em;
+      margin-bottom: 5px;
+      color: #0B3D91;
+    }
+    #compatible-container .arrow-icon {
+      margin-left: auto;
+      width: 40px;
+      height: 40px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background-color: #f0f0f0;
+      border-radius: 50%;
+      transition: all 0.3s ease;
+    }
+    #compatible-container .collection-item:hover .arrow-icon {
+      background-color: #0B3D91;
+    }
+    #compatible-container .collection-item:hover .arrow-path {
+      stroke: white;
+    }
+    /* Styles for the connecting lines */
+    .line-container {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+    }
+    .connection-line {
+      position: absolute;
+      border-bottom: 2px dashed #0071ce;
+      z-index: 1;
+      /* Add animation properties */
+      animation: drawLine 2s linear infinite;
+    }
+    /* Keyframes for the dashed line animation */
+    @keyframes drawLine {
+      0% {
+        border-bottom-style: dashed;
+        border-bottom-width: 2px;
+      }
+      50% {
+        border-bottom-style: solid;
+        border-bottom-width: 2px;
+      }
+      100% {
+        border-bottom-style: dashed;
+        border-bottom-width: 2px;
+      }
+    }
+    /* Responsive adjustments */
+    @media (max-width: 768px) {
+      #compatible-container .product-showcase {
+        flex-direction: column;
+        align-items: stretch; /* Make items stretch to full width */
+      }
+      #compatible-container .product-info,
+      #compatible-container .collections-container {
+        width: 100%;
+        padding: 0;
+      }
+      #compatible-container .product-info {
+        margin-bottom: 20px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div id="compatible-container">
+    <div class="container">
+      <div class="product-showcase">
+        <!-- Left side - Product info -->
+        <div class="product-info" id="product-info">
+          <h1 class="product-title">EZBio® Over Molded Silicone Cap System</h1>
+          <img
+            src="https://cdn.shopify.com/s/files/1/1064/0118/files/EZBio_Over_Molded_Silicone_Cap_System-125ml-38-430-img-1-600x744.png?v=1747316906"
+            alt="EZBio® Over Molded Silicone Cap System"
+            class="product-image"
+            id="main-product-image"
+          />
+        </div>
+        <!-- Right side - Collections showcase -->
+        <div class="collections-container">
+          <h2 class="collections-title">Compatible Collections</h2>
+          <ul class="collections-list">
+            <!-- Collection Item 1 -->
+            <li class="collection-item" id="collection1">
+              <a href="/collections/ezbio-bottles" class="collection-link">
+                <img
+                  src="https://www.foxxlifesciences.com/cdn/shop/products/125EZBioBottle_medium.jpg?v=1642516000"
+                  alt="EZBio® Bottles"
+                  class="collection-image"
+                />
+                <div class="collection-content">
+                  <h3 class="collection-name">EZBio® Bottles</h3>
+                </div>
+                <div class="arrow-icon">
+                  <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+                    <path class="arrow-path" d="M9 6l6 6-6 6" stroke="#333" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                  </svg>
+                </div>
+              </a>
+            </li>
+            <!-- Collection Item 2 -->
+            <li class="collection-item" id="collection2">
+              <a href="/collections/ezbio-titanium-square-bottles" class="collection-link">
+                <img
+                  src="https://www.foxxlifesciences.com/cdn/shop/files/EZBioTSNoCap60mL_512x512.jpg?v=1682620235"
+                  alt="EZBio® Titanium Square Bottle"
+                  class="collection-image"
+                />
+                <div class="collection-content">
+                  <h3 class="collection-name">EZBio® Titanium Square Bottle</h3>
+                </div>
+                <div class="arrow-icon">
+                  <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+                    <path class="arrow-path" d="M9 6l6 6-6 6" stroke="#333" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                  </svg>
+                </div>
+              </a>
+            </li>
+          </ul>
+        </div>
+      </div>
+    </div>
+    <!-- Line container -->
+    <div class="line-container"></div>
+  </div>
+  <script>
+    document.addEventListener('DOMContentLoaded', function() {
+      const productInfo = document.getElementById('product-info');
+      const collections = document.querySelectorAll('.collection-item');
+      const lineContainer = document.querySelector('.line-container');
+      // Ensure elements exist before proceeding
+      if (!productInfo || collections.length === 0 || !lineContainer) {
+        console.error('Required elements not found.');
+        return;
+      }
+      // Function to draw lines
+      function drawLines() {
+        // Clear existing lines
+        lineContainer.innerHTML = '';
+        const productRect = productInfo.getBoundingClientRect();
+        collections.forEach((collection, index) => {
+          const collectionRect = collection.getBoundingClientRect();
+          // Calculate start and end points for the line
+          const startX = productRect.right + window.scrollX;
+          const startY = productRect.top + (productRect.height / 2) + window.scrollY;
+          const endX = collectionRect.left + window.scrollX;
+          const endY = collectionRect.top + (collectionRect.height / 2) + window.scrollY;
+          // Calculate the length and angle of the line
+          const length = Math.sqrt(Math.pow(endX - startX, 2) + Math.pow(endY - startY, 2));
+          const angle = Math.atan2(endY - startY, endX - startX) * (180 / Math.PI);
+          // Create a line element
+          const line = document.createElement('div');
+          line.classList.add('connection-line');
+          line.style.width = `\${length}px`;
+          line.style.left = `\${startX}px`;
+          line.style.top = `\${startY}px`;
+          line.style.transform = `rotate(\${angle}deg)`;
+          // Append the line to the line container
+          lineContainer.appendChild(line);
+        });
+      }
+      // Initial draw
+      drawLines();
+      // Redraw lines on window resize
+      window.addEventListener('resize', drawLines);
+    });
+  </script>
+</body>
+</html>

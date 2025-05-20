@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { Editor } from '@tinymce/tinymce-react';
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
@@ -99,13 +100,13 @@ const BlogManagement = () => {
     queryKey: ['/api/admin/blog/posts', { page: currentPage, status: statusFilter, category: categoryFilter, search: searchQuery }],
   });
 
-  const { data: categories } = useQuery<{id: string, name: string}[]>({
+  const { data: categories } = useQuery<{id: number, name: string, slug: string, type: string}[]>({
     queryKey: ['/api/admin/blog/categories'],
     queryFn: async () => {
       const response = await fetch('/api/admin/blog/categories');
       if (!response.ok) throw new Error('Failed to fetch categories');
       const data = await response.json();
-      return data.filter((cat: any) => cat.type === 'blog');
+      return data;
     }
   });
 
@@ -300,13 +301,26 @@ const BlogManagement = () => {
       <div className="flex justify-between items-center mb-8">
         <h1 className="text-3xl font-heading font-bold">Blog Management</h1>
         <div className="flex space-x-2">
-          <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
+          <Dialog open={isCreateDialogOpen} onOpenChange={(open) => {
+            if (open) {
+              form.reset({
+                title: "",
+                content: "",
+                excerpt: "",
+                categoryId: "",
+                featuredImage: "",
+                status: "draft",
+                tags: ""
+              });
+            }
+            setIsCreateDialogOpen(open);
+          }}>
             <DialogTrigger asChild>
               <Button>
                 <Plus className="mr-1" size={16} /> New Post
               </Button>
             </DialogTrigger>
-            <DialogContent className="max-w-2xl">
+            <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
               <DialogHeader>
                 <DialogTitle>Create New Blog Post</DialogTitle>
                 <DialogDescription>
@@ -331,28 +345,107 @@ const BlogManagement = () => {
                   <FormField
                     control={form.control}
                     name="excerpt"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Excerpt</FormLabel>
-                        <FormControl>
-                          <Textarea placeholder="Short excerpt of the post" {...field} rows={2} />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
+                    render={({ field }) => {
+                      const [excerptViewMode, setExcerptViewMode] = useState<'code' | 'preview'>('code');
+                      return (
+                        <FormItem>
+                          <div className="flex justify-between items-center mb-2">
+                            <FormLabel>Excerpt</FormLabel>
+                            <div className="flex gap-2">
+                              <Button
+                                type="button"
+                                variant={excerptViewMode === 'code' ? 'default' : 'outline'}
+                                size="sm"
+                                onClick={() => setExcerptViewMode('code')}
+                              >
+                                Code
+                              </Button>
+                              <Button
+                                type="button"
+                                variant={excerptViewMode === 'preview' ? 'default' : 'outline'}
+                                size="sm"
+                                onClick={() => setExcerptViewMode('preview')}
+                              >
+                                Preview
+                              </Button>
+                            </div>
+                          </div>
+                          <FormControl>
+                            <div className="space-y-4">
+                              <div style={{ maxHeight: '200px', overflowY: 'auto' }} className="border rounded-lg">
+                                {excerptViewMode === 'code' ? (
+                                  <Textarea 
+                                    placeholder="Short excerpt of the post" 
+                                    {...field} 
+                                    rows={4}
+                                    className="border-none focus:ring-0"
+                                  />
+                                ) : (
+                                  <div 
+                                    className="p-4 bg-white prose dark:prose-invert max-w-none" 
+                                    contentEditable={true}
+                                    onBlur={(e) => field.onChange(e.currentTarget.textContent)}
+                                    dangerouslySetInnerHTML={{ __html: field.value || 'No excerpt to preview' }}
+                                  />
+                                )}
+                              </div>
+                            </div>
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      );
+                    }}
                   />
                   <FormField
                     control={form.control}
                     name="content"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Content</FormLabel>
-                        <FormControl>
-                          <Textarea placeholder="Post content" {...field} rows={8} />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
+                    render={({ field }) => {
+                      const [viewMode, setViewMode] = useState<'code' | 'preview'>('code');
+                      return (
+                        <FormItem>
+                          <div className="flex justify-between items-center mb-2">
+                            <FormLabel>Content</FormLabel>
+                            <div className="flex gap-2">
+                              <Button
+                                type="button"
+                                variant={viewMode === 'code' ? 'default' : 'outline'}
+                                size="sm"
+                                onClick={() => setViewMode('code')}
+                              >
+                                Code
+                              </Button>
+                              <Button
+                                type="button"
+                                variant={viewMode === 'preview' ? 'default' : 'outline'}
+                                size="sm"
+                                onClick={() => setViewMode('preview')}
+                              >
+                                Preview
+                              </Button>
+                            </div>
+                          </div>
+                          <FormControl>
+                            <div className="space-y-4">
+                              <div style={{ height: '400px', overflowY: 'auto' }}>
+                                {viewMode === 'code' ? (
+                                  <Textarea 
+                                    placeholder="Post content" 
+                                    {...field} 
+                                    rows={8}
+                                    className="font-mono text-sm h-full"
+                                  />
+                                ) : (
+                                  <div className="p-4 border rounded-lg bg-white">
+                                    <div dangerouslySetInnerHTML={{ __html: field.value || 'No content to preview' }} />
+                                  </div>
+                                )}
+                              </div>
+                            </div>
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      );
+                    }}
                   />
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <FormField
@@ -454,7 +547,7 @@ const BlogManagement = () => {
               </Form>
             </DialogContent>
           </Dialog>
-          
+
           <Dialog open={isImportDialogOpen} onOpenChange={setIsImportDialogOpen}>
             <DialogTrigger asChild>
               <Button variant="outline">
@@ -514,7 +607,7 @@ const BlogManagement = () => {
               </form>
             </DialogContent>
           </Dialog>
-          
+
           {selectedPosts.length > 0 && (
             <AlertDialog>
               <AlertDialogTrigger asChild>
@@ -563,14 +656,18 @@ const BlogManagement = () => {
             </div>
             <div className="md:w-1/4">
               <Label htmlFor="categoryFilter">Category</Label>
-              <Select value={categoryFilter} onValueChange={handleCategoryFilterChange}>
+              <Select 
+                value={categoryFilter} 
+                onValueChange={handleCategoryFilterChange}
+                defaultValue="all"
+              >
                 <SelectTrigger id="categoryFilter">
                   <SelectValue placeholder="Filter by category" />
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="all">All Categories</SelectItem>
                   {categories?.map(category => (
-                    <SelectItem key={category.id} value={category.id}>
+                    <SelectItem key={category.id} value={category.name}>
                       {category.name}
                     </SelectItem>
                   ))}
@@ -704,7 +801,7 @@ const BlogManagement = () => {
               </TableBody>
             </Table>
           </div>
-          
+
           {postsData && postsData.totalPages > 1 && (
             <div className="flex items-center justify-center py-4">
               <Pagination>
@@ -715,7 +812,7 @@ const BlogManagement = () => {
                       className={currentPage === 1 ? "pointer-events-none opacity-50" : "cursor-pointer"}
                     />
                   </PaginationItem>
-                  
+
                   {Array.from({ length: postsData.totalPages }, (_, i) => i + 1).map((page) => (
                     <PaginationItem key={page}>
                       <PaginationLink
@@ -726,7 +823,7 @@ const BlogManagement = () => {
                       </PaginationLink>
                     </PaginationItem>
                   ))}
-                  
+
                   <PaginationItem>
                     <PaginationNext 
                       onClick={() => setCurrentPage(p => Math.min(p + 1, postsData.totalPages))}
@@ -742,7 +839,7 @@ const BlogManagement = () => {
 
       {/* Edit dialog */}
       <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
-        <DialogContent className="max-w-2xl">
+        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>Edit Blog Post</DialogTitle>
             <DialogDescription>
@@ -767,41 +864,123 @@ const BlogManagement = () => {
               <FormField
                 control={form.control}
                 name="excerpt"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Excerpt</FormLabel>
-                    <FormControl>
-                      <Textarea placeholder="Short excerpt of the post" {...field} rows={2} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
+                render={({ field }) => {
+                  const [excerptViewMode, setExcerptViewMode] = useState<'code' | 'preview'>('code');
+                  return (
+                    <FormItem>
+                      <div className="flex justify-between items-center mb-2">
+                        <FormLabel>Excerpt</FormLabel>
+                        <div className="flex gap-2">
+                          <Button
+                            type="button"
+                            variant={excerptViewMode === 'code' ? 'default' : 'outline'}
+                            size="sm"
+                            onClick={() => setExcerptViewMode('code')}
+                          >
+                            Code
+                          </Button>
+                          <Button
+                            type="button"
+                            variant={excerptViewMode === 'preview' ? 'default' : 'outline'}
+                            size="sm"
+                            onClick={() => setExcerptViewMode('preview')}
+                          >
+                            Preview
+                          </Button>
+                        </div>
+                      </div>
+                      <FormControl>
+                        <div className="space-y-4">
+                          <div style={{ maxHeight: '200px', overflowY: 'auto' }} className="border rounded-lg">
+                            {excerptViewMode === 'code' ? (
+                              <Textarea 
+                                placeholder="Short excerpt of the post" 
+                                {...field} 
+                                rows={4}
+                                className="border-none focus:ring-0"
+                              />
+                            ) : (
+                              <div 
+                                className="p-4 bg-white prose dark:prose-invert max-w-none" 
+                                contentEditable={true}
+                                onBlur={(e) => field.onChange(e.currentTarget.textContent)}
+                                dangerouslySetInnerHTML={{ __html: field.value || 'No excerpt to preview' }}
+                              />
+                            )}
+                          </div>
+                        </div>
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  );
+                }}
               />
               <FormField
                 control={form.control}
                 name="content"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Content</FormLabel>
-                    <FormControl>
-                      <div className="space-y-4">
-                        <Textarea 
-                          placeholder="Post content" 
-                          {...field} 
-                          rows={8}
-                          className="font-mono text-sm max-h-[400px] overflow-y-auto"
-                        />
-                        {field.value && field.value.includes('iframe') && (
-                          <div className="p-4 border rounded-lg bg-neutral-50">
-                            <h4 className="text-sm font-medium mb-2">Embedded Content Preview</h4>
-                            <div dangerouslySetInnerHTML={{ __html: field.value }} />
-                          </div>
-                        )}
+                render={({ field }) => {
+                  const [viewMode, setViewMode] = useState<'code' | 'preview'>('code');
+                  return (
+                    <FormItem>
+                      <div className="flex justify-between items-center mb-2">
+                        <FormLabel>Content</FormLabel>
+                        <div className="flex gap-2">
+                          <Button
+                            type="button"
+                            variant={viewMode === 'code' ? 'default' : 'outline'}
+                            size="sm"
+                            onClick={() => setViewMode('code')}
+                          >
+                            Code
+                          </Button>
+                          <Button
+                            type="button"
+                            variant={viewMode === 'preview' ? 'default' : 'outline'}
+                            size="sm"
+                            onClick={() => setViewMode('preview')}
+                          >
+                            Preview
+                          </Button>
+                        </div>
                       </div>
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
+                      <FormControl>
+                        <div className="space-y-4">
+                          <div style={{ minHeight: '400px' }}>
+                            {viewMode === 'code' ? (
+                              <Editor
+                               apiKey='g9qza7skbocuxy9nfma4k6pdgd6vb76ljq5f7ymp1mt1tf75'
+                                init={{
+                                  height: 400,
+                                  menubar: true,
+                                  branding: false,
+                                  promotion: false,
+                                   plugins: [
+          // Core editing features
+          'anchor', 'autolink', 'charmap', 'codesample', 'emoticons', 'image', 'link', 'lists', 'media', 'searchreplace', 'table', 'visualblocks', 'wordcount',
+          // Your account includes a free trial of TinyMCE premium features
+          // Try the most popular premium features until May 29, 2025:
+          'checklist', 'mediaembed', 'casechange', 'formatpainter', 'pageembed', 'a11ychecker', 'tinymcespellchecker', 'permanentpen', 'powerpaste', 'advtable', 'advcode', 'editimage', 'advtemplate', 'ai', 'mentions', 'tinycomments', 'tableofcontents', 'footnotes', 'mergetags', 'autocorrect', 'typography', 'inlinecss', 'markdown','importword', 'exportword', 'exportpdf'
+        ],
+        toolbar: 'undo redo | blocks fontfamily fontsize | bold italic underline strikethrough | link image media table mergetags | addcomment showcomments | spellcheckdialog a11ycheck typography | align lineheight | checklist numlist bullist indent outdent | emoticons charmap | removeformat',
+        tinycomments_mode: 'embedded',
+        tinycomments_author: 'Author name',
+                                }}
+                                value={field.value}
+                                onEditorChange={(content) => field.onChange(content)}
+                            
+                              />
+                            ) : (
+                              <div className="p-4 border rounded-lg bg-white prose dark:prose-invert max-w-none">
+                                <div dangerouslySetInnerHTML={{ __html: field.value || 'No content to preview' }} />
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  );
+                }}
               />
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <FormField
@@ -818,7 +997,7 @@ const BlogManagement = () => {
                         </FormControl>
                         <SelectContent>
                           {categories?.map(category => (
-                            <SelectItem key={category.id} value={category.id}>
+                            <SelectItem key={category.id} value={category.id.toString()}>
                               {category.name}
                             </SelectItem>
                           ))}
@@ -921,7 +1100,7 @@ const Badge = ({ variant, children }: { variant: "default" | "secondary" | "outl
     secondary: "bg-secondary text-white",
     outline: "bg-transparent border border-neutral-dark text-neutral-dark"
   };
-  
+
   return (
     <span className={`px-2 py-1 text-xs rounded-full ${variantClasses[variant]}`}>
       {children}

@@ -712,9 +712,7 @@ export const storage = {
 
   async getBlogCategories() {
     try {
-      return await db.query.categories.findMany({
-        where: eq(categories.type, 'blog'),
-      });
+      return await db.query.categories.findMany();
     } catch (error) {
       console.error('Error getting blog categories:', error);
       throw error;
@@ -733,7 +731,7 @@ export const storage = {
 
       // Apply category filter
       if (categoryId && categoryId !== 'all') {
-        whereConditions.push(eq(blogPosts.categoryId, parseInt(categoryId)));
+        whereConditions.push(eq(categories.name, categoryId));
       }
 
       // Apply search filter
