@@ -82,28 +82,37 @@ const [showMainHeader, setShowMainHeader] = useState(true);
 
   useEffect(() => {
     let lastScrollY = window.scrollY;
+    let ticking = false;
+    
     const handleScroll = () => {
       const scrollThreshold = 100;
       const currentScrollY = window.scrollY;
+      
+      if (!ticking) {
+        window.requestAnimationFrame(() => {
+          // Update scroll state
+          if (currentScrollY > scrollThreshold) {
+            setIsScrolled(true);
+          } else {
+            setIsScrolled(false);
+          }
 
-      // Update scroll state
-      if (currentScrollY > scrollThreshold) {
-        setIsScrolled(true);
-      } else {
-        setIsScrolled(false);
+          // Hide/show main header based on scroll direction
+          if (currentScrollY > lastScrollY + 5) { // Add threshold to prevent micro-movements
+            setShowMainHeader(false);
+          } else if (currentScrollY < lastScrollY - 5) {
+            setShowMainHeader(true);
+          }
+
+          lastScrollY = currentScrollY;
+          ticking = false;
+        });
+
+        ticking = true;
       }
-
-      // Hide/show main header based on scroll direction
-      if (currentScrollY > lastScrollY) {
-        setShowMainHeader(false);
-      } else if (currentScrollY < lastScrollY) {
-        setShowMainHeader(true);
-      }
-
-      lastScrollY = currentScrollY;
     };
 
-    window.addEventListener('scroll', handleScroll);
+    window.addEventListener('scroll', handleScroll, { passive: true });
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
