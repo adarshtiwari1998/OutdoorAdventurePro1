@@ -29,4 +29,11 @@ export default defineConfig({
     outDir: path.resolve(import.meta.dirname, "dist/public"),
     emptyOutDir: true,
   },
+  server: {
+    host: true,
+    hmr: {
+      clientPort: 443,
+      host: "0.0.0.0"
+    }
+  },
 });
