@@ -30,10 +30,17 @@ export default defineConfig({
     emptyOutDir: true,
   },
   server: {
-    host: true,
+    host: "0.0.0.0",
+    port: 5000,
     hmr: {
       clientPort: 443,
       host: "0.0.0.0"
+    },
+    proxy: {
+      '/api': {
+        target: 'http://localhost:5000',
+        changeOrigin: true
+      }
     }
   },
 });
