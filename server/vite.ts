@@ -25,6 +25,30 @@ export function log(message: string, source = "express") {
 }
 
 export async function setupVite(app: Express, server: Server) {
+  // const serverOptions = {
+  //   middlewareMode: true,
+  //   hmr: { server },
+  //   allowedHosts: true,
+  // };
+
+  // const vite = await createViteServer({
+  //   ...viteConfig,
+  //   configFile: false,
+  //   customLogger: {
+  //     ...viteLogger,
+  //     error: (msg, options) => {
+  //       viteLogger.error(msg, options);
+  //       process.exit(1);
+  //     },
+  //   },
+  //   server: {
+  //     middlewareMode: true,
+  //     // Do NOT include: hmr: { server }
+  //     // Optional: if you want HMR in dev, Vite will handle it automatically
+  //   },
+  //   appType: "custom",
+  // });
+
   const serverOptions = {
     middlewareMode: true,
     hmr: { server },
@@ -41,13 +65,10 @@ export async function setupVite(app: Express, server: Server) {
         process.exit(1);
       },
     },
-    server: {
-      middlewareMode: true,
-      // Do NOT include: hmr: { server }
-      // Optional: if you want HMR in dev, Vite will handle it automatically
-    },
+    server: serverOptions,
     appType: "custom",
   });
+
 
   app.use(vite.middlewares);
   app.use("*", async (req, res, next) => {
