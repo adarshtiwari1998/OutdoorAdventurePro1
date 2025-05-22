@@ -324,6 +324,9 @@ const [showMainHeader, setShowMainHeader] = useState(true);
                 )}
             </Link>
             <div className="grid grid-cols-6 gap-4 p-2">
+              <span className="font-heading font-bold text-xl md:text-2xl text-theme">
+                {headerConfig.logoText}
+              </span>
               {activities?.slice(0, 6).map((activity) => (
                 <Link 
                   key={activity.id} 
