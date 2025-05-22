@@ -307,17 +307,18 @@ const [showMainHeader, setShowMainHeader] = useState(true);
         </div>
 
         {/* Activity Shortcuts */}
-        {!isMobile && (
-          <div className={`flex justify-between items-center container mx-auto px-4 transition-transform duration-300 ease-in-out ${isScrolled ? 'fixed top-0 left-0 right-0 bg-white shadow-md z-50 py-2 translate-y-0' : 'mt-4 -translate-y-1'}`}>
-            <Link href="/" className="flex items-center">
-              <div className="w-10 h-10 rounded-full overflow-hidden">
-                <img 
-                  src={headerConfig.logoSrc} 
-                  alt={headerConfig.logoText}
-                  className="w-full h-full object-cover"
-                />
-              </div>
-            </Link>
+        {!isMobile && isScrolled && (
+          <div className="fixed top-0 left-0 right-0 bg-white shadow-md z-50 py-2">
+            <div className="flex justify-between items-center container mx-auto px-4">
+              <Link href="/" className="flex items-center">
+                <div className="w-20 h-20 rounded-full overflow-hidden">
+                  <img 
+                    src={headerConfig.logoSrc} 
+                    alt={headerConfig.logoText}
+                    className="w-full h-full object-cover"
+                  />
+                </div>
+              </Link>
             <div className="grid grid-cols-6 gap-4 p-2">
               {activities?.slice(0, 6).map((activity) => (
                 <Link 
@@ -326,7 +327,7 @@ const [showMainHeader, setShowMainHeader] = useState(true);
                   className="flex flex-col items-center group"
                 >
                   <div 
-                    className="w-20 h-20 rounded-full overflow-hidden border-2 border-transparent group-hover:border-theme transition-all duration-200"
+                    className="w-[5rem] h-[5rem] rounded-full overflow-hidden border-2 border-transparent group-hover:border-theme transition-all duration-200"
                     style={{ borderColor: activity.primaryColor }}
                   >
                     <img 
