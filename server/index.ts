@@ -8,10 +8,24 @@ import { pool } from "@db";
 // Set up session store
 const PgSession = connectPgSimple(session);
 
-// Set up Express
+// Set up Express with enhanced CORS
 const app = express();
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
+
+// Configure CORS for all routes
+app.use((req, res, next) => {
+  res.header('Access-Control-Allow-Origin', '*');
+  res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, PATCH, OPTIONS');
+  res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept, Authorization');
+  res.header('Access-Control-Allow-Credentials', 'true');
+  
+  // Handle preflight requests
+  if (req.method === 'OPTIONS') {
+    return res.status(200).end();
+  }
+  next();
+});
 
 // Set up session middleware
 app.use(session({
@@ -78,10 +92,21 @@ app.use((req, res, next) => {
   app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {
     const status = err.status || err.statusCode || 500;
     const message = err.message || "Internal Server Error";
+    
+    // Log error details for debugging
+    console.error('Error details:', {
+      status,
+      message,
+      stack: err.stack,
+      path: req.path
+    });
 
     res.status(status).json({ message });
-    console.error(err);
   });
+
+  // Keep-alive configuration
+  server.keepAliveTimeout = 65000; // Slightly higher than 60 second default
+  server.headersTimeout = 66000; // Slightly higher than keepAliveTimeout
 
   // Enable CORS for development
   app.use((req, res, next) => {
