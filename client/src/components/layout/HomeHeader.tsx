@@ -371,6 +371,7 @@ const [showMainHeader, setShowMainHeader] = useState(true);
       {isMobile && (
         <MobileMenu isOpen={isMobileMenuOpen} onClose={() => setIsMobileMenuOpen(false)} />
       )}
+      </div>
 
       {/* Mega Menu Display */}
       {!isMobile && activeMenuItem?.megaMenuCategories && activeMenuItem.megaMenuCategories.length > 0 && (
