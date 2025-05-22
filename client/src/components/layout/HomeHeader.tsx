@@ -41,18 +41,17 @@ const HomeHeader = () => {
       <div className="container mx-auto px-4 py-4">
         <div className="flex items-center justify-between">
           <div className="flex items-center">
-            <img 
-              src="/icons/outdoor-logo.png"
-              alt="Logo" 
-              className="h-16 w-16 object-contain mr-3"
-              loading="eager"
-              onError={(e) => {
-                const target = e.target as HTMLImageElement;
-                target.src = target.src.replace(/\?.*$/, '') + '?' + new Date().getTime();
-              }}
-            />
-            <Link href="/" className="text-xl font-semibold hover:text-[#025323] transition-colors">
-              Your vacation ideas Channel
+            <Link href="/">
+              <img 
+                src={headerConfig.logoSrc}
+                alt={headerConfig.logoText}
+                className="h-16 w-16 object-contain"
+                loading="eager"
+                onError={(e) => {
+                  const target = e.target as HTMLImageElement;
+                  target.src = target.src.replace(/\?.*$/, '') + '?' + new Date().getTime();
+                }}
+              />
             </Link>
           </div>
 
