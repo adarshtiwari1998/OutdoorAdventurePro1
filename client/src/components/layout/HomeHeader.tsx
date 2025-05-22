@@ -1,21 +1,13 @@
+
 import { useState } from "react";
 import { Link } from "wouter";
-import { useMobile } from "@/hooks/use-mobile";
 import { useQuery } from "@tanstack/react-query";
 import { ShoppingCart, Search } from "lucide-react";
 
 const HomeHeader = () => {
-  const isMobile = useMobile();
-  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-
   const { data: cartCount } = useQuery<number>({
     queryKey: ['/api/cart/count'],
     staleTime: 60000,
-  });
-
-  const { data: headerConfigs } = useQuery({
-    queryKey: ['/api/admin/header-configs'],
-    select: (data) => data.filter(config => config.category !== 'home'),
   });
 
   return (
@@ -25,21 +17,21 @@ const HomeHeader = () => {
         Your ultimate guide to outdoor adventures and experiences
       </div>
 
-      {/* Search and Social Bar */}
+      {/* Top Bar */}
       <div className="border-b border-gray-200">
         <div className="container mx-auto px-4 py-2 flex justify-between items-center">
           <div className="text-sm">Made with ❤️ by HTHFO</div>
-          <div className="flex items-center space-x-4">
-            <a href="https://youtube.com" target="_blank" rel="noopener noreferrer" className="text-sm">YOUTUBE</a>
-            <a href="https://instagram.com" target="_blank" rel="noopener noreferrer" className="text-sm">INSTAGRAM</a>
-            <a href="https://twitter.com" target="_blank" rel="noopener noreferrer" className="text-sm">TWITTER</a>
+          <div className="flex items-center space-x-6">
+            <a href="#" className="text-sm uppercase hover:text-[#025323]">YOUTUBE</a>
+            <a href="#" className="text-sm uppercase hover:text-[#025323]">INSTAGRAM</a>
+            <a href="#" className="text-sm uppercase hover:text-[#025323]">TWITTER</a>
             <div className="relative">
-              <Search className="w-4 h-4 absolute left-2 top-1/2 transform -translate-y-1/2 text-gray-400" />
               <input 
                 type="text" 
                 placeholder="Search here..." 
-                className="pl-8 pr-4 py-1 text-sm border border-gray-200 rounded-full w-40"
+                className="pl-4 pr-8 py-1 text-sm border border-gray-200 rounded w-40"
               />
+              <Search className="w-4 h-4 absolute right-2 top-1/2 transform -translate-y-1/2 text-gray-400" />
             </div>
           </div>
         </div>
@@ -48,63 +40,65 @@ const HomeHeader = () => {
       {/* Main Navigation */}
       <div className="container mx-auto px-4 py-4">
         <div className="flex justify-between items-center">
-          {/* Logo */}
-          <div className="flex items-center justify-between w-full">
-            <span className="text-2xl font-semibold">Your vacation ideas Channel</span>
-            <Link href="/" className="flex items-center">
-              <img 
-                src="https://honeydew-partridge-785212.hostingersite.com/wp-content/uploads/2024/11/hthfo-new-logo_120x-v2-1.jpg"
-                alt="Your vacation ideas Channel" 
-                className="h-16 w-16"
-              />
+          <div className="flex-1">
+            <Link href="/" className="text-xl font-semibold">
+              Your vacation ideas Channel
             </Link>
           </div>
+          
+          <Link href="/" className="flex-shrink-0">
+            <img 
+              src="https://honeydew-partridge-785212.hostingersite.com/wp-content/uploads/2024/11/hthfo-new-logo_120x-v2-1.jpg"
+              alt="Logo" 
+              className="h-16 w-16 object-contain"
+            />
+          </Link>
 
-          {/* Navigation Links */}
-          <nav className="hidden md:flex items-center space-x-8">
-            <Link href="/destinations" className="hover:text-[#025323]">Destinations</Link>
-            <Link href="/gear" className="hover:text-[#025323]">Gear</Link>
-            <Link href="/blog" className="hover:text-[#025323]">Blog</Link>
-            <Link href="/community" className="hover:text-[#025323]">Community</Link>
-            <Link href="/about" className="hover:text-[#025323]">About Us</Link>
-          </nav>
-
-          {/* Action Buttons */}
-          <div className="flex items-center space-x-4">
-            <button className="text-[#025323] border border-[#025323] px-4 py-2 rounded-full hover:bg-[#025323] hover:text-white transition">
-              Sign In
-            </button>
-            <button className="bg-orange-500 text-white px-4 py-2 rounded-full hover:bg-orange-600 transition">
-              Join Now
-            </button>
-            <Link href="/cart" className="relative">
-              <ShoppingCart className="text-gray-700" />
-              {cartCount && cartCount > 0 && (
-                <span className="absolute -top-2 -right-2 bg-red-500 text-white text-xs w-5 h-5 flex items-center justify-center rounded-full">
-                  {cartCount}
+          <div className="flex-1 flex justify-end items-center space-x-4">
+            <nav className="hidden md:flex items-center space-x-6">
+              <Link href="/destinations" className="hover:text-[#025323]">Destinations</Link>
+              <Link href="/gear" className="hover:text-[#025323]">Gear</Link>
+              <Link href="/blog" className="hover:text-[#025323]">Blog</Link>
+              <Link href="/community" className="hover:text-[#025323]">Community</Link>
+            </nav>
+            <div className="flex items-center space-x-3">
+              <button className="border border-[#025323] text-[#025323] px-4 py-1.5 rounded-full hover:bg-[#025323] hover:text-white transition">
+                Sign In
+              </button>
+              <button className="bg-[#FF6B00] text-white px-4 py-1.5 rounded-full hover:bg-[#FF5500] transition">
+                Join Now
+              </button>
+              <Link href="/cart" className="relative">
+                <ShoppingCart className="text-gray-700" />
+                <span className="absolute -top-2 -right-2 bg-[#FF6B00] text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">
+                  {cartCount || 0}
                 </span>
-              )}
-            </Link>
+              </Link>
+            </div>
           </div>
         </div>
       </div>
 
-      {/* Channel Navigation */}
-      <div className="border-t border-gray-200">
+      {/* Category Navigation */}
+      <div className="border-t border-gray-200 bg-gray-50">
         <div className="container mx-auto px-4 py-4">
-          <div className="flex justify-between items-center">
-            {headerConfigs?.map((config) => (
+          <div className="flex justify-center items-center space-x-6">
+            {['Outdoors', 'Cruising', 'Fishing', 'Hiking', 'Camping', '4x4'].map((category) => (
               <Link 
-                key={config.id} 
-                href={`/${config.category}`}
+                key={category} 
+                href={`/${category.toLowerCase()}`}
                 className="flex flex-col items-center group"
               >
-                <img 
-                  src={config.logoSrc} 
-                  alt={config.logoText}
-                  className="w-16 h-16 rounded-full mb-2"
-                  style={{ objectFit: 'cover' }}
-                />
+                <div className="w-14 h-14 rounded-full bg-[#025323] mb-2 flex items-center justify-center">
+                  <img 
+                    src={`/icons/${category.toLowerCase()}.png`}
+                    alt={category}
+                    className="w-8 h-8"
+                  />
+                </div>
+                <span className="text-sm font-medium">
+                  {category}
+                </span>
               </Link>
             ))}
           </div>
