@@ -83,17 +83,17 @@ const [showMainHeader, setShowMainHeader] = useState(true);
   useEffect(() => {
     let lastScrollY = window.scrollY;
     let frameId: number | null = null;
-    
+
     const handleScroll = () => {
       if (frameId) {
         return;
       }
-      
+
       frameId = requestAnimationFrame(() => {
         const currentScrollY = window.scrollY;
         const scrollThreshold = 100;
         const scrollDelta = Math.abs(currentScrollY - lastScrollY);
-        
+
         if (scrollDelta > 5) {
           if (currentScrollY > scrollThreshold) {
             setIsScrolled(true);
@@ -104,7 +104,7 @@ const [showMainHeader, setShowMainHeader] = useState(true);
           }
           lastScrollY = currentScrollY;
         }
-        
+
         frameId = null;
       });
     };
