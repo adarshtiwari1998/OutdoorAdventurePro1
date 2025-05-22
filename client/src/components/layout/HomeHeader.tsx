@@ -268,10 +268,11 @@ const HomeHeader = () => {
 
         {/* Activity Shortcuts */}
         {!isMobile && (
-       <div className="flex justify-center gap-10 items-center mt-4">
-         <span className="font-heading font-bold text-xl md:text-2xl text-theme">
-           {headerConfig.logoText}
-         </span>
+          <div className="sticky top-0 bg-white z-40 py-4 border-b">
+            <div className="flex justify-center gap-10 items-center">
+              <span className="font-heading font-bold text-xl md:text-2xl text-theme">
+                {headerConfig.logoText}
+              </span>
             <div className="grid grid-cols-6 gap-4 p-2">
               {activities?.slice(0, 6).map((activity) => (
                 <Link 
