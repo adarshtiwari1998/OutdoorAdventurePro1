@@ -1,111 +1,320 @@
-
-import { useState } from "react";
-import { Link } from "wouter";
+import { useState, useEffect, useRef } from "react";
+import { Link, useLocation } from "wouter";
+import { useMobile } from "@/hooks/use-mobile";
+import MobileMenu from "./MobileMenu";
+import MegaMenu from "./MegaMenu";
 import { useQuery } from "@tanstack/react-query";
-import { ShoppingCart, Search } from "lucide-react";
+import { 
+  ShoppingCart, 
+  ChevronDown,
+  Search,
+  User,
+  Menu
+} from "lucide-react";
+import { Button } from "../ui/button";
+
+// Define the header configuration interfaces (same as CategoryHeader)
+interface MegaMenuItem {
+  id: string | number;
+  label: string;
+  path: string;
+  order: number;
+  featuredItem?: boolean;
+  categoryId: number;
+  createdAt: string;
+}
+
+interface MegaMenuCategory {
+  id: string | number;
+  title: string;
+  order: number;
+  menuItemId: number;
+  createdAt: string;
+  items: MegaMenuItem[];
+}
+
+interface HeaderMenuItem {
+  id: string | number;
+  label: string;
+  path: string;
+  order: number;
+  hasMegaMenu: boolean;
+  createdAt: string;
+  megaMenuCategories?: MegaMenuCategory[];
+}
+
+interface HeaderConfig {
+  id: string | number;
+  category: string;
+  logoSrc: string;
+  logoText: string;
+  primaryColor: string;
+  bannerText?: string;
+  menuItems: HeaderMenuItem[];
+  createdAt: string;
+  updatedAt: string;
+}
+
+// Default header config for fallback
+const defaultConfig: Omit<HeaderConfig, 'id' | 'category' | 'createdAt' | 'updatedAt'> = {
+  logoSrc: "/logo.svg",
+  logoText: "Outdoor Enthusiast",
+  primaryColor: "#3B82F6",
+  bannerText: "Your ultimate guide to outdoor adventures and experiences",
+  menuItems: [
+    { id: "default-1", label: "Destinations", path: "/destinations", order: 0, hasMegaMenu: false, createdAt: '' },
+    { id: "default-2", label: "Gear", path: "/shop", order: 1, hasMegaMenu: false, createdAt: '' },
+    { id: "default-3", label: "Blog", path: "/blog", order: 2, hasMegaMenu: false, createdAt: '' },
+    { id: "default-4", label: "Community", path: "/community", order: 3, hasMegaMenu: false, createdAt: '' }
+  ]
+};
 
 const HomeHeader = () => {
+  const [location] = useLocation();
+  const isMobile = useMobile();
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [activeMegaMenu, setActiveMegaMenu] = useState<number | null>(null);
+  const [isHoveringMegaMenu, setIsHoveringMegaMenu] = useState(false);
+  const headerRef = useRef<HTMLElement>(null);
+  const menuTimeoutRef = useRef<number | null>(null);
+
+  // Fetch header configuration from API for the home page
+  const { data: headerData, isLoading, error } = useQuery<HeaderConfig>({
+    queryKey: ['/api/header-configs/category/home'],
+    staleTime: 5 * 60 * 1000, // 5 minutes
+  });
+
+  // Determine which config to use - API data or default
+  const headerConfig = headerData || {
+    ...defaultConfig,
+    id: 0,
+    category: 'home',
+    createdAt: '',
+    updatedAt: ''
+  };
+
   const { data: cartCount } = useQuery<number>({
     queryKey: ['/api/cart/count'],
-    staleTime: 60000,
+    staleTime: 60000, // 1 minute
+  });
+
+  const toggleMobileMenu = () => {
+    setIsMobileMenuOpen(!isMobileMenuOpen);
+  };
+
+  // Handle mega menu activation on hover
+  const handleMenuMouseEnter = (itemId: number) => {
+    if (menuTimeoutRef.current) {
+      window.clearTimeout(menuTimeoutRef.current);
+      menuTimeoutRef.current = null;
+    }
+    setActiveMegaMenu(itemId);
+  };
+
+  // Handle mouse leave events for mega menu
+  const handleMenuMouseLeave = () => {
+    if (menuTimeoutRef.current) {
+      window.clearTimeout(menuTimeoutRef.current);
+    }
+
+    menuTimeoutRef.current = window.setTimeout(() => {
+      if (!isHoveringMegaMenu) {
+        setActiveMegaMenu(null);
+      }
+    }, 150);
+  };
+
+  // Handle mouse events for the mega menu itself
+  const handleMegaMenuMouseEnter = () => {
+    setIsHoveringMegaMenu(true);
+    if (menuTimeoutRef.current) {
+      window.clearTimeout(menuTimeoutRef.current);
+      menuTimeoutRef.current = null;
+    }
+  };
+
+  const handleMegaMenuMouseLeave = () => {
+    setIsHoveringMegaMenu(false);
+    if (menuTimeoutRef.current) {
+      window.clearTimeout(menuTimeoutRef.current);
+    }
+    menuTimeoutRef.current = window.setTimeout(() => {
+      setActiveMegaMenu(null);
+    }, 150);
+  };
+
+  // Clean up timeouts
+  useEffect(() => {
+    return () => {
+      if (menuTimeoutRef.current) {
+        window.clearTimeout(menuTimeoutRef.current);
+      }
+    };
+  }, []);
+
+  // Close mega menu when clicking outside or navigating away
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (headerRef.current && !headerRef.current.contains(event.target as Node)) {
+        setActiveMegaMenu(null);
+        setIsHoveringMegaMenu(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+
+    // Close mega menu when navigating to a new route
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+      setActiveMegaMenu(null);
+      setIsHoveringMegaMenu(false);
+    };
+  }, []);
+
+  // Get the active menu item with mega menu data
+  const activeMenuItem = activeMegaMenu !== null 
+    ? headerConfig.menuItems.find(item => item.id === activeMegaMenu)
+    : null;
+
+  // Fetch available activities for the activity cards
+  const { data: activities } = useQuery<HeaderConfig[]>({
+    queryKey: ['/api/admin/header-configs'],
+    select: (data) => data.filter(config => config.category !== 'home'), // Exclude home
+    staleTime: 5 * 60 * 1000, // 5 minutes
   });
 
   return (
-    <header className="bg-white w-full sticky top-0 z-50">
-      {/* Top Banner */}
-      <div className="bg-[#025323] text-white text-center py-2 text-sm">
-        Your ultimate guide to outdoor adventures and experiences
-      </div>
-
-      {/* Top Bar */}
-      <div className="border-b border-gray-200">
-        <div className="container mx-auto px-4 py-2 flex justify-between items-center">
-          <div className="text-sm">Made with ❤️ by HTHFO</div>
-          <div className="flex items-center space-x-6">
-            <a href="#" className="text-sm hover:text-[#025323]">YOUTUBE</a>
-            <a href="#" className="text-sm hover:text-[#025323]">INSTAGRAM</a>
-            <a href="#" className="text-sm hover:text-[#025323]">TWITTER</a>
-            <div className="relative">
-              <input 
-                type="text" 
-                placeholder="Search here..." 
-                className="pl-4 pr-8 py-1 text-sm border border-gray-200 rounded w-40"
-              />
-              <Search className="w-4 h-4 absolute right-2 top-1/2 transform -translate-y-1/2 text-gray-400" />
-            </div>
-          </div>
+    <header ref={headerRef} className="bg-white shadow-md sticky top-0 z-50 relative">
+      {/* Banner announcement */}
+      {headerConfig.bannerText && (
+        <div className="py-1 px-4 text-center text-white bg-theme text-xs md:text-sm">
+          {headerConfig.bannerText}
         </div>
-      </div>
+      )}
 
-      {/* Main Navigation */}
-      <div className="container mx-auto px-4 py-4">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center">
-            <Link href="/">
+      <div className="container mx-auto px-4">
+        <div className="flex justify-between items-center py-4">
+          {/* Logo */}
+          <Link href="/" className="flex items-center space-x-3">
+            <div className="w-10 h-10 rounded-full overflow-hidden">
               <img 
-                src={headerConfig.logoSrc}
+                src={headerConfig.logoSrc || '/logo.svg'} 
                 alt={headerConfig.logoText}
-                className="h-16 w-16 object-contain"
-                loading="eager"
-                onError={(e) => {
-                  const target = e.target as HTMLImageElement;
-                  target.src = target.src.replace(/\?.*$/, '') + '?' + new Date().getTime();
-                }}
+                className="w-full h-full object-cover"
               />
-            </Link>
-          </div>
+            </div>
+            <span className="font-heading font-bold text-xl md:text-2xl text-theme">
+              {headerConfig.logoText}
+            </span>
+          </Link>
 
-          <div className="flex items-center gap-8">
-            <nav className="hidden md:flex items-center space-x-6">
-              <Link href="/destinations" className="hover:text-[#025323]">Destinations</Link>
-              <Link href="/categories" className="hover:text-[#025323]">Categories</Link>
-              <Link href="/shop" className="hover:text-[#025323]">Shop</Link>
-              <Link href="/blog" className="hover:text-[#025323]">Blog</Link>
-              <Link href="/tips" className="hover:text-[#025323]">Tips & Ideas</Link>
+          {/* Main Navigation - Desktop */}
+          {!isMobile && (
+            <nav className="flex items-center space-x-8">
+              {headerConfig.menuItems.map((item) => (
+                <div 
+                  key={typeof item.id === 'string' ? item.id : `menu-${item.id}`}
+                  className="relative"
+                  onMouseEnter={() => {
+                    if (item.hasMegaMenu && typeof item.id === 'number') {
+                      handleMenuMouseEnter(item.id);
+                    }
+                  }}
+                  onMouseLeave={handleMenuMouseLeave}
+                >
+                  <Link 
+                    href={item.path} 
+                    className={`font-medium hover:text-theme transition flex items-center gap-1 ${activeMegaMenu === item.id ? 'text-theme' : ''}`}
+                    onClick={() => setActiveMegaMenu(null)}
+                  >
+                    {item.label}
+                    {item.hasMegaMenu && <ChevronDown size={16} />}
+                  </Link>
+                </div>
+              ))}
             </nav>
-            <div className="flex items-center space-x-3">
-              <button className="border border-[#025323] text-[#025323] px-4 py-1.5 rounded-full hover:bg-[#025323] hover:text-white transition">
-                Sign In
-              </button>
-              <button className="bg-[#FF6B00] text-white px-4 py-1.5 rounded-full hover:bg-[#FF5500] transition">
-                Join Now
-              </button>
-              <Link href="/cart" className="relative">
-                <ShoppingCart className="text-gray-700" />
-                <span className="absolute -top-2 -right-2 bg-[#FF6B00] text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">
-                  {cartCount || 0}
+          )}
+
+          {/* Action Buttons */}
+          <div className="flex items-center space-x-4">
+            {!isMobile && (
+              <>
+                <button className="bg-transparent border border-theme text-theme hover:bg-theme hover:text-white transition rounded-full px-4 py-2 font-medium">
+                  Sign In
+                </button>
+                <button className="bg-orange-500 text-white hover:bg-theme-dark transition rounded-full px-5 py-2 font-medium">
+                  Join Now
+                </button>
+              </>
+            )}
+            <Link href="/cart" className="relative">
+              <ShoppingCart className="text-gray-700 hover:text-theme transition" size={24} />
+              {(typeof cartCount === 'number' && cartCount > 0) && (
+                <span className="absolute -top-2 -right-2 bg-theme text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">
+                  {cartCount > 9 ? '9+' : cartCount}
                 </span>
-              </Link>
+              )}
+            </Link>
+            {isMobile && (
+              <button 
+                className="text-gray-700 hover:text-theme transition" 
+                onClick={toggleMobileMenu}
+              >
+                <Menu size={24} />
+              </button>
+            )}
+          </div>
+        </div>
+
+        {/* Activity Shortcuts */}
+        {!isMobile && (
+          <div className="py-4 border-t border-gray-200">
+            <div className="grid grid-cols-6 gap-4">
+              {activities?.slice(0, 6).map((activity) => (
+                <Link 
+                  key={activity.id} 
+                  href={`/${activity.category}`}
+                  className="flex flex-col items-center group"
+                >
+                  <div 
+                    className="w-14 h-14 rounded-full overflow-hidden border-2 border-transparent group-hover:border-theme transition-all duration-200"
+                    style={{ borderColor: activity.primaryColor }}
+                  >
+                    <img 
+                      src={activity.logoSrc} 
+                      alt={activity.logoText} 
+                      className="w-full h-full object-cover"
+                    />
+                  </div>
+                  <span 
+                    className="mt-2 text-sm font-medium group-hover:font-semibold transition-all duration-200"
+                    style={{ color: activity.primaryColor }}
+                  >
+                    {activity.logoText}
+                  </span>
+                </Link>
+              ))}
             </div>
           </div>
-        </div>
+        )}
       </div>
 
-      {/* Category Navigation */}
-      <div className="border-t border-gray-200">
-        <div className="container mx-auto px-4 py-4">
-          <div className="flex justify-center items-center space-x-6">
-            {['Outdoors', 'Cruising', 'Fishing', 'Hiking', 'Camping', '4x4'].map((category) => (
-              <Link 
-                key={category} 
-                href={`/${category.toLowerCase()}`}
-                className="flex flex-col items-center group"
-              >
-                <div className="w-12 h-12 rounded-full bg-[#025323] mb-2 flex items-center justify-center">
-                  <img 
-                    src={`/icons/${category.toLowerCase()}.png`}
-                    alt={category}
-                    className="w-8 h-8"
-                  />
-                </div>
-                <span className="text-sm font-medium">
-                  {category}
-                </span>
-              </Link>
-            ))}
-          </div>
-        </div>
-      </div>
+      {/* Mobile Menu */}
+      {isMobile && (
+        <MobileMenu isOpen={isMobileMenuOpen} onClose={() => setIsMobileMenuOpen(false)} />
+      )}
+
+      {/* Mega Menu Display */}
+      {!isMobile && activeMenuItem?.megaMenuCategories && activeMenuItem.megaMenuCategories.length > 0 && (
+        <MegaMenu 
+          categories={activeMenuItem.megaMenuCategories} 
+          isOpen={activeMegaMenu !== null} 
+          colorClass="text-theme"
+          onClose={() => setActiveMegaMenu(null)}
+          onMouseEnter={handleMegaMenuMouseEnter}
+          onMouseLeave={handleMegaMenuMouseLeave}
+        />
+      )}
     </header>
   );
 };
