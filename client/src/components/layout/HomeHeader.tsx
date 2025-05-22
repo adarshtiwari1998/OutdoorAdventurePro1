@@ -309,17 +309,9 @@ const HomeHeader = () => {
       )}
 
       {/* Activity Shortcuts */}
-      {!isMobile && (
-        <div className={`flex justify-between items-center container mx-auto px-4 ${isScrolled ? 'fixed top-0 left-0 right-0 bg-white shadow-md z-50 py-2' : ''}`}>
-          <Link href="/" className="flex items-center">
-            <div className="w-20 h-20 rounded-full overflow-hidden">
-              <img 
-                src={headerConfig.logoSrc} 
-                alt={headerConfig.logoText}
-                className="w-full h-full object-cover"
-              />
-            </div>
-          </Link>
+      {!isMobile && isScrolled && (
+        <div className="fixed top-0 left-0 right-0 bg-white shadow-md z-50 py-2">
+          <div className="flex justify-between items-center container mx-auto px-4">
           <div className="grid grid-cols-6 gap-4 p-2">
             {activities?.slice(0, 6).map((activity) => (
               <Link 
