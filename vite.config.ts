@@ -1,3 +1,4 @@
+
 import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react";
 import path from "path";
@@ -14,11 +15,9 @@ export default defineConfig({
     port: 5000,
     strictPort: true,
     hmr: {
-      clientPort: 443,
-      protocol: 'wss',
-      host: '.preview.csb.app'
-    },
-    allowedHosts: ['b9f53048-d8cb-4b2d-801e-4b0f5c943598-00-9o507r78pxx9.pike.replit.dev'],
+      port: 5000,
+      protocol: 'ws'
+    }
   },
   build: {
     outDir: path.resolve(__dirname, "dist"),
