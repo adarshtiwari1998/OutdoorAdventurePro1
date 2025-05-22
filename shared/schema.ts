@@ -508,6 +508,24 @@ export type SidebarConfig = typeof sidebarConfigs.$inferSelect;
 export type InsertSidebarItem = z.infer<typeof insertSidebarItemSchema>;
 export type SidebarItem = typeof sidebarItems.$inferSelect;
 
+// Favorite Destinations
+export const favoriteDestinations = pgTable("favorite_destinations", {
+  id: serial("id").primaryKey(),
+  title: text("title").notNull(),
+  image: text("image").notNull(),
+  order: integer("order").notNull().default(0),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+
+export const insertFavoriteDestinationSchema = createInsertSchema(favoriteDestinations, {
+  title: (schema) => schema.min(2, "Title must be at least 2 characters"),
+  image: (schema) => schema.url("Image must be a valid URL"),
+});
+
+export type InsertFavoriteDestination = z.infer<typeof insertFavoriteDestinationSchema>;
+export type FavoriteDestination = typeof favoriteDestinations.$inferSelect;
+
 // Category Styles
 export const categoryStyles = pgTable("category_styles", {
   id: serial("id").primaryKey(),

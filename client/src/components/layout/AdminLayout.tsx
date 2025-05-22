@@ -189,7 +189,7 @@ const AdminLayout = ({ children, title }: AdminLayoutProps) => {
               </Link>
             </div>
           </div>
-          
+
           {/* Landing Page Styles */}
           <div className="mt-4 pt-4 border-t border-slate-200 dark:border-slate-800">
             <h3 className="px-4 py-2 text-xs font-semibold uppercase text-slate-500 dark:text-slate-400">
@@ -247,7 +247,7 @@ const AdminLayout = ({ children, title }: AdminLayoutProps) => {
               </Link>
             </div>
           </div>
-          
+
           {/* Back to Website Link */}
           <div className="mt-4 pt-4 border-t border-slate-200 dark:border-slate-800">
             <Link 
@@ -284,7 +284,7 @@ const AdminLayout = ({ children, title }: AdminLayoutProps) => {
             </div>
             <h1 className="text-2xl font-bold text-slate-900 dark:text-white">{title}</h1>
           </div>
-          
+
           <div className="flex items-center gap-4">
             <ThemeButton variant="ghost" size="sm" />
             <DropdownMenu>
@@ -321,7 +321,7 @@ const AdminLayout = ({ children, title }: AdminLayoutProps) => {
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
-            
+
             {/* Logout confirmation dialog */}
             <AlertDialog open={showLogoutConfirm} onOpenChange={setShowLogoutConfirm}>
               <AlertDialogContent>
@@ -348,11 +348,11 @@ const AdminLayout = ({ children, title }: AdminLayoutProps) => {
             </AlertDialog>
           </div>
         </header>
-        
+
         <main className="flex-1 p-6">
           {children}
         </main>
-        
+
         <footer className="py-4 px-6 border-t border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 text-center text-sm text-muted-foreground">
           <div className="flex flex-col md:flex-row items-center justify-between">
             <p>© {new Date().getFullYear()} Outdoor Adventures Admin. All rights reserved.</p>

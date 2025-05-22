@@ -8,6 +8,7 @@ import BlogSection from "@/components/sections/BlogSection";
 import TestimonialSection from "@/components/sections/TestimonialSection";
 import NewsletterSection from "@/components/sections/NewsletterSection";
 import { Loader2 } from "lucide-react";
+import FavoriteDestinations from "@/components/sections/FavoriteDestinations";
 
 const Home = () => {
   // Fetch home sliders from the API
@@ -50,7 +51,7 @@ const Home = () => {
       subtitles: ["Trending"]
     }
   ];
-  
+
   // Use API data if available, otherwise use fallback
   const carouselSlides = sliders?.length > 0 
     ? sliders.map((slider: any) => ({
@@ -74,7 +75,8 @@ const Home = () => {
       <div className="mt-6 relative z-20 container mx-auto px-4 mb-8">
         <SearchBox />
       </div>
-      
+
+      <FavoriteDestinations />
       <FeaturedActivities />
       <ChannelsSection />
       <FeaturedProducts />
