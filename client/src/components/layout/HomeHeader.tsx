@@ -333,7 +333,10 @@ const HomeHeader = () => {
 
       {/* Mobile Menu */}
       {isMobile && (
-        <MobileMenu isOpen={isMobileMenuOpen} onClose={() => setIsMobileMenuOpen(false)} />
+        <MobileMenu 
+          isOpen={isMobileMenuOpen} 
+          onClose={() => setIsMobileMenuOpen(false)} 
+        />
       )}
 
       {/* Mega Menu Display */}
