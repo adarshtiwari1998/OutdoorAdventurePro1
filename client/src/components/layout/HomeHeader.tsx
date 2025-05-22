@@ -319,6 +319,7 @@ const HomeHeader = () => {
           />
         )}
       </div>
+      </div>
     </header>
   );
 };
