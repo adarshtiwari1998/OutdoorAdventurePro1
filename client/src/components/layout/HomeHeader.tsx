@@ -13,7 +13,7 @@ import {
 } from "lucide-react";
 import { Button } from "../ui/button";
 
-// Define the header configuration interfaces
+// Define the header configuration interfaces (same as CategoryHeader)
 interface MegaMenuItem {
   id: string | number;
   label: string;
@@ -78,22 +78,22 @@ const HomeHeader = () => {
   const headerRef = useRef<HTMLElement>(null);
   const menuTimeoutRef = useRef<number | null>(null);
   const [isScrolled, setIsScrolled] = useState(false);
-  const [showMainHeader, setShowMainHeader] = useState(true);
+const [showMainHeader, setShowMainHeader] = useState(true);
 
   useEffect(() => {
     let lastScrollY = window.scrollY;
     let frameId: number | null = null;
-
+    
     const handleScroll = () => {
       if (frameId) {
         return;
       }
-
+      
       frameId = requestAnimationFrame(() => {
         const currentScrollY = window.scrollY;
         const scrollThreshold = 100;
         const scrollDelta = Math.abs(currentScrollY - lastScrollY);
-
+        
         if (scrollDelta > 5) {
           if (currentScrollY > scrollThreshold) {
             setIsScrolled(true);
@@ -104,7 +104,7 @@ const HomeHeader = () => {
           }
           lastScrollY = currentScrollY;
         }
-
+        
         frameId = null;
       });
     };
@@ -243,6 +243,9 @@ const HomeHeader = () => {
                 className="w-full h-full object-cover"
               />
             </div>
+            {/* <span className="font-heading font-bold text-xl md:text-2xl text-theme">
+              {headerConfig.logoText}
+            </span> */}
           </Link>
 
           {/* Main Navigation - Desktop */}
@@ -302,16 +305,24 @@ const HomeHeader = () => {
             )}
           </div>
         </div>
-      </div>
 
-      {isMobile && (
-        <MobileMenu isOpen={isMobileMenuOpen} onClose={() => setIsMobileMenuOpen(false)} />
-      )}
-
-      {/* Activity Shortcuts */}
-      {!isMobile && isScrolled && (
-        <div className="fixed top-0 left-0 right-0 bg-white shadow-md z-50 py-2">
-          <div className="flex justify-between items-center container mx-auto px-4">
+        {/* Activity Shortcuts */}
+        {!isMobile && (
+          <div className={`flex justify-between items-center container mx-auto px-4 transition-transform duration-300 ease-in-out ${isScrolled ? 'fixed top-0 left-0 right-0 bg-white shadow-md z-50 py-2 translate-y-0' : 'mt-4 -translate-y-1'}`}>
+            <Link href="/" className="flex items-center">
+              {isScrolled && (
+                 <>
+              <div className="w-20 h-20 rounded-full overflow-hidden">        
+                <img 
+                  src={headerConfig.logoSrc} 
+                  alt={headerConfig.logoText}
+                  className="w-full h-full object-cover"
+                />
+              
+              </div>
+                </>
+                )}
+            </Link>
             <div className="grid grid-cols-6 gap-4 p-2">
               {activities?.slice(0, 6).map((activity) => (
                 <Link 
@@ -320,7 +331,7 @@ const HomeHeader = () => {
                   className="flex flex-col items-center group"
                 >
                   <div 
-                    className="w-[5rem] h-[5rem] rounded-full overflow-hidden border-2 border-transparent group-hover:border-theme transition-all duration-200"
+                    className="w-20 h-20 rounded-full overflow-hidden border-2 border-transparent group-hover:border-theme transition-all duration-200"
                     style={{ borderColor: activity.primaryColor }}
                   >
                     <img 
@@ -329,6 +340,12 @@ const HomeHeader = () => {
                       className="w-full h-full object-cover"
                     />
                   </div>
+                  {/* <span 
+                    className="mt-2 text-sm font-medium group-hover:font-semibold transition-all duration-200"
+                    style={{ color: activity.primaryColor }}
+                  >
+                    {activity.logoText}
+                  </span> */}
                 </Link>
               ))}
             </div>
@@ -353,7 +370,12 @@ const HomeHeader = () => {
               </Link>
             </div>
           </div>
-        </div>
+        )}
+      </div>
+
+      {/* Mobile Menu */}
+      {isMobile && (
+        <MobileMenu isOpen={isMobileMenuOpen} onClose={() => setIsMobileMenuOpen(false)} />
       )}
 
       {/* Mega Menu Display */}
