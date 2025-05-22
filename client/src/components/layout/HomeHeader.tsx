@@ -312,45 +312,46 @@ const HomeHeader = () => {
       {!isMobile && isScrolled && (
         <div className="fixed top-0 left-0 right-0 bg-white shadow-md z-50 py-2">
           <div className="flex justify-between items-center container mx-auto px-4">
-          <div className="grid grid-cols-6 gap-4 p-2">
-            {activities?.slice(0, 6).map((activity) => (
-              <Link 
-                key={activity.id} 
-                href={`/${activity.category}`}
-                className="flex flex-col items-center group"
-              >
-                <div 
-                  className="w-[5rem] h-[5rem] rounded-full overflow-hidden border-2 border-transparent group-hover:border-theme transition-all duration-200"
-                  style={{ borderColor: activity.primaryColor }}
+            <div className="grid grid-cols-6 gap-4 p-2">
+              {activities?.slice(0, 6).map((activity) => (
+                <Link 
+                  key={activity.id} 
+                  href={`/${activity.category}`}
+                  className="flex flex-col items-center group"
                 >
-                  <img 
-                    src={activity.logoSrc} 
-                    alt={activity.logoText} 
-                    className="w-full h-full object-cover"
-                  />
-                </div>
-              </Link>
-            ))}
-          </div>
-          <div className="flex items-center gap-4">
-            {isScrolled && (
-              <>
-                <button className="bg-transparent border border-theme text-theme hover:bg-theme hover:text-white transition rounded-full px-4 py-2 font-medium">
-                  Sign In
-                </button>
-                <button className="bg-orange-500 text-white hover:bg-theme-dark transition rounded-full px-5 py-2 font-medium">
-                  Join Now
-                </button>
-              </>
-            )}
-            <Link href="/cart" className="relative">
-              <ShoppingCart className="text-gray-700 hover:text-theme transition" size={24} />
-              {(typeof cartCount === 'number' && cartCount > 0) && (
-                <span className="absolute -top-2 -right-2 bg-theme text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">
-                  {cartCount > 9 ? '9+' : cartCount}
-                </span>
+                  <div 
+                    className="w-[5rem] h-[5rem] rounded-full overflow-hidden border-2 border-transparent group-hover:border-theme transition-all duration-200"
+                    style={{ borderColor: activity.primaryColor }}
+                  >
+                    <img 
+                      src={activity.logoSrc} 
+                      alt={activity.logoText} 
+                      className="w-full h-full object-cover"
+                    />
+                  </div>
+                </Link>
+              ))}
+            </div>
+            <div className="flex items-center gap-4">
+              {isScrolled && (
+                <>
+                  <button className="bg-transparent border border-theme text-theme hover:bg-theme hover:text-white transition rounded-full px-4 py-2 font-medium">
+                    Sign In
+                  </button>
+                  <button className="bg-orange-500 text-white hover:bg-theme-dark transition rounded-full px-5 py-2 font-medium">
+                    Join Now
+                  </button>
+                </>
               )}
-            </Link>
+              <Link href="/cart" className="relative">
+                <ShoppingCart className="text-gray-700 hover:text-theme transition" size={24} />
+                {(typeof cartCount === 'number' && cartCount > 0) && (
+                  <span className="absolute -top-2 -right-2 bg-theme text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">
+                    {cartCount > 9 ? '9+' : cartCount}
+                  </span>
+                )}
+              </Link>
+            </div>
           </div>
         </div>
       )}
