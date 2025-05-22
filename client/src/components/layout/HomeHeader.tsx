@@ -294,44 +294,9 @@ const HomeHeader = () => {
           </div>
         </div>
 
-        {/* Activity Shortcuts */}
-        {!isMobile && (
-          <div className="relative">
-            <div className="flex justify-center gap-10 items-center">
-              <span className="font-heading font-bold text-xl md:text-2xl text-theme">
-                {headerConfig.logoText}
-              </span>
-            <div className="grid grid-cols-6 gap-4 p-2">
-              {activities?.slice(0, 6).map((activity) => (
-                <Link 
-                  key={activity.id} 
-                  href={`/${activity.category}`}
-                  className="flex flex-col items-center group"
-                >
-                  <div 
-                    className="w-20 h-20 rounded-full overflow-hidden border-2 border-transparent group-hover:border-theme transition-all duration-200"
-                    style={{ borderColor: activity.primaryColor }}
-                  >
-                    <img 
-                      src={activity.logoSrc} 
-                      alt={activity.logoText} 
-                      className="w-full h-full object-cover"
-                    />
-                  </div>
-                  {/* <span 
-                    className="mt-2 text-sm font-medium group-hover:font-semibold transition-all duration-200"
-                    style={{ color: activity.primaryColor }}
-                  >
-                    {activity.logoText}
-                  </span> */}
-                </Link>
-              ))}
-            </div>
-          </div>
-        )}
-      </div>
+        </div>
 
-      {/* Mobile Menu */}
+      {/* Mobile Menu Section */}
       {isMobile && (
         <MobileMenu 
           isOpen={isMobileMenuOpen} 
