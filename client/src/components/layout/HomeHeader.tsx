@@ -78,22 +78,33 @@ const HomeHeader = () => {
   const headerRef = useRef<HTMLElement>(null);
   const menuTimeoutRef = useRef<number | null>(null);
   const [isScrolled, setIsScrolled] = useState(false);
+const [showMainHeader, setShowMainHeader] = useState(true);
 
   useEffect(() => {
+    let lastScrollY = window.scrollY;
     const handleScroll = () => {
       const scrollThreshold = 100;
-      if (window.scrollY > scrollThreshold) {
+      const currentScrollY = window.scrollY;
+      
+      // Update scroll state
+      if (currentScrollY > scrollThreshold) {
         setIsScrolled(true);
       } else {
         setIsScrolled(false);
       }
+
+      // Hide/show main header based on scroll direction
+      if (currentScrollY > lastScrollY) {
+        setShowMainHeader(false);
+      } else if (currentScrollY < lastScrollY) {
+        setShowMainHeader(true);
+      }
+      
+      lastScrollY = currentScrollY;
     };
 
     window.addEventListener('scroll', handleScroll);
-
-    return () => {
-      window.removeEventListener('scroll', handleScroll);
-    };
+    return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
   // Fetch header configuration from API for the home page
@@ -202,7 +213,7 @@ const HomeHeader = () => {
   });
 
   return (
-    <header ref={headerRef} className="bg-white shadow-md sticky top-0 z-50 relative">
+    <header ref={headerRef} className={`bg-white shadow-md sticky top-0 z-50 ${!showMainHeader && isScrolled ? 'pt-0' : ''}`}>
       {/* Banner announcement */}
       {headerConfig.bannerText && (
         <div className="py-1 px-4 text-center text-white bg-theme text-xs md:text-sm">
@@ -211,7 +222,7 @@ const HomeHeader = () => {
       )}
 
       <div className="container mx-auto px-4">
-        <div className="flex justify-between items-center py-4">
+        <div className={`flex justify-between items-center py-4 transition-all duration-300 ${!showMainHeader && isScrolled ? 'hidden' : ''}`}>
           {/* Logo */}
           <Link href="/" className="flex items-center space-x-3">
             <div className="w-20 h-20 rounded-full overflow-hidden">
