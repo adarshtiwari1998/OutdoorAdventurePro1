@@ -184,7 +184,7 @@ const HomeHeader = () => {
   });
 
   return (
-    <header ref={headerRef} className="bg-white shadow-md sticky top-0 z-50 relative">
+    <header ref={headerRef} className="bg-white shadow-md fixed w-full top-0 z-50 transition-transform duration-300">
       {/* Banner announcement */}
       {headerConfig.bannerText && (
         <div className="py-1 px-4 text-center text-white bg-theme text-xs md:text-sm">

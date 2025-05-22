@@ -224,7 +224,7 @@ const CategoryHeader = () => {
     : null;
 
   return (
-    <header ref={headerRef} className="bg-white shadow-md sticky top-0 z-50 relative">
+    <header ref={headerRef} className="bg-white shadow-md fixed w-full top-0 z-50 transition-transform duration-300">
       {/* Optional Banner for category-specific announcements */}
       {headerConfig.bannerText && (
         <div className={`py-1 px-4 text-center text-white bg-gradient-to-r from-primary to-secondary text-xs md:text-sm`}>
