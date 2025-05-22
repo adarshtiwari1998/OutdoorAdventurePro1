@@ -101,10 +101,10 @@ const CategoryHeader = () => {
   const [isHoveringMegaMenu, setIsHoveringMegaMenu] = useState(false);
   const headerRef = useRef<HTMLElement>(null);
   const menuTimeoutRef = useRef<number | null>(null);
-  
+
   // Determine the current category from the URL path
   const currentPath = location.split('/')[1]; // Gets "hiking", "camping", etc.
-  
+
   // Fetch header configuration from API
   const { data: headerData, isLoading, error } = useQuery<HeaderConfig>({
     queryKey: [`/api/header-configs/category/${currentPath}`],
@@ -112,7 +112,7 @@ const CategoryHeader = () => {
     enabled: !!currentPath, // Only run if we have a path
     retry: false
   });
-  
+
   // Determine which config to use - API data or default
   const headerConfig = headerData || {
     ...defaultConfig,
@@ -124,31 +124,31 @@ const CategoryHeader = () => {
 
   // Access the theme context
   const { setPrimaryColor } = useTheme();
-  
+
   // Map color to Tailwind class or prepare inline style
   const colorClass = headerConfig.primaryColor ? 
     (colorMap[headerConfig.primaryColor] || 'text-primary') : 
     'text-primary';
-    
+
   // Determine if we need inline style (when no matching Tailwind class exists)
   const useInlineStyle = headerConfig.primaryColor && !colorMap[headerConfig.primaryColor];
-  
+
   // Update the theme color when header config changes
   useEffect(() => {
     if (headerConfig?.primaryColor) {
       setPrimaryColor(headerConfig.primaryColor);
     }
   }, [headerConfig?.primaryColor, setPrimaryColor]);
-  
+
   const { data: cartCount } = useQuery<number>({
     queryKey: ['/api/cart/count'],
     staleTime: 60000, // 1 minute
   });
-  
+
   const toggleMobileMenu = () => {
     setIsMobileMenuOpen(!isMobileMenuOpen);
   };
-  
+
   // Handle mega menu activation on hover
   const handleMenuMouseEnter = (itemId: number) => {
     if (menuTimeoutRef.current) {
@@ -157,20 +157,20 @@ const CategoryHeader = () => {
     }
     setActiveMegaMenu(itemId);
   };
-  
+
   // Handle mouse leave events for mega menu
   const handleMenuMouseLeave = () => {
     if (menuTimeoutRef.current) {
       window.clearTimeout(menuTimeoutRef.current);
     }
-    
+
     menuTimeoutRef.current = window.setTimeout(() => {
       if (!isHoveringMegaMenu) {
         setActiveMegaMenu(null);
       }
     }, 150);
   };
-  
+
   // Handle mouse events for the mega menu itself
   const handleMegaMenuMouseEnter = () => {
     setIsHoveringMegaMenu(true);
@@ -179,7 +179,7 @@ const CategoryHeader = () => {
       menuTimeoutRef.current = null;
     }
   };
-  
+
   const handleMegaMenuMouseLeave = () => {
     setIsHoveringMegaMenu(false);
     if (menuTimeoutRef.current) {
@@ -189,7 +189,7 @@ const CategoryHeader = () => {
       setActiveMegaMenu(null);
     }, 150);
   };
-  
+
   // Clean up timeouts
   useEffect(() => {
     return () => {
@@ -198,7 +198,7 @@ const CategoryHeader = () => {
       }
     };
   }, []);
-  
+
   // Close mega menu when clicking outside or navigating away
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -207,9 +207,9 @@ const CategoryHeader = () => {
         setIsHoveringMegaMenu(false);
       }
     };
-    
+
     document.addEventListener('mousedown', handleClickOutside);
-    
+
     // Close mega menu when navigating to a new route
     return () => {
       document.removeEventListener('mousedown', handleClickOutside);
@@ -217,21 +217,21 @@ const CategoryHeader = () => {
       setIsHoveringMegaMenu(false);
     };
   }, []);
-  
+
   // Get the active menu item with mega menu data
   const activeMenuItem = activeMegaMenu !== null 
     ? headerConfig.menuItems.find(item => item.id === activeMegaMenu)
     : null;
 
   return (
-    <header ref={headerRef} className="bg-white shadow-md fixed w-full top-0 z-50 transition-transform duration-300">
+    <header ref={headerRef} className="bg-white shadow-md sticky top-0 z-50 relative">
       {/* Optional Banner for category-specific announcements */}
       {headerConfig.bannerText && (
         <div className={`py-1 px-4 text-center text-white bg-gradient-to-r from-primary to-secondary text-xs md:text-sm`}>
           {headerConfig.bannerText}
         </div>
       )}
-      
+
       <div className="container mx-auto px-4">
         <div className="flex justify-between items-center py-4">
           {/* Category-specific Logo */}
@@ -256,7 +256,7 @@ const CategoryHeader = () => {
               </span>
             )}
           </Link>
-          
+
           {/* Category-specific Navigation - Desktop */}
           {!isMobile && (
             <nav className="flex items-center space-x-8">
@@ -289,7 +289,7 @@ const CategoryHeader = () => {
               ))}
             </nav>
           )}
-          
+
           {/* Action Buttons - Same across categories */}
           <div className="flex items-center space-x-4">
             {!isMobile && (
@@ -323,7 +323,7 @@ const CategoryHeader = () => {
             )}
           </div>
         </div>
-        
+
         {/* Category-specific Submenu */}
         {!isMobile && (
           <div className="py-2 border-t border-neutral overflow-x-auto">
@@ -342,19 +342,19 @@ const CategoryHeader = () => {
                   <BookOpen size={14} /> Guides & Tips
                 </Link>
               </div>
-              
+
               {/* Activity Selector for switching between different landing pages */}
               <ActivitySelector />
             </div>
           </div>
         )}
       </div>
-      
+
       {/* Mobile Menu */}
       {isMobile && (
         <MobileMenu isOpen={isMobileMenuOpen} onClose={() => setIsMobileMenuOpen(false)} />
       )}
-      
+
       {/* Mega Menu Display */}
       {!isMobile && activeMenuItem?.megaMenuCategories && activeMenuItem.megaMenuCategories.length > 0 && (
         <MegaMenu 
