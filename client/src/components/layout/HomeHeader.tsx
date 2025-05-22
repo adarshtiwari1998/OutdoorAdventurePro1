@@ -49,14 +49,16 @@ const HomeHeader = () => {
       <div className="container mx-auto px-4 py-4">
         <div className="flex justify-between items-center">
           {/* Logo */}
-          <Link href="/" className="flex items-center space-x-3">
-            <img 
-              src="/logo.svg" 
-              alt="Your vacation ideas Channel" 
-              className="h-12 w-12"
-            />
-            <span className="text-xl font-semibold">Your vacation ideas Channel</span>
-          </Link>
+          <div className="flex items-center justify-between w-full">
+            <span className="text-2xl font-semibold">Your vacation ideas Channel</span>
+            <Link href="/" className="flex items-center">
+              <img 
+                src="https://honeydew-partridge-785212.hostingersite.com/wp-content/uploads/2024/11/hthfo-new-logo_120x-v2-1.jpg"
+                alt="Your vacation ideas Channel" 
+                className="h-16 w-16"
+              />
+            </Link>
+          </div>
 
           {/* Navigation Links */}
           <nav className="hidden md:flex items-center space-x-8">
@@ -101,10 +103,8 @@ const HomeHeader = () => {
                   src={config.logoSrc} 
                   alt={config.logoText}
                   className="w-16 h-16 rounded-full mb-2"
+                  style={{ objectFit: 'cover' }}
                 />
-                <span className="text-sm group-hover:text-[#025323]">
-                  {config.logoText}
-                </span>
               </Link>
             ))}
           </div>
