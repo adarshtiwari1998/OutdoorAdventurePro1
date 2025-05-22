@@ -11,7 +11,7 @@ const HomeHeader = () => {
   });
 
   return (
-    <header className="bg-white w-full">
+    <header className="bg-white w-full sticky top-0 z-50">
       {/* Top Banner */}
       <div className="bg-[#025323] text-white text-center py-2 text-sm">
         Your ultimate guide to outdoor adventures and experiences
@@ -48,6 +48,11 @@ const HomeHeader = () => {
               src="https://honeydew-partridge-785212.hostingersite.com/wp-content/uploads/2024/11/hthfo-new-logo_120x-v2-1.jpg"
               alt="Logo" 
               className="h-16 w-16 object-contain"
+              loading="eager"
+              onError={(e) => {
+                const target = e.target as HTMLImageElement;
+                target.src = target.src.replace(/\?.*$/, '') + '?' + new Date().getTime();
+              }}
             />
           </div>
 
