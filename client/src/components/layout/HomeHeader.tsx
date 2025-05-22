@@ -193,23 +193,20 @@ const HomeHeader = () => {
       )}
 
       <div className="container mx-auto px-4">
-        <div className="flex flex-col py-4">
-          {/* Top row with logo and navigation */}
-          <div className="flex justify-between items-center">
-            {/* Logo */}
-            <div className="flex items-center gap-4">
-              <Link href="/" className="flex items-center space-x-3">
-                <div className="w-10 h-10 rounded-full overflow-hidden">
-                  <img 
-                    src={headerConfig.logoSrc || '/logo.svg'} 
-                    alt={headerConfig.logoText}
-                    className="w-full h-full object-cover"
-                  />
-                </div>
-                <span className="font-heading font-bold text-xl md:text-2xl text-theme">
-                  {headerConfig.logoText}
-                </span>
-              </Link>
+        <div className="flex justify-between items-center py-4">
+          {/* Logo */}
+          <Link href="/" className="flex items-center space-x-3">
+            <div className="w-10 h-10 rounded-full overflow-hidden">
+              <img 
+                src={headerConfig.logoSrc || '/logo.svg'} 
+                alt={headerConfig.logoText}
+                className="w-full h-full object-cover"
+              />
+            </div>
+            <span className="font-heading font-bold text-xl md:text-2xl text-theme">
+              {headerConfig.logoText}
+            </span>
+          </Link>
 
           {/* Main Navigation - Desktop */}
           {!isMobile && (
@@ -269,11 +266,11 @@ const HomeHeader = () => {
           </div>
         </div>
 
-        {/* Activity Shortcuts - Now in the same row as text */}
+        {/* Activity Shortcuts */}
         {!isMobile && (
-          <div className="flex justify-between items-center mt-4">
+       <div className="flex justify-between items-center mt-4">
             <h2 className="text-xl font-semibold">Your vacation ideas</h2>
-            <div className="flex gap-4">
+            <div className="grid grid-cols-6 gap-4">
               {activities?.slice(0, 6).map((activity) => (
                 <Link 
                   key={activity.id} 
@@ -297,31 +294,28 @@ const HomeHeader = () => {
                     {activity.logoText}
                   </span>
                 </Link>
-            ))}
-                  </div>
-                </div>
-              )}
+              ))}
             </div>
-
-
-       
-        {isMobile && (
-          <MobileMenu isOpen={isMobileMenuOpen} onClose={() => setIsMobileMenuOpen(false)} />
-        )}
-
-      
-        {!isMobile && activeMenuItem?.megaMenuCategories && activeMenuItem.megaMenuCategories.length > 0 && (
-          <MegaMenu 
-            categories={activeMenuItem.megaMenuCategories} 
-            isOpen={activeMegaMenu !== null} 
-            colorClass="text-theme"
-            onClose={() => setActiveMegaMenu(null)}
-            onMouseEnter={handleMegaMenuMouseEnter}
-            onMouseLeave={handleMegaMenuMouseLeave}
-          />
+          </div>
         )}
       </div>
-      </div>
+
+      {/* Mobile Menu */}
+      {isMobile && (
+        <MobileMenu isOpen={isMobileMenuOpen} onClose={() => setIsMobileMenuOpen(false)} />
+      )}
+
+      {/* Mega Menu Display */}
+      {!isMobile && activeMenuItem?.megaMenuCategories && activeMenuItem.megaMenuCategories.length > 0 && (
+        <MegaMenu 
+          categories={activeMenuItem.megaMenuCategories} 
+          isOpen={activeMegaMenu !== null} 
+          colorClass="text-theme"
+          onClose={() => setActiveMegaMenu(null)}
+          onMouseEnter={handleMegaMenuMouseEnter}
+          onMouseLeave={handleMegaMenuMouseLeave}
+        />
+      )}
     </header>
   );
 };
