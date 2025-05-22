@@ -297,17 +297,19 @@ const HomeHeader = () => {
                     {activity.logoText}
                   </span>
                 </Link>
-              ))}
+            ))}
+                  </div>
+                </div>
+              )}
             </div>
-          </div>
-        )}
 
-        {/* Mobile Menu */}
+
+       
         {isMobile && (
           <MobileMenu isOpen={isMobileMenuOpen} onClose={() => setIsMobileMenuOpen(false)} />
         )}
 
-        {/* Mega Menu Display */}
+      
         {!isMobile && activeMenuItem?.megaMenuCategories && activeMenuItem.megaMenuCategories.length > 0 && (
           <MegaMenu 
             categories={activeMenuItem.megaMenuCategories} 
