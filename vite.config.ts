@@ -15,7 +15,8 @@ export default defineConfig({
     strictPort: true,
     hmr: {
       clientPort: 443,
-      port: 5000
+      protocol: 'wss',
+      host: '.preview.csb.app'
     }
   },
   build: {
