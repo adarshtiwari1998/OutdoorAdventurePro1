@@ -313,7 +313,9 @@ async function seed() {
     slug TEXT NOT NULL UNIQUE,
     country TEXT NOT NULL,
     description TEXT NOT NULL,
-    "order" INTEGER NOT NULL
+    "order" INTEGER NOT NULL,
+    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
   `);
     console.log("Seeding database...");
