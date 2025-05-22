@@ -196,16 +196,16 @@ const HomeHeader = () => {
         <div className="flex justify-between items-center py-4">
           {/* Logo */}
           <Link href="/" className="flex items-center space-x-3">
-            <div className="w-10 h-10 rounded-full overflow-hidden">
+            <div className="w-20 h-20 rounded-full overflow-hidden">
               <img 
                 src={headerConfig.logoSrc || '/logo.svg'} 
                 alt={headerConfig.logoText}
                 className="w-full h-full object-cover"
               />
             </div>
-            <span className="font-heading font-bold text-xl md:text-2xl text-theme">
+            {/* <span className="font-heading font-bold text-xl md:text-2xl text-theme">
               {headerConfig.logoText}
-            </span>
+            </span> */}
           </Link>
 
           {/* Main Navigation - Desktop */}
@@ -268,9 +268,11 @@ const HomeHeader = () => {
 
         {/* Activity Shortcuts */}
         {!isMobile && (
-       <div className="flex justify-between items-center mt-4">
-            <h2 className="text-xl font-semibold">Your vacation ideas</h2>
-            <div className="grid grid-cols-6 gap-4">
+       <div className="flex justify-center gap-10 items-center mt-4">
+         <span className="font-heading font-bold text-xl md:text-2xl text-theme">
+           {headerConfig.logoText}
+         </span>
+            <div className="grid grid-cols-6 gap-4 p-2">
               {activities?.slice(0, 6).map((activity) => (
                 <Link 
                   key={activity.id} 
@@ -278,7 +280,7 @@ const HomeHeader = () => {
                   className="flex flex-col items-center group"
                 >
                   <div 
-                    className="w-14 h-14 rounded-full overflow-hidden border-2 border-transparent group-hover:border-theme transition-all duration-200"
+                    className="w-20 h-20 rounded-full overflow-hidden border-2 border-transparent group-hover:border-theme transition-all duration-200"
                     style={{ borderColor: activity.primaryColor }}
                   >
                     <img 
@@ -287,12 +289,12 @@ const HomeHeader = () => {
                       className="w-full h-full object-cover"
                     />
                   </div>
-                  <span 
+                  {/* <span 
                     className="mt-2 text-sm font-medium group-hover:font-semibold transition-all duration-200"
                     style={{ color: activity.primaryColor }}
                   >
                     {activity.logoText}
-                  </span>
+                  </span> */}
                 </Link>
               ))}
             </div>
