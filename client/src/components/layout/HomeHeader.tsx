@@ -22,9 +22,9 @@ const HomeHeader = () => {
         <div className="container mx-auto px-4 py-2 flex justify-between items-center">
           <div className="text-sm">Made with ❤️ by HTHFO</div>
           <div className="flex items-center space-x-6">
-            <a href="#" className="text-sm uppercase hover:text-[#025323]">YOUTUBE</a>
-            <a href="#" className="text-sm uppercase hover:text-[#025323]">INSTAGRAM</a>
-            <a href="#" className="text-sm uppercase hover:text-[#025323]">TWITTER</a>
+            <a href="#" className="text-sm hover:text-[#025323]">YOUTUBE</a>
+            <a href="#" className="text-sm hover:text-[#025323]">INSTAGRAM</a>
+            <a href="#" className="text-sm hover:text-[#025323]">TWITTER</a>
             <div className="relative">
               <input 
                 type="text" 
@@ -39,27 +39,25 @@ const HomeHeader = () => {
 
       {/* Main Navigation */}
       <div className="container mx-auto px-4 py-4">
-        <div className="flex justify-between items-center">
-          <div className="flex-1">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-4">
             <Link href="/" className="text-xl font-semibold">
               Your vacation ideas Channel
             </Link>
-          </div>
-          
-          <Link href="/" className="flex-shrink-0">
             <img 
               src="https://honeydew-partridge-785212.hostingersite.com/wp-content/uploads/2024/11/hthfo-new-logo_120x-v2-1.jpg"
               alt="Logo" 
               className="h-16 w-16 object-contain"
             />
-          </Link>
+          </div>
 
-          <div className="flex-1 flex justify-end items-center space-x-4">
+          <div className="flex items-center gap-8">
             <nav className="hidden md:flex items-center space-x-6">
               <Link href="/destinations" className="hover:text-[#025323]">Destinations</Link>
-              <Link href="/gear" className="hover:text-[#025323]">Gear</Link>
+              <Link href="/categories" className="hover:text-[#025323]">Categories</Link>
+              <Link href="/shop" className="hover:text-[#025323]">Shop</Link>
               <Link href="/blog" className="hover:text-[#025323]">Blog</Link>
-              <Link href="/community" className="hover:text-[#025323]">Community</Link>
+              <Link href="/tips" className="hover:text-[#025323]">Tips & Ideas</Link>
             </nav>
             <div className="flex items-center space-x-3">
               <button className="border border-[#025323] text-[#025323] px-4 py-1.5 rounded-full hover:bg-[#025323] hover:text-white transition">
@@ -80,7 +78,7 @@ const HomeHeader = () => {
       </div>
 
       {/* Category Navigation */}
-      <div className="border-t border-gray-200 bg-gray-50">
+      <div className="border-t border-gray-200">
         <div className="container mx-auto px-4 py-4">
           <div className="flex justify-center items-center space-x-6">
             {['Outdoors', 'Cruising', 'Fishing', 'Hiking', 'Camping', '4x4'].map((category) => (
@@ -89,7 +87,7 @@ const HomeHeader = () => {
                 href={`/${category.toLowerCase()}`}
                 className="flex flex-col items-center group"
               >
-                <div className="w-14 h-14 rounded-full bg-[#025323] mb-2 flex items-center justify-center">
+                <div className="w-12 h-12 rounded-full bg-[#025323] mb-2 flex items-center justify-center">
                   <img 
                     src={`/icons/${category.toLowerCase()}.png`}
                     alt={category}
