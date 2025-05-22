@@ -16,6 +16,9 @@ import { PlusCircle, Pencil, Trash2, MoveUp, MoveDown } from "lucide-react";
 const formSchema = z.object({
   title: z.string().min(2, "Title must be at least 2 characters"),
   image: z.string().url("Image must be a valid URL"),
+  slug: z.string().min(2, "Slug must be at least 2 characters"),
+  description: z.string().optional(),
+  country: z.string().min(2, "Country must be at least 2 characters"),
 });
 
 const FavoriteDestinations = () => {

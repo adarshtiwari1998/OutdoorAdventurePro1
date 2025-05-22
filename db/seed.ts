@@ -305,6 +305,16 @@ async function seed() {
       created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
       updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
   );
+
+  CREATE TABLE IF NOT EXISTS favorite_destinations (
+    id SERIAL PRIMARY KEY,
+    title TEXT NOT NULL,
+    image TEXT NOT NULL,
+    slug TEXT NOT NULL UNIQUE,
+    country TEXT NOT NULL,
+    description TEXT NOT NULL,
+    "order" INTEGER NOT NULL
+);
   `);
     console.log("Seeding database...");
 
@@ -1408,6 +1418,66 @@ Happy fishing!
         });
       }
     }
+
+    // Seed destinations
+    await db.insert(schema.favoriteDestinations).values([
+      {
+        title: "Florida",
+        image: "https://images.unsplash.com/photo-1605723517503-3cadb5818a0c",
+        slug: "florida",
+        country: "United States",
+        description: "Beautiful beaches and endless sunshine",
+        order: 0
+      },
+      {
+        title: "Africa",
+        image: "https://images.unsplash.com/photo-1589182337358-2cb63099350c",
+        slug: "africa",
+        country: "Africa",
+        description: "Ancient pyramids and rich culture",
+        order: 1
+      },
+      {
+        title: "New York",
+        image: "https://images.unsplash.com/photo-1522083165195-3424ed129620",
+        slug: "new-york",
+        country: "United States", 
+        description: "The city that never sleeps",
+        order: 2
+      },
+      {
+        title: "Paris",
+        image: "https://images.unsplash.com/photo-1502602898657-3e91760cbb34",
+        slug: "paris",
+        country: "France",
+        description: "City of love and lights",
+        order: 3
+      },
+      {
+        title: "Michigan",
+        image: "https://images.unsplash.com/photo-1596394516093-501ba68a0ba6",
+        slug: "michigan",
+        country: "United States",
+        description: "Great lakes and natural beauty",
+        order: 4
+      },
+      {
+        title: "Colorado",
+        image: "https://images.unsplash.com/photo-1546156929-a4c0ac411f47",
+        slug: "colorado", 
+        country: "United States",
+        description: "Rocky mountains and outdoor adventure",
+        order: 5
+      },
+      {
+        title: "Georgia",
+        image: "https://images.unsplash.com/photo-1603888613934-ee2f7d143dd0",
+        slug: "georgia",
+        country: "United States",
+        description: "Southern charm and hospitality",
+        order: 6
+      }
+    ]);
 
     console.log("Seeding complete!");
   } catch (error) {
