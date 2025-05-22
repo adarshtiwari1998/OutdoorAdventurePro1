@@ -40,20 +40,20 @@ const HomeHeader = () => {
       {/* Main Navigation */}
       <div className="container mx-auto px-4 py-4">
         <div className="flex items-center justify-between">
-          <div className="flex items-center gap-4">
-            <Link href="/" className="text-xl font-semibold">
-              Your vacation ideas Channel
-            </Link>
+          <div className="flex items-center">
             <img 
-              src="https://honeydew-partridge-785212.hostingersite.com/wp-content/uploads/2024/11/hthfo-new-logo_120x-v2-1.jpg"
+              src="/icons/outdoor-logo.png"
               alt="Logo" 
-              className="h-16 w-16 object-contain"
+              className="h-16 w-16 object-contain mr-3"
               loading="eager"
               onError={(e) => {
                 const target = e.target as HTMLImageElement;
                 target.src = target.src.replace(/\?.*$/, '') + '?' + new Date().getTime();
               }}
             />
+            <Link href="/" className="text-xl font-semibold hover:text-[#025323] transition-colors">
+              Your vacation ideas Channel
+            </Link>
           </div>
 
           <div className="flex items-center gap-8">
