@@ -2,13 +2,8 @@ import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react";
 import path from "path";
 import runtimeErrorOverlay from "@replit/vite-plugin-runtime-error-modal";
-import { fileURLToPath } from "url";
-
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
 
 export default defineConfig({
-  root: path.resolve(__dirname, "client"),
   plugins: [
     react(),
     runtimeErrorOverlay(),
@@ -21,29 +16,17 @@ export default defineConfig({
         ]
       : []),
   ],
-  server: {
-    port: 6000,
-    host: "0.0.0.0",
-    hmr: {
-      clientPort: 443,
-      host: "0.0.0.0",
-      protocol: 'wss',
-      timeout: 120000,
-      overlay: false,
-      path: "/@hmr"
-    },
-    watch: {
-      usePolling: true,
-      interval: 100
-    }
-  },
-  build: {
-    outDir: path.resolve(__dirname, "dist"),
-    emptyOutDir: true,
-  },
   resolve: {
     alias: {
-      "@": path.resolve(__dirname, "client/src"),
+      "@db": path.resolve(import.meta.dirname, "db"),
+      "@": path.resolve(import.meta.dirname, "client", "src"),
+      "@shared": path.resolve(import.meta.dirname, "shared"),
+      "@assets": path.resolve(import.meta.dirname, "attached_assets"),
     },
+  },
+  root: path.resolve(import.meta.dirname, "client"),
+  build: {
+    outDir: path.resolve(import.meta.dirname, "dist/public"),
+    emptyOutDir: true,
   },
 });
