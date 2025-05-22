@@ -85,7 +85,7 @@ const [showMainHeader, setShowMainHeader] = useState(true);
     const handleScroll = () => {
       const scrollThreshold = 100;
       const currentScrollY = window.scrollY;
-      
+
       // Update scroll state
       if (currentScrollY > scrollThreshold) {
         setIsScrolled(true);
@@ -99,7 +99,7 @@ const [showMainHeader, setShowMainHeader] = useState(true);
       } else if (currentScrollY < lastScrollY) {
         setShowMainHeader(true);
       }
-      
+
       lastScrollY = currentScrollY;
     };
 
@@ -327,6 +327,16 @@ const [showMainHeader, setShowMainHeader] = useState(true);
                 </Link>
               ))}
             </div>
+            {isScrolled && (
+              <div className="flex items-center gap-4">
+                <button className="bg-transparent border border-theme text-theme hover:bg-theme hover:text-white transition rounded-full px-4 py-2 font-medium">
+                  Sign In
+                </button>
+                <button className="bg-orange-500 text-white hover:bg-theme-dark transition rounded-full px-5 py-2 font-medium">
+                  Join Now
+                </button>
+              </div>
+            )}
           </div>
         )}
       </div>
