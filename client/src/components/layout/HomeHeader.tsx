@@ -369,7 +369,7 @@ const [showMainHeader, setShowMainHeader] = useState(true);
         )}
       </div>
 
-      {/* Mobile Menu */}
+     
       {isMobile && (
         <MobileMenu isOpen={isMobileMenuOpen} onClose={() => setIsMobileMenuOpen(false)} />
       )}
