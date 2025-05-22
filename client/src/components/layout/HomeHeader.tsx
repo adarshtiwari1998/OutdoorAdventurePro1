@@ -77,6 +77,24 @@ const HomeHeader = () => {
   const [isHoveringMegaMenu, setIsHoveringMegaMenu] = useState(false);
   const headerRef = useRef<HTMLElement>(null);
   const menuTimeoutRef = useRef<number | null>(null);
+  const [isScrolled, setIsScrolled] = useState(false);
+
+  useEffect(() => {
+    const handleScroll = () => {
+      const scrollThreshold = 100;
+      if (window.scrollY > scrollThreshold) {
+        setIsScrolled(true);
+      } else {
+        setIsScrolled(false);
+      }
+    };
+
+    window.addEventListener('scroll', handleScroll);
+
+    return () => {
+      window.removeEventListener('scroll', handleScroll);
+    };
+  }, []);
 
   // Fetch header configuration from API for the home page
   const { data: headerData, isLoading, error } = useQuery<HeaderConfig>({
@@ -268,7 +286,7 @@ const HomeHeader = () => {
 
         {/* Activity Shortcuts */}
         {!isMobile && (
-       <div className="flex justify-center gap-10 items-center mt-4">
+          <div className={`flex justify-center gap-10 items-center transition-all duration-300 ${isScrolled ? 'fixed top-0 left-0 right-0 bg-white shadow-md z-50 py-2' : 'mt-4'}`}>
          <span className="font-heading font-bold text-xl md:text-2xl text-theme">
            {headerConfig.logoText}
          </span>
