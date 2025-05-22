@@ -296,25 +296,26 @@ const HomeHeader = () => {
 
         </div>
 
-      {/* Mobile Menu Section */}
-      {isMobile && (
-        <MobileMenu 
-          isOpen={isMobileMenuOpen} 
-          onClose={() => setIsMobileMenuOpen(false)} 
-        />
-      )}
+        {/* Mobile Menu Section */}
+        {isMobile && (
+          <MobileMenu 
+            isOpen={isMobileMenuOpen} 
+            onClose={() => setIsMobileMenuOpen(false)} 
+          />
+        )}
 
-      {/* Mega Menu Display */}
-      {!isMobile && activeMenuItem?.megaMenuCategories && activeMenuItem.megaMenuCategories.length > 0 && (
-        <MegaMenu 
-          categories={activeMenuItem.megaMenuCategories} 
-          isOpen={activeMegaMenu !== null} 
-          colorClass="text-theme"
-          onClose={() => setActiveMegaMenu(null)}
-          onMouseEnter={handleMegaMenuMouseEnter}
-          onMouseLeave={handleMegaMenuMouseLeave}
-        />
-      )}
+        {/* Mega Menu Display */}
+        {!isMobile && activeMenuItem?.megaMenuCategories && activeMenuItem.megaMenuCategories.length > 0 && (
+          <MegaMenu 
+            categories={activeMenuItem.megaMenuCategories} 
+            isOpen={activeMegaMenu !== null} 
+            colorClass="text-theme"
+            onClose={() => setActiveMegaMenu(null)}
+            onMouseEnter={handleMegaMenuMouseEnter}
+            onMouseLeave={handleMegaMenuMouseLeave}
+          />
+        )}
+      </div>
     </header>
   );
 };
