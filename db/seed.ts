@@ -1427,9 +1427,7 @@ Happy fishing!
         slug: "texas",
         country: "United States",
         description: "Experience the unique culture and vast landscapes",
-        order: 0,
-        createdAt: new Date(),
-        updatedAt: new Date()
+        order: 0
       },
       {
         title: "Paris",
