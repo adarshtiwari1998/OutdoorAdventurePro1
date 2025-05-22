@@ -23,12 +23,18 @@ export default defineConfig({
   ],
   server: {
     port: 6000,
-    host: true,
+    host: "0.0.0.0",
     hmr: {
       clientPort: 443,
       host: "0.0.0.0",
       protocol: 'wss',
-      timeout: 120000
+      timeout: 120000,
+      overlay: false,
+      path: "/@hmr"
+    },
+    watch: {
+      usePolling: true,
+      interval: 100
     }
   },
   build: {
