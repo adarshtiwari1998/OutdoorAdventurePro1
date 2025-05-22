@@ -17,7 +17,8 @@ export default defineConfig({
     hmr: {
       port: 5000,
       protocol: 'ws'
-    }
+    },
+    allowedHosts: ['b9f53048-d8cb-4b2d-801e-4b0f5c943598-00-9o507r78pxx9.pike.replit.dev']
   },
   build: {
     outDir: path.resolve(__dirname, "dist"),
