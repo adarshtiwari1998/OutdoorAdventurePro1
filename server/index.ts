@@ -96,19 +96,17 @@ app.use((req, res, next) => {
   // this serves both the API and the client.
   // It is the only port that is not firewalled.
   const port = 5000;
+  app.use((req, res, next) => {
+    res.header('Access-Control-Allow-Origin', '*');
+    res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
+    res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept');
+    next();
+  });
+
   server.listen({
     port,
     host: "0.0.0.0",
-    reusePort: true,
   }, () => {
     log(`serving on port ${port}`);
-  });
-
-  server.on('upgrade', (request, socket, head) => {
-    socket.write('HTTP/1.1 101 Web Socket Protocol Handshake\r\n' +
-                'Upgrade: WebSocket\r\n' +
-                'Connection: Upgrade\r\n' +
-                '\r\n');
-    socket.pipe(socket);
   });
 })();
