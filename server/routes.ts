@@ -875,8 +875,7 @@ app.post(`${apiPrefix}/admin/blog/import/wordpress`, async (req, res) => {
 
       return res.json(headerConfig);
     } catch (error) {
-      ```text
-console.error("Error fetching header config:", error);
+      console.error("Error fetching header config:", error);
       return res.status(500).json({ message: "Failed to fetch header configuration" });
     }
   });
@@ -1550,7 +1549,7 @@ console.error("Error fetching header config:", error);
       res.status(500).json({ message: "Failed to convert video to blog post" });
     }
   });
-  
+
   // Get all favorite destinations for admin
   app.get(`${apiPrefix}/admin/favorite-destinations`, async (req, res) => {
     try {
