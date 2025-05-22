@@ -314,8 +314,8 @@ async function seed() {
     country TEXT NOT NULL,
     description TEXT NOT NULL,
     "order" INTEGER NOT NULL DEFAULT 0,
-    "createdAt" TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    "updatedAt" TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
   `);
     console.log("Seeding database...");
