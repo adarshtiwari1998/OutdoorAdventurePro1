@@ -24,6 +24,7 @@ import LandingPageStyle from "@/pages/admin/styles/landing-page-style";
 import AdminAuth from "@/pages/admin/auth";
 import Profile from "@/pages/admin/profile";
 import Settings from "@/pages/admin/settings";
+import FavoriteDestinations from "@/pages/admin/home-blocks/favorite-destinations";
 import { ThemeProvider } from "@/contexts/ThemeContext";
 import { GlobalThemeProvider } from "@/contexts/GlobalThemeManager";
 import { AuthProvider } from "@/hooks/use-auth";
@@ -44,10 +45,10 @@ function Router() {
       <Route path="/four-x-four" component={FourXFour} />
       <Route path="/blog" component={Blog} />
       <Route path="/shop" component={Shop} />
-      
+
       {/* Authentication route */}
       <Route path="/auth" component={AdminAuth} />
-      
+
       {/* Protected admin routes */}
       <Route path="/admin">
         <Redirect to="/admin/dashboard" />
@@ -63,7 +64,8 @@ function Router() {
       <ProtectedRoute path="/admin/sliders" component={Sliders} />
       <ProtectedRoute path="/admin/profile" component={Profile} />
       <ProtectedRoute path="/admin/settings" component={Settings} />
-      
+      <ProtectedRoute path="/admin/home-blocks/favorite-destinations" component={FavoriteDestinations} />
+
       {/* Landing page style routes */}
       <ProtectedRoute path="/admin/styles/home" component={LandingPageStyle} />
       <ProtectedRoute path="/admin/styles/outdoors" component={LandingPageStyle} />
@@ -72,7 +74,7 @@ function Router() {
       <ProtectedRoute path="/admin/styles/hiking" component={LandingPageStyle} />
       <ProtectedRoute path="/admin/styles/camping" component={LandingPageStyle} />
       <ProtectedRoute path="/admin/styles/four-x-four" component={LandingPageStyle} />
-      
+
       <Route component={NotFound} />
     </Switch>
   );
@@ -81,15 +83,15 @@ function Router() {
 // AppLayout component to conditionally render layouts based on route
 function AppLayout({ children }: { children: ReactNode }) {
   const [pathname, setPathname] = useState(window.location.pathname);
-  
+
   // Update pathname when location changes
   useEffect(() => {
     const handleRouteChange = () => {
       setPathname(window.location.pathname);
     };
-    
+
     window.addEventListener('popstate', handleRouteChange);
-    
+
     // Also listen for clicks on Link components since wouter doesn't trigger popstate
     const handleClick = () => {
       // Delay to ensure the URL has been updated
@@ -97,29 +99,29 @@ function AppLayout({ children }: { children: ReactNode }) {
         setPathname(window.location.pathname);
       }, 0);
     };
-    
+
     document.addEventListener('click', handleClick);
-    
+
     // Clean up
     return () => {
       window.removeEventListener('popstate', handleRouteChange);
       document.removeEventListener('click', handleClick);
     };
   }, []);
-  
+
   // Check if the current route is an admin route
   const isAdminRoute = pathname.startsWith('/admin');
-  
+
   // Don't apply any layout for the auth page
   if (pathname === '/auth') {
     return <>{children}</>;
   }
-  
+
   // Skip MainLayout for admin routes to avoid the header
   if (isAdminRoute) {
     return <>{children}</>;
   }
-  
+
   // Apply MainLayout for all other routes
   return <MainLayout>{children}</MainLayout>;
 }
