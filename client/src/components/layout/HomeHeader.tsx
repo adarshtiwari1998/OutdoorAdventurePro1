@@ -82,38 +82,40 @@ const [showMainHeader, setShowMainHeader] = useState(true);
 
   useEffect(() => {
     let lastScrollY = window.scrollY;
-    let ticking = false;
+    let frameId: number | null = null;
     
     const handleScroll = () => {
-      const scrollThreshold = 100;
-      const currentScrollY = window.scrollY;
+      if (frameId) {
+        return;
+      }
       
-      if (!ticking) {
-        window.requestAnimationFrame(() => {
-          // Update scroll state
+      frameId = requestAnimationFrame(() => {
+        const currentScrollY = window.scrollY;
+        const scrollThreshold = 100;
+        const scrollDelta = Math.abs(currentScrollY - lastScrollY);
+        
+        if (scrollDelta > 5) {
           if (currentScrollY > scrollThreshold) {
             setIsScrolled(true);
+            setShowMainHeader(false);
           } else {
             setIsScrolled(false);
-          }
-
-          // Hide/show main header based on scroll direction
-          if (currentScrollY > lastScrollY + 5) { // Add threshold to prevent micro-movements
-            setShowMainHeader(false);
-          } else if (currentScrollY < lastScrollY - 5) {
             setShowMainHeader(true);
           }
-
           lastScrollY = currentScrollY;
-          ticking = false;
-        });
-
-        ticking = true;
-      }
+        }
+        
+        frameId = null;
+      });
     };
 
     window.addEventListener('scroll', handleScroll, { passive: true });
-    return () => window.removeEventListener('scroll', handleScroll);
+    return () => {
+      window.removeEventListener('scroll', handleScroll);
+      if (frameId) {
+        cancelAnimationFrame(frameId);
+      }
+    };
   }, []);
 
   // Fetch header configuration from API for the home page
@@ -306,7 +308,7 @@ const [showMainHeader, setShowMainHeader] = useState(true);
 
         {/* Activity Shortcuts */}
         {!isMobile && (
-          <div className={`flex justify-center gap-10 items-center transition-all duration-300 ${isScrolled ? 'fixed top-0 left-0 right-0 bg-white shadow-md z-50 py-2' : 'mt-4'}`}>
+          <div className={`flex justify-center gap-10 items-center transition-transform duration-300 ease-in-out ${isScrolled ? 'fixed top-0 left-0 right-0 bg-white shadow-md z-50 py-2 translate-y-0' : 'mt-4 -translate-y-1'}`}>
          <span className="font-heading font-bold text-xl md:text-2xl text-theme">
            {headerConfig.logoText}
          </span>
