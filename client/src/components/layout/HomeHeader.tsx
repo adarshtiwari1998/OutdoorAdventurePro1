@@ -308,10 +308,16 @@ const [showMainHeader, setShowMainHeader] = useState(true);
 
         {/* Activity Shortcuts */}
         {!isMobile && (
-          <div className={`flex justify-center gap-10 items-center transition-transform duration-300 ease-in-out ${isScrolled ? 'fixed top-0 left-0 right-0 bg-white shadow-md z-50 py-2 translate-y-0' : 'mt-4 -translate-y-1'}`}>
-         <span className="font-heading font-bold text-xl md:text-2xl text-theme">
-           {headerConfig.logoText}
-         </span>
+          <div className={`flex justify-between items-center container mx-auto px-4 transition-transform duration-300 ease-in-out ${isScrolled ? 'fixed top-0 left-0 right-0 bg-white shadow-md z-50 py-2 translate-y-0' : 'mt-4 -translate-y-1'}`}>
+            <Link href="/" className="flex items-center">
+              <div className="w-10 h-10 rounded-full overflow-hidden">
+                <img 
+                  src={headerConfig.logoSrc} 
+                  alt={headerConfig.logoText}
+                  className="w-full h-full object-cover"
+                />
+              </div>
+            </Link>
             <div className="grid grid-cols-6 gap-4 p-2">
               {activities?.slice(0, 6).map((activity) => (
                 <Link 
@@ -338,16 +344,26 @@ const [showMainHeader, setShowMainHeader] = useState(true);
                 </Link>
               ))}
             </div>
-            {isScrolled && (
-              <div className="flex items-center gap-4">
-                <button className="bg-transparent border border-theme text-theme hover:bg-theme hover:text-white transition rounded-full px-4 py-2 font-medium">
-                  Sign In
-                </button>
-                <button className="bg-orange-500 text-white hover:bg-theme-dark transition rounded-full px-5 py-2 font-medium">
-                  Join Now
-                </button>
-              </div>
-            )}
+            <div className="flex items-center gap-4">
+              {isScrolled && (
+                <>
+                  <button className="bg-transparent border border-theme text-theme hover:bg-theme hover:text-white transition rounded-full px-4 py-2 font-medium">
+                    Sign In
+                  </button>
+                  <button className="bg-orange-500 text-white hover:bg-theme-dark transition rounded-full px-5 py-2 font-medium">
+                    Join Now
+                  </button>
+                </>
+              )}
+              <Link href="/cart" className="relative">
+                <ShoppingCart className="text-gray-700 hover:text-theme transition" size={24} />
+                {(typeof cartCount === 'number' && cartCount > 0) && (
+                  <span className="absolute -top-2 -right-2 bg-theme text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">
+                    {cartCount > 9 ? '9+' : cartCount}
+                  </span>
+                )}
+              </Link>
+            </div>
           </div>
         )}
       </div>
