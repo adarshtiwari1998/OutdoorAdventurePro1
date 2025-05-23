@@ -8,24 +8,10 @@ import { pool } from "@db";
 // Set up session store
 const PgSession = connectPgSimple(session);
 
-// Set up Express with enhanced CORS
+// Set up Express
 const app = express();
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
-
-// Configure CORS for all routes
-app.use((req, res, next) => {
-  res.header('Access-Control-Allow-Origin', '*');
-  res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, PATCH, OPTIONS');
-  res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept, Authorization');
-  res.header('Access-Control-Allow-Credentials', 'true');
-
-  // Handle preflight requests
-  if (req.method === 'OPTIONS') {
-    return res.status(200).end();
-  }
-  next();
-});
 
 // Set up session middleware
 app.use(session({
@@ -93,20 +79,9 @@ app.use((req, res, next) => {
     const status = err.status || err.statusCode || 500;
     const message = err.message || "Internal Server Error";
 
-    // Log error details for debugging
-    console.error('Error details:', {
-      status,
-      message,
-      stack: err.stack,
-      path: req.path
-    });
-
     res.status(status).json({ message });
+    console.error(err);
   });
-
-  // Keep-alive configuration
-  server.keepAliveTimeout = 65000; // Slightly higher than 60 second default
-  server.headersTimeout = 66000; // Slightly higher than keepAliveTimeout
 
   // Enable CORS for development
   app.use((req, res, next) => {
@@ -115,17 +90,10 @@ app.use((req, res, next) => {
     next();
   });
 
-  // Configure HMR and static serving
+  // importantly only setup vite in development and after
+  // setting up all the other routes so the catch-all route
+  // doesn't interfere with the other routes
   if (app.get("env") === "development") {
-    app.use((req, res, next) => {
-      res.header('Access-Control-Allow-Origin', '*');
-      res.header('Access-Control-Allow-Methods', 'GET,PUT,POST,DELETE');
-      res.header('Access-Control-Allow-Headers', 'Content-Type');
-      next();
-    });
-
-    // Keep alive connections for HMR
-    app.set('socketTimeoutSeconds', 0);
     await setupVite(app, server);
   } else {
     serveStatic(app);
