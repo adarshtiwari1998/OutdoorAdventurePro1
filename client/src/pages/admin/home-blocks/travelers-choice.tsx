@@ -124,10 +124,19 @@ const TravelersChoice = () => {
         body: JSON.stringify({ direction }),
       });
       if (!response.ok) throw new Error('Failed to reorder choice');
+      return response.json();
     },
     onSuccess: () => {
-      queryClient.invalidateQueries(['/api/travelers-choice']);
+      queryClient.invalidateQueries({ queryKey: ['/api/travelers-choice'] });
+      toast({ title: "Order updated successfully" });
     },
+    onError: (error: Error) => {
+      toast({ 
+        title: "Failed to update order",
+        description: error.message,
+        variant: "destructive"
+      });
+    }
   });
 
   const onSubmit = (data) => {
