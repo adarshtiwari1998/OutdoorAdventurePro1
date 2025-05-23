@@ -79,6 +79,7 @@ const Home = () => {
 
       <FavoriteDestinations />
       <TravelersChoice />
+      <TipsAndIdeas />
       <FeaturedActivities />
       <ChannelsSection />
       <FeaturedProducts />

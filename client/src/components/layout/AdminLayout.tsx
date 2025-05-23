@@ -152,6 +152,13 @@ const AdminLayout = ({ children, title }: AdminLayoutProps) => {
                 href="/admin/home-blocks/travelers-choice"
                 isActive={location.startsWith("/admin/home-blocks/travelers-choice")}
               />
+              <AdminMenuItem
+                key="/admin/tips-management"
+                icon={Compass}
+                label="Tips & Ideas"
+                href="/admin/tips-management"
+                isActive={location.startsWith("/admin/tips-management")}
+              />
           </nav>
 
           {/* Quick Links Section */}
