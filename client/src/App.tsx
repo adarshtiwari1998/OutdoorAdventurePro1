@@ -30,7 +30,7 @@ import { GlobalThemeProvider } from "@/contexts/GlobalThemeManager";
 import { AuthProvider } from "@/hooks/use-auth";
 import { ProtectedRoute } from "@/lib/protected-route";
 import { ReactNode, useEffect, useState } from "react";
-import TravelersChoice from "@/pages/admin/home-blocks/TravelersChoice";
+import TravelersChoice from "@/pages/admin/home-blocks/travelers-choice";
 // No need to import QueryClient or QueryClientProvider here as they are used in main.tsx
 
 function Router() {
