@@ -107,26 +107,26 @@ const TravelersChoice = () => {
             variant="secondary"
             size="icon"
             className={cn(
-              "absolute left-[-20px] top-1/2 transform -translate-y-1/2 opacity-0 transition-opacity duration-300",
-              "bg-white/80 hover:bg-white shadow-md",
+              "absolute left-4 top-1/2 transform -translate-y-1/2 opacity-0 transition-opacity duration-300",
+              "bg-white/50 hover:bg-white/80 rounded-full shadow-md w-10 h-10",
               "group-hover:opacity-100"
             )}
             onClick={() => scroll('left')}
           >
-            <ChevronLeft className="h-6 w-6" />
+            <ChevronLeft className="h-5 w-5 text-neutral-900" />
           </Button>
           
           <Button
             variant="secondary"
             size="icon"
             className={cn(
-              "absolute right-[-20px] top-1/2 transform -translate-y-1/2 opacity-0 transition-opacity duration-300",
-              "bg-white/80 hover:bg-white shadow-md",
+              "absolute right-4 top-1/2 transform -translate-y-1/2 opacity-0 transition-opacity duration-300",
+              "bg-white/50 hover:bg-white/80 rounded-full shadow-md w-10 h-10",
               "group-hover:opacity-100"
             )}
             onClick={() => scroll('right')}
           >
-            <ChevronRight className="h-6 w-6" />
+            <ChevronRight className="h-5 w-5 text-neutral-900" />
           </Button>
         </div>
       </div>
