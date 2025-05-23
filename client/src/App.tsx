@@ -30,6 +30,7 @@ import { GlobalThemeProvider } from "@/contexts/GlobalThemeManager";
 import { AuthProvider } from "@/hooks/use-auth";
 import { ProtectedRoute } from "@/lib/protected-route";
 import { ReactNode, useEffect, useState } from "react";
+import TravelersChoice from "./components/sections/TravelersChoice";
 // No need to import QueryClient or QueryClientProvider here as they are used in main.tsx
 
 function Router() {
@@ -66,6 +67,7 @@ function Router() {
       <ProtectedRoute path="/admin/settings" component={Settings} />
       <ProtectedRoute path="/admin/home-blocks/favorite-destinations" component={FavoriteDestinations} />
 
+      <ProtectedRoute path="/admin/home-blocks/travelers-choices" component={TravelersChoice} />
       {/* Landing page style routes */}
       <ProtectedRoute path="/admin/styles/home" component={LandingPageStyle} />
       <ProtectedRoute path="/admin/styles/outdoors" component={LandingPageStyle} />
