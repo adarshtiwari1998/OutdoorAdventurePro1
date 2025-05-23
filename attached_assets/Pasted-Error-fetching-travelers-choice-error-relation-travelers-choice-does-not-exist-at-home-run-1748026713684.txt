@@ -1,0 +1,135 @@
+Error fetching travelers choice: error: relation "travelers_choice" does not exist
+    at /home/runner/workspace/node_modules/pg-pool/index.js:45:11
+    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)
+    at async <anonymous> (/home/runner/workspace/node_modules/src/node-postgres/session.ts:104:19)
+    at async <anonymous> (/home/runner/workspace/server/routes.ts:1616:23) {
+  length: 116,
+  severity: 'ERROR',
+  code: '42P01',
+  detail: undefined,
+  hint: undefined,
+  position: '108',
+  internalPosition: undefined,
+  internalQuery: undefined,
+  where: undefined,
+  schema: undefined,
+  table: undefined,
+  column: undefined,
+  dataType: undefined,
+  constraint: undefined,
+  file: 'parse_relation.c',
+  line: '1449',
+  routine: 'parserOpenTable'
+}
+6:57:15 PM [express] GET /api/cart/count 304 in 675ms
+6:57:15 PM [express] GET /api/favorite-destinations 304 in 698ms :: [{"id":1,"title":"New York","ima…
+6:57:15 PM [express] GET /api/travelers-choice 500 in 696ms :: {"message":"Failed to fetch travelers…
+6:57:15 PM [express] GET /api/header-configs/category/home 304 in 711ms :: {"id":1,"category":"home"…
+6:57:15 PM [express] GET /api/admin/header-configs 304 in 901ms :: [{"id":2,"category":"hiking","log…
+6:57:16 PM [express] GET /api/activities/featured 304 in 698ms :: [{"id":1,"title":"Appalachian Trai…
+6:57:16 PM [express] GET /api/youtube/channels 304 in 705ms :: [{"id":"1","title":"How To Have Fun O…
+6:57:16 PM [express] GET /api/products/featured 304 in 696ms :: [{"id":"1","title":"Wilderness Explo…
+6:57:16 PM [express] GET /api/testimonials 304 in 682ms :: [{"id":"3","content":"The camping trip wa…
+6:57:16 PM [express] GET /api/sliders 304 in 676ms :: [{"id":1,"title":"Acropolis of Athens in Greec…
+6:57:17 PM [express] GET /api/blog/featured 304 in 1188ms :: {"featured":{"id":"51","title":"You NEE…
+6:57:17 PM [express] GET /api/user 304 in 457ms :: {"id":1,"username":"admin","password":"dad0c4a582…
+6:57:17 PM [express] GET /api/category-styles 304 in 703ms :: [{"id":1,"category":"home","primaryCol…
+6:57:18 PM [express] GET /api/user 304 in 488ms :: {"id":1,"username":"admin","password":"dad0c4a582…
+Error fetching travelers choice: error: relation "travelers_choice" does not exist
+    at /home/runner/workspace/node_modules/pg-pool/index.js:45:11
+    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)
+    at async <anonymous> (/home/runner/workspace/node_modules/src/node-postgres/session.ts:104:19)
+    at async <anonymous> (/home/runner/workspace/server/routes.ts:1616:23) {
+  length: 116,
+  severity: 'ERROR',
+  code: '42P01',
+  detail: undefined,
+  hint: undefined,
+  position: '108',
+  internalPosition: undefined,
+  internalQuery: undefined,
+  where: undefined,
+  schema: undefined,
+  table: undefined,
+  column: undefined,
+  dataType: undefined,
+  constraint: undefined,
+  file: 'parse_relation.c',
+  line: '1449',
+  routine: 'parserOpenTable'
+}
+6:57:18 PM [express] GET /api/category-styles 304 in 695ms :: [{"id":1,"category":"home","primaryCol…
+6:57:18 PM [express] GET /api/travelers-choice 500 in 680ms :: {"message":"Failed to fetch travelers…
+6:57:19 PM [express] GET /api/category-styles 304 in 690ms :: [{"id":1,"category":"home","primaryCol…
+Error fetching travelers choice: error: relation "travelers_choice" does not exist
+    at /home/runner/workspace/node_modules/pg-pool/index.js:45:11
+    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)
+    at async <anonymous> (/home/runner/workspace/node_modules/src/node-postgres/session.ts:104:19)
+    at async <anonymous> (/home/runner/workspace/server/routes.ts:1616:23) {
+  length: 116,
+  severity: 'ERROR',
+  code: '42P01',
+  detail: undefined,
+  hint: undefined,
+  position: '108',
+  internalPosition: undefined,
+  internalQuery: undefined,
+  where: undefined,
+  schema: undefined,
+  table: undefined,
+  column: undefined,
+  dataType: undefined,
+  constraint: undefined,
+  file: 'parse_relation.c',
+  line: '1449',
+  routine: 'parserOpenTable'
+}
+6:57:22 PM [express] GET /api/travelers-choice 500 in 684ms :: {"message":"Failed to fetch travelers…
+Error fetching travelers choice: error: relation "travelers_choice" does not exist
+    at /home/runner/workspace/node_modules/pg-pool/index.js:45:11
+    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)
+    at async <anonymous> (/home/runner/workspace/node_modules/src/node-postgres/session.ts:104:19)
+    at async <anonymous> (/home/runner/workspace/server/routes.ts:1616:23) {
+  length: 116,
+  severity: 'ERROR',
+  code: '42P01',
+  detail: undefined,
+  hint: undefined,
+  position: '108',
+  internalPosition: undefined,
+  internalQuery: undefined,
+  where: undefined,
+  schema: undefined,
+  table: undefined,
+  column: undefined,
+  dataType: undefined,
+  constraint: undefined,
+  file: 'parse_relation.c',
+  line: '1449',
+  routine: 'parserOpenTable'
+}
+6:57:24 PM [express] GET /api/travelers-choice 500 in 759ms :: {"message":"Failed to fetch travelers…
+Error fetching travelers choice: error: relation "travelers_choice" does not exist
+    at /home/runner/workspace/node_modules/pg-pool/index.js:45:11
+    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)
+    at async <anonymous> (/home/runner/workspace/node_modules/src/node-postgres/session.ts:104:19)
+    at async <anonymous> (/home/runner/workspace/server/routes.ts:1616:23) {
+  length: 116,
+  severity: 'ERROR',
+  code: '42P01',
+  detail: undefined,
+  hint: undefined,
+  position: '108',
+  internalPosition: undefined,
+  internalQuery: undefined,
+  where: undefined,
+  schema: undefined,
+  table: undefined,
+  column: undefined,
+  dataType: undefined,
+  constraint: undefined,
+  file: 'parse_relation.c',
+  line: '1449',
+  routine: 'parserOpenTable'
+}
+6:57:29 PM [express] GET /api/travelers-choice 500 in 690ms :: {"message":"Failed to fetch travelers…
