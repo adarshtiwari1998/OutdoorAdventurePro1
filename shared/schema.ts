@@ -272,7 +272,7 @@ export const adminStats = pgTable("admin_stats", {
 });
 
 // Travelers Choice
-export const travelersChoice = pgTable("travelers_choice", {
+export const travelersChoice = pgTable("travelersChoice", {
   id: serial("id").primaryKey(),
   title: text("title").notNull(),
   image: text("image").notNull(),
