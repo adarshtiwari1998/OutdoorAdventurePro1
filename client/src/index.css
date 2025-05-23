@@ -227,6 +227,20 @@ header {
   opacity: 0;
 }
 
+.activity-shortcuts {
+  transition: transform 0.3s ease, opacity 0.3s ease;
+}
+
+.activity-shortcuts-scrolled {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  background: white;
+  z-index: 50;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
   .card-overlay {
     background: linear-gradient(180deg, rgba(0,0,0,0) 0%, rgba(0,0,0,0.7) 100%);
   }

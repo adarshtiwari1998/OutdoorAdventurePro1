@@ -229,7 +229,7 @@ const [showMainHeader, setShowMainHeader] = useState(true);
       )}
 
       <div className="container mx-auto px-4">
-        <div className={`flex justify-between items-center py-4 transition-all duration-300 ${!showMainHeader && isScrolled ? 'hidden' : ''}`}>
+        <div className={`flex justify-between items-center py-4 transition-all duration-300 ${isScrolled ? 'hidden' : ''}`}>
           {/* Logo */}
           <Link href="/" className="flex items-center space-x-3">
             <div className="w-20 h-20 rounded-full overflow-hidden">
@@ -304,7 +304,7 @@ const [showMainHeader, setShowMainHeader] = useState(true);
 
         {/* Activity Shortcuts */}
         {!isMobile && (
-          <div className={`flex justify-between items-center container mx-auto px-4 transition-transform duration-300 ease-in-out ${isScrolled ? 'fixed top-0 left-0 right-0 bg-white shadow-md z-50 py-2 translate-y-0' : 'mt-4 -translate-y-1'}`}>
+          <div className={`flex justify-between items-center container mx-auto px-4 transition-all duration-300 ease-in-out ${isScrolled ? 'fixed top-0 left-0 right-0 bg-white shadow-md z-50 py-2 opacity-100 translate-y-0' : 'mt-4 -translate-y-1 opacity-100'}`}>
             <Link href="/" className="flex items-center">
               {isScrolled && (
                  <>
