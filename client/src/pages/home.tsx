@@ -10,6 +10,7 @@ import NewsletterSection from "@/components/sections/NewsletterSection";
 import { Loader2 } from "lucide-react";
 import FavoriteDestinations from "@/components/sections/FavoriteDestinations";
 import TravelersChoice from "@/components/sections/TravelersChoice";
+import TipsAndIdeas from "@/components/sections/TipsAndIdeas";
 
 const Home = () => {
   // Fetch home sliders from the API
