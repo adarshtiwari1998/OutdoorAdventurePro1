@@ -144,7 +144,13 @@ const TravelersChoice = () => {
         <h1 className="text-2xl font-bold tracking-tight">Travelers' Choice</h1>
         <Button onClick={() => {
           setEditingChoice(null);
-          form.reset();
+          form.reset({
+            title: "",
+            image: "",
+            slug: "",
+            description: "",
+            category: ""
+          });
           setIsDialogOpen(true);
         }}>
           <PlusCircle className="mr-2 h-4 w-4" /> Add New
