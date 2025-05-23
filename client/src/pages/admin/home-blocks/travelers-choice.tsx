@@ -42,9 +42,9 @@ import { Input } from "@/components/ui/input";
 const formSchema = z.object({
   title: z.string().min(2, "Title must be at least 2 characters"),
   image: z.string().url("Image must be a valid URL"),
-  slug: z.string(),
+  slug: z.string().min(2, "Slug must be at least 2 characters"),
   description: z.string(),
-  category: z.string()
+  category: z.string().min(2, "Category must be at least 2 characters"),
 });
 
 const TravelersChoice = () => {
