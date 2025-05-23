@@ -1479,6 +1479,9 @@ Happy fishing!
       }
     }
 
+    // Clear existing favorite destinations before seeding
+    await db.delete(schema.favoriteDestinations);
+    
     // Seed destinations
     await db.insert(schema.favoriteDestinations).values([
       {
