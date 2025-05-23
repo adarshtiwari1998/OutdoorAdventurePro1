@@ -82,40 +82,31 @@ const [showMainHeader, setShowMainHeader] = useState(true);
 
   useEffect(() => {
     let lastScrollY = window.scrollY;
-    let frameId: number | null = null;
+    let ticking = false;
     
     const handleScroll = () => {
-      if (frameId) {
-        return;
-      }
-      
-      frameId = requestAnimationFrame(() => {
-        const currentScrollY = window.scrollY;
-        const scrollThreshold = 100;
-        const scrollDelta = Math.abs(currentScrollY - lastScrollY);
-        
-        if (scrollDelta > 5) {
+      if (!ticking) {
+        window.requestAnimationFrame(() => {
+          const currentScrollY = window.scrollY;
+          const scrollThreshold = 50; // Reduced threshold for faster reaction
+          
           if (currentScrollY > scrollThreshold) {
             setIsScrolled(true);
-            setShowMainHeader(false);
+            setShowMainHeader(currentScrollY < lastScrollY);
           } else {
             setIsScrolled(false);
             setShowMainHeader(true);
           }
+          
           lastScrollY = currentScrollY;
-        }
-        
-        frameId = null;
-      });
+          ticking = false;
+        });
+        ticking = true;
+      }
     };
 
     window.addEventListener('scroll', handleScroll, { passive: true });
-    return () => {
-      window.removeEventListener('scroll', handleScroll);
-      if (frameId) {
-        cancelAnimationFrame(frameId);
-      }
-    };
+    return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
   // Fetch header configuration from API for the home page
