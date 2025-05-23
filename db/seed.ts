@@ -814,7 +814,8 @@ Happy fishing!
           label: "Gear", 
           path: "/shop", 
           order: 1,
-          hasMegaMenu: true          megaMenuCategories: [
+          hasMegaMenu: true,
+          megaMenuCategories: [
             {
               title: "Activity Gear",
               order: 0,
