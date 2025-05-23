@@ -59,7 +59,7 @@ const TravelersChoice = () => {
             2025's Travelers' Choice
           </h2>
           <p className="text-neutral-600 text-lg">
-            Stay at the world's top hotels
+            Explore the top adventure's choice
           </p>
         </div>
 
