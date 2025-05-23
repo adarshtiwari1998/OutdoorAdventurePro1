@@ -16,7 +16,8 @@ import {
   Loader2,
   Image,
   SlidersHorizontal,
-  Type
+  Type,
+  Compass
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useMobile } from "@/hooks/use-mobile";
