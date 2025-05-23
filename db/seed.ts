@@ -306,7 +306,19 @@ async function seed() {
       updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
   );
 
-  CREATE TABLE IF NOT EXISTS favorite_destinations (
+  CREATE TABLE IF NOT EXISTS travelers_choice (
+      id SERIAL PRIMARY KEY,
+      title TEXT NOT NULL,
+      image TEXT NOT NULL,
+      slug TEXT NOT NULL UNIQUE,
+      description TEXT,
+      category TEXT NOT NULL,
+      "order" INTEGER NOT NULL DEFAULT 0,
+      created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+      updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+    );
+
+    CREATE TABLE IF NOT EXISTS favorite_destinations (
     id SERIAL PRIMARY KEY,
     title TEXT NOT NULL,
     image TEXT NOT NULL,
@@ -802,8 +814,7 @@ Happy fishing!
           label: "Gear", 
           path: "/shop", 
           order: 1,
-          hasMegaMenu: true,
-          megaMenuCategories: [
+          hasMegaMenu: true          megaMenuCategories: [
             {
               title: "Activity Gear",
               order: 0,
@@ -1422,7 +1433,7 @@ Happy fishing!
     }
 
     // Seed travelers choice
-    await db.insert(schema.travelersChoice).values([
+    const travelersChoiceData = [
       {
         title: "World's Best Hotels",
         image: "https://images.unsplash.com/photo-1566073771259-6a8506099945",
@@ -1455,7 +1466,17 @@ Happy fishing!
         description: "One-of-a-kind stays you won't find anywhere else",
         order: 3
       }
-    ]);
+    ];
+
+    for (const travelersChoiceItem of travelersChoiceData) {
+      const existingTravelersChoiceItem = await db.query.travelersChoice.findFirst({
+        where: eq(schema.travelersChoice.slug, travelersChoiceItem.slug)
+      });
+
+      if (!existingTravelersChoiceItem) {
+        await db.insert(schema.travelersChoice).values(travelersChoiceItem);
+      }
+    }
 
     // Seed destinations
     await db.insert(schema.favoriteDestinations).values([
