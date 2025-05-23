@@ -306,7 +306,7 @@ async function seed() {
       updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
   );
 
-  CREATE TABLE IF NOT EXISTS travelers_choice (
+  CREATE TABLE IF NOT EXISTS "travelersChoice" (
       id SERIAL PRIMARY KEY,
       title TEXT NOT NULL,
       image TEXT NOT NULL,
