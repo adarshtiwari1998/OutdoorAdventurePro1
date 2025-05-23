@@ -150,7 +150,7 @@ const AdminLayout = ({ children, title }: AdminLayoutProps) => {
                 icon={Star} 
                 label="Travelers Choice"
                 href="/admin/home-blocks/travelers-choice"
-                isActive={location === "/admin/home-blocks/travelers-choice"}
+                isActive={location.startsWith("/admin/home-blocks/travelers-choice")}
               />
           </nav>
 
