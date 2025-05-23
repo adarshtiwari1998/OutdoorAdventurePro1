@@ -271,6 +271,29 @@ export const adminStats = pgTable("admin_stats", {
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 
+// Travelers Choice
+export const travelersChoice = pgTable("travelers_choice", {
+  id: serial("id").primaryKey(),
+  title: text("title").notNull(),
+  image: text("image").notNull(),
+  slug: text("slug").notNull(),
+  description: text("description"),
+  category: text("category").notNull(),
+  order: integer("order").notNull().default(0),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull()
+});
+
+export const insertTravelersChoiceSchema = createInsertSchema(travelersChoice, {
+  title: (schema) => schema.min(2, "Title must be at least 2 characters"),
+  image: (schema) => schema.url("Image must be a valid URL"),
+  slug: (schema) => schema.min(2, "Slug must be at least 2 characters"),
+  category: (schema) => schema.min(2, "Category must be at least 2 characters"),
+});
+
+export type InsertTravelersChoice = z.infer<typeof insertTravelersChoiceSchema>;
+export type TravelersChoice = typeof travelersChoice.$inferSelect;
+
 // Validation schemas
 export const insertUserSchema = createInsertSchema(users, {
   username: (schema) => schema.min(3, "Username must be at least 3 characters long"),
