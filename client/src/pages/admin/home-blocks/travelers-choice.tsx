@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { useQueryClient, useMutation, useQuery } from "@tanstack/react-query";
@@ -65,7 +64,7 @@ const TravelersChoice = () => {
   });
 
   const { data: choices, isLoading } = useQuery({
-    queryKey: ['/api/admin/travelers-choice'],
+    queryKey: ['/api/travelers-choice'],
   });
 
   const createMutation = useMutation({
@@ -79,7 +78,7 @@ const TravelersChoice = () => {
       return response.json();
     },
     onSuccess: () => {
-      queryClient.invalidateQueries(['/api/admin/travelers-choice']);
+      queryClient.invalidateQueries(['/api/travelers-choice']);
       toast({ title: "Choice created successfully" });
       setIsDialogOpen(false);
       form.reset();
@@ -97,7 +96,7 @@ const TravelersChoice = () => {
       return response.json();
     },
     onSuccess: () => {
-      queryClient.invalidateQueries(['/api/admin/travelers-choice']);
+      queryClient.invalidateQueries(['/api/travelers-choice']);
       toast({ title: "Choice updated successfully" });
       setIsDialogOpen(false);
       form.reset();
@@ -112,7 +111,7 @@ const TravelersChoice = () => {
       if (!response.ok) throw new Error('Failed to delete choice');
     },
     onSuccess: () => {
-      queryClient.invalidateQueries(['/api/admin/travelers-choice']);
+      queryClient.invalidateQueries(['/api/travelers-choice']);
       toast({ title: "Choice deleted successfully" });
     },
   });
@@ -127,7 +126,7 @@ const TravelersChoice = () => {
       if (!response.ok) throw new Error('Failed to reorder choice');
     },
     onSuccess: () => {
-      queryClient.invalidateQueries(['/api/admin/travelers-choice']);
+      queryClient.invalidateQueries(['/api/travelers-choice']);
     },
   });
 
@@ -311,3 +310,4 @@ const TravelersChoice = () => {
 };
 
 export default TravelersChoice;
+```
