@@ -1,5 +1,5 @@
 import { db, pool } from "./index";
-import * as schema from "@shared/schema";
+import * * as schema from "@shared/schema";
 import { createSlug } from "../server/utils/slugify";
 import { eq, sql } from "drizzle-orm";
 import { scrypt, randomBytes } from "crypto";
@@ -328,6 +328,20 @@ async function seed() {
     "order" INTEGER NOT NULL DEFAULT 0,
     created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
+  CREATE TABLE IF NOT EXISTS tips_and_ideas (
+    id SERIAL PRIMARY KEY,
+    title TEXT NOT NULL,
+    description TEXT NOT NULL,
+    category TEXT NOT NULL,
+    difficultyLevel TEXT NOT NULL,
+    seasonality TEXT NOT NULL,
+    estimatedTime TEXT NOT NULL,
+    image TEXT NOT NULL,
+    iconType TEXT NOT NULL,
+    parentCategory TEXT NOT NULL,
+    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
   `);
     console.log("Seeding database...");
@@ -1479,11 +1493,55 @@ Happy fishing!
       }
     }
 
-    // Clear existing favorite destinations before seeding
-    await db.delete(schema.favoriteDestinations);
-    
-    // Seed destinations
-    await db.insert(schema.favoriteDestinations).values([
+    // Seed tips and ideas
+const tipsAndIdeasData = [
+  {
+    title: "Essential Trail Navigation",
+    description: "Master the art of trail navigation with these fundamental techniques that combine traditional methods with modern technology.",
+    category: "hiking",
+    difficultyLevel: "intermediate",
+    seasonality: "all-season",
+    estimatedTime: "15 minutes",
+    image: "https://images.unsplash.com/photo-1522163182402-834f871fd851",
+    iconType: "compass",
+    parentCategory: "outdoor-skills"
+  },
+  {
+    title: "Campfire Cooking Mastery",
+    description: "Transform your outdoor cooking game with these professional campfire cooking techniques and recipes.",
+    category: "camping",
+    difficultyLevel: "beginner",
+    seasonality: "all-season",
+    estimatedTime: "20 minutes",
+    image: "https://images.unsplash.com/photo-1523987355523-c7b5b0dd90a7",
+    iconType: "fire",
+    parentCategory: "food-and-cooking"
+  },
+  {
+    title: "Advanced Fly Fishing Techniques",
+    description: "Take your fly fishing skills to the next level with these expert casting and presentation techniques.",
+    category: "fishing",
+    difficultyLevel: "expert",
+    seasonality: "spring",
+    estimatedTime: "25 minutes",
+    image: "https://images.unsplash.com/photo-1516939884455-1445c8652f83",
+    iconType: "fish",
+    parentCategory: "water-activities"
+  }
+];
+
+for (const tip of tipsAndIdeasData) {
+  const existingTip = await db.query.tipsAndIdeas.findFirst({
+    where: eq(schema.tipsAndIdeas.title, tip.title)
+  });
+
+  if (!existingTip) {
+    await db.insert(schema.tipsAndIdeas).values(tip);
+  }
+}
+
+// Seed favorite destinations
+await db.insert(schema.favoriteDestinations).values([
       {
         title: "New York",
         image: "https://images.unsplash.com/photo-1522083165195-3424ed129620",

@@ -531,6 +531,33 @@ export type SidebarConfig = typeof sidebarConfigs.$inferSelect;
 export type InsertSidebarItem = z.infer<typeof insertSidebarItemSchema>;
 export type SidebarItem = typeof sidebarItems.$inferSelect;
 
+// Tips and Ideas 
+export const tipsAndIdeas = pgTable("tips_and_ideas", {
+  id: serial("id").primaryKey(),
+  title: text("title").notNull(),
+  description: text("description").notNull(),
+  category: text("category").notNull(), // hiking, camping, fishing etc
+  parentCategory: text("parent_category"), // For hierarchical organization
+  difficultyLevel: text("difficulty_level"), // beginner, intermediate, expert
+  seasonality: text("seasonality"), // spring, summer, fall, winter
+  estimatedTime: text("estimated_time"),
+  image: text("image").notNull(),
+  iconType: text("icon_type"), // For custom icon display
+  likes: integer("likes").default(0),
+  views: integer("views").default(0),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+
+export const insertTipsAndIdeasSchema = createInsertSchema(tipsAndIdeas, {
+  title: (schema) => schema.min(2, "Title must be at least 2 characters"),
+  description: (schema) => schema.min(10, "Description must be at least 10 characters"),
+  category: (schema) => schema.min(2, "Category must be at least 2 characters"),
+});
+
+export type InsertTipsAndIdeas = z.infer<typeof insertTipsAndIdeasSchema>;
+export type TipsAndIdeas = typeof tipsAndIdeas.$inferSelect;
+
 // Favorite Destinations
 export const favoriteDestinations = pgTable("favorite_destinations", {
   id: serial("id").primaryKey(),
