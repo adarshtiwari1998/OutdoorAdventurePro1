@@ -813,8 +813,7 @@ Happy fishing!
         { 
           label: "Gear", 
           path: "/shop", 
-          ```text
-order: 1,
+          order: 1,
           hasMegaMenu: true,
           megaMenuCategories: [
             {
