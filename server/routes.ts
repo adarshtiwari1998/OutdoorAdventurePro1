@@ -1610,5 +1610,18 @@ app.post(`${apiPrefix}/admin/blog/import/wordpress`, async (req, res) => {
     }
   });
 
+  // Travelers Choice API routes
+  app.get(`${apiPrefix}/travelers-choice`, async (req, res) => {
+    try {
+      const choices = await db.query.travelersChoice.findMany({
+        orderBy: (choices) => [asc(choices.order)]
+      });
+      res.json(choices);
+    } catch (error) {
+      console.error("Error fetching travelers choice:", error);
+      res.status(500).json({ message: "Failed to fetch travelers choice" });
+    }
+  });
+
   return httpServer;
 }
