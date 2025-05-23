@@ -123,7 +123,10 @@ const TravelersChoice = () => {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ direction }),
       });
-      if (!response.ok) throw new Error('Failed to reorder choice');
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || 'Failed to reorder choice');
+      }
       return response.json();
     },
     onSuccess: () => {
