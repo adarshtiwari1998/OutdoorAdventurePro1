@@ -1421,6 +1421,42 @@ Happy fishing!
       }
     }
 
+    // Seed travelers choice
+    await db.insert(schema.travelersChoice).values([
+      {
+        title: "World's Best Hotels",
+        image: "https://images.unsplash.com/photo-1566073771259-6a8506099945",
+        slug: "worlds-best-hotels",
+        category: "World",
+        description: "Discover the finest hotels across the globe",
+        order: 0
+      },
+      {
+        title: "Luxury Stays",
+        image: "https://images.unsplash.com/photo-1582719508461-905c673771fd",
+        slug: "luxury-stays",
+        category: "Luxury",
+        description: "Experience unparalleled luxury and comfort",
+        order: 1
+      },
+      {
+        title: "Family-Friendly Hotels",
+        image: "https://images.unsplash.com/photo-1566073771259-6a8506099945",
+        slug: "family-friendly-hotels",
+        category: "Family-Friendly",
+        description: "Perfect accommodations for the whole family",
+        order: 2
+      },
+      {
+        title: "Unique Experiences",
+        image: "https://images.unsplash.com/photo-1518623489648-a173ef7824f3",
+        slug: "unique-experiences",
+        category: "One of a Kind",
+        description: "One-of-a-kind stays you won't find anywhere else",
+        order: 3
+      }
+    ]);
+
     // Seed destinations
     await db.insert(schema.favoriteDestinations).values([
       {

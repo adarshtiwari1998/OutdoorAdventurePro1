@@ -42,6 +42,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+import { MapPin, Star } from "lucide-react";
 
 interface AdminMenuItemProps {
   icon: LucideIcon;
@@ -144,6 +145,13 @@ const AdminLayout = ({ children, title }: AdminLayoutProps) => {
                 isActive={location.startsWith(item.href)}
               />
             ))}
+              <AdminMenuItem
+                key="/admin/home-blocks/travelers-choice"
+                icon={Star}
+                label="Travelers Choice"
+                href="/admin/home-blocks/travelers-choice"
+                isActive={location.startsWith("/admin/home-blocks/travelers-choice")}
+              />
           </nav>
 
           {/* Quick Links Section */}
