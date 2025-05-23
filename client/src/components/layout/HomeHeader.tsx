@@ -82,32 +82,27 @@ const [showMainHeader, setShowMainHeader] = useState(true);
 
   useEffect(() => {
     let lastScrollY = window.scrollY;
-    let frameId: number | null = null;
-    
+    let ticking = false;
+
     const handleScroll = () => {
-      if (frameId) {
-        return;
-      }
-      
-      frameId = requestAnimationFrame(() => {
-        const currentScrollY = window.scrollY;
-        const direction = currentScrollY > lastScrollY ? 'down' : 'up';
-        const scrollDelta = Math.abs(currentScrollY - lastScrollY);
-        const scrollThreshold = 50;
-        
-        if (scrollDelta > 2) {
+      if (!ticking) {
+        window.requestAnimationFrame(() => {
+          const currentScrollY = window.scrollY;
+          const scrollThreshold = 50;
+          
           if (currentScrollY > scrollThreshold) {
             setIsScrolled(true);
-            setShowMainHeader(direction === 'up' || currentScrollY < scrollThreshold);
+            setShowMainHeader(currentScrollY <= lastScrollY);
           } else {
             setIsScrolled(false);
             setShowMainHeader(true);
           }
-        }
-        
-        lastScrollY = currentScrollY;
-        frameId = null;
-      });
+          
+          lastScrollY = currentScrollY;
+          ticking = false;
+        });
+        ticking = true;
+      }
     };
 
     window.addEventListener('scroll', handleScroll, { passive: true });

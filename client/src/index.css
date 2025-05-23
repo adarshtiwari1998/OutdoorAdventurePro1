@@ -214,11 +214,16 @@
   }
 
 header {
-  transition: transform 0.3s ease-in-out, opacity 0.3s ease-in-out;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.header-transition {
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .header-hidden {
   transform: translateY(-100%);
+  visibility: hidden;
   opacity: 0;
 }
 
