@@ -25,65 +25,65 @@
   :root {
     --background: 0 0% 100%;
     --foreground: 0 0% 20%;
-    
+
     --card: 0 0% 100%;
     --card-foreground: 0 0% 20%;
-    
+
     --popover: 0 0% 100%;
     --popover-foreground: 0 0% 20%;
-    
+
     /* Global theme defaults */
     --primary: 144 45% 30%;
     --primary-foreground: 0 0% 100%;
     --primary-light: 144 38% 37%;
     --primary-dark: 144 50% 23%;
-    
+
     /* Dynamic theme from ThemeContext - set by JavaScript */
     --theme-primary: 144 45% 30%;
     --theme-primary-light: 144 38% 37%;
     --theme-primary-dark: 144 50% 23%;
     --theme-primary-hex: #10b981;
-    
+
     /* For backward compatibility */
     --page-primary: var(--theme-primary);
     --page-primary-foreground: var(--primary-foreground);
     --page-primary-light: var(--theme-primary-light);
     --page-primary-dark: var(--theme-primary-dark);
-    
+
     --secondary: 36 99% 48%;
     --secondary-foreground: 0 0% 100%;
     --secondary-light: 36 100% 60%;
     --secondary-dark: 36 100% 41%;
-    
+
     --accent: 204 78% 47%;
     --accent-foreground: 0 0% 100%;
     --accent-light: 204 78% 57%;
     --accent-dark: 204 78% 39%;
-    
+
     --muted: 0 0% 88%;
     --muted-foreground: 0 0% 45%;
-    
+
     --neutral-light: 0 0% 96%;
     --neutral: 0 0% 88%;
     --neutral-dark: 0 0% 20%;
-    
+
     --destructive: 0 84% 56%;
     --destructive-foreground: 0 0% 100%;
-    
+
     --success: 142 52% 42%;
-    
+
     --border: 0 0% 88%;
     --input: 0 0% 88%;
     --ring: 144 45% 30%;
-    
+
     --chart-1: 144 45% 30%;
     --chart-2: 36 99% 48%;
     --chart-3: 204 78% 47%;
     --chart-4: 340 82% 52%;
     --chart-5: 262 83% 58%;
-    
+
     --radius: 0.5rem;
-    
+
     /* Font families */
     --font-heading: "Jost";
     --font-body: "Open Sans";
@@ -91,54 +91,54 @@
     --font-button: "Jost";
     --font-display: "Jost";
   }
- 
+
   .dark {
     --background: 0 0% 12%;
     --foreground: 0 0% 96%;
-    
+
     --card: 0 0% 16%;
     --card-foreground: 0 0% 96%;
-    
+
     --popover: 0 0% 16%;
     --popover-foreground: 0 0% 96%;
-    
+
     --primary: 144 38% 37%;
     --primary-foreground: 0 0% 100%;
     --primary-light: 144 34% 42%;
     --primary-dark: 144 44% 31%;
-    
+
     --secondary: 36 100% 60%;
     --secondary-foreground: 0 0% 20%;
     --secondary-light: 36 100% 65%;
     --secondary-dark: 36 100% 48%;
-    
+
     --accent: 204 78% 57%;
     --accent-foreground: 0 0% 100%;
     --accent-light: 204 78% 67%;
     --accent-dark: 204 78% 47%;
-    
+
     --muted: 0 0% 24%;
     --muted-foreground: 0 0% 80%;
-    
+
     --neutral-light: 0 0% 20%;
     --neutral: 0 0% 24%;
     --neutral-dark: 0 0% 88%;
-    
+
     --destructive: 0 84% 60%;
     --destructive-foreground: 0 0% 100%;
-    
+
     --success: 142 52% 42%;
-    
+
     --border: 0 0% 24%;
     --input: 0 0% 24%;
     --ring: 144 38% 37%;
-    
+
     --chart-1: 144 38% 37%;
     --chart-2: 36 100% 60%;
     --chart-3: 204 78% 57%;
     --chart-4: 340 82% 58%;
     --chart-5: 262 83% 63%;
-    
+
     /* Font families - same as light mode */
     --font-heading: "Jost";
     --font-body: "Open Sans";
@@ -186,12 +186,12 @@
   .text-theme-dark {
     color: hsl(var(--theme-primary-dark));
   }
-  
+
   /* Gradient overlays */
   .hero-overlay {
     background: linear-gradient(90deg, rgba(0,0,0,0.7) 0%, rgba(0,0,0,0.5) 50%, rgba(0,0,0,0.2) 100%);
   }
-  
+
   /* Themed gradient overlay that uses the current theme color */
   .hero-overlay-themed {
     background: linear-gradient(90deg, 
@@ -199,7 +199,7 @@
       rgba(var(--theme-primary-hex-rgb, 0, 120, 59), 0.65) 50%, 
       rgba(var(--theme-primary-hex-rgb, 0, 120, 59), 0.45) 100%);
   }
-  
+
   /* Gradient overlay for the slider */
   .bg-theme-overlay-gradient {
     background: linear-gradient(90deg, 
@@ -207,16 +207,20 @@
       rgba(var(--theme-primary-hex-rgb, 0, 120, 59), 0.65) 30%, 
       rgba(0, 0, 0, 0.4) 100%);
   }
-  
+
   /* Animations for slider content */
-  @keyframes fadeIn {
-    from { opacity: 0; transform: translateY(20px); }
-    to { opacity: 1; transform: translateY(0); }
-  }
-  
   .animate-fadeIn {
     animation: fadeIn 0.8s ease-out forwards;
   }
+
+header {
+  transition: transform 0.3s ease-in-out, opacity 0.3s ease-in-out;
+}
+
+.header-hidden {
+  transform: translateY(-100%);
+  opacity: 0;
+}
 
   .card-overlay {
     background: linear-gradient(180deg, rgba(0,0,0,0) 0%, rgba(0,0,0,0.7) 100%);
@@ -240,50 +244,50 @@
     -webkit-box-orient: vertical;
     overflow: hidden;
   }
-  
+
   /* Custom scrollbar styles */
   .custom-scrollbar::-webkit-scrollbar {
     height: 0;
     width: 0;
     display: none;
   }
-  
+
   .custom-scrollbar::-webkit-scrollbar-track {
     background: transparent;
   }
-  
+
   .custom-scrollbar::-webkit-scrollbar-thumb {
     background: transparent;
   }
-  
+
   .custom-scrollbar::-webkit-scrollbar-thumb:hover {
     background: transparent;
   }
-  
+
   /* Hide scrollbar for IE, Edge and Firefox */
   .custom-scrollbar {
     -ms-overflow-style: none;  /* IE and Edge */
     scrollbar-width: none;  /* Firefox */
   }
-  
+
   /* Blog section specific styles */
   .blog-section-container {
     display: flex;
     flex-direction: column;
     gap: 1.5rem;
   }
-  
+
   @media (min-width: 1024px) {
     .blog-section-container {
       flex-direction: row;
       align-items: stretch;
     }
-    
+
     .blog-section-container > div {
       height: 100%;
     }
   }
-  
+
   /* Scroll indicator for sliders */
   .scroll-indicator {
     position: absolute;
