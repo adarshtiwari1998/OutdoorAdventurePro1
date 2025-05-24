@@ -1651,5 +1651,5 @@ app.get(`${apiPrefix}/admin/tips/:id`, async (req, res) => {
   }
 });
 
-  // Tips and Ideas 
-export const tipsAndIdeas = pgTable("tips_and_ideas", {
+  return httpServer;
+}
