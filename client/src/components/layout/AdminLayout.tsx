@@ -154,11 +154,11 @@ const AdminLayout = ({ children, title }: AdminLayoutProps) => {
                 isActive={location.startsWith("/admin/home-blocks/travelers-choice")}
               />
               <AdminMenuItem
-                key="/admin/tips-management"
+                key="/admin/home-blocks/tips-management"
                 icon={Compass}
                 label="Tips & Ideas"
-                href="/admin/tips-management"
-                isActive={location.startsWith("/admin/tips-management")}
+                href="/admin/home-blocks/tips-management"
+                isActive={location.startsWith("/admin/home-blocks/tips-management")}
               />
           </nav>
 

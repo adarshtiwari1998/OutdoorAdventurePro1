@@ -70,7 +70,7 @@ function Router() {
 
       <ProtectedRoute path="/admin/home-blocks/travelers-choice" component={TravelersChoice} />
 
-       <ProtectedRoute path="/admin/home-blocks/tips-and-ideas" component={TipsManagement} />
+       <ProtectedRoute path="/admin/home-blocks/tips-management" component={TipsManagement} />
       {/* Landing page style routes */}
       <ProtectedRoute path="/admin/styles/home" component={LandingPageStyle} />
       <ProtectedRoute path="/admin/styles/outdoors" component={LandingPageStyle} />
