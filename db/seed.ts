@@ -1499,12 +1499,12 @@ const tipsAndIdeasData = [
     title: "Essential Trail Navigation",
     description: "Master the art of trail navigation with these fundamental techniques that combine traditional methods with modern technology.",
     category: "hiking",
-    difficultyLevel: "intermediate", 
+    difficultylevel: "intermediate",
     seasonality: "all-season",
-    estimatedTime: "15 minutes",
+    estimatedtime: "15 minutes",
     image: "https://images.unsplash.com/photo-1522163182402-834f871fd851",
-    iconType: "compass",
-    parentCategory: "outdoor-skills"
+    icontype: "compass",
+    parentcategory: "outdoor-skills"
   },
   {
     title: "Advanced Camping Setup",
