@@ -1,5 +1,5 @@
 import { db, pool } from "./index";
-import * * as schema from "@shared/schema";
+import * as schema from "@shared/schema";
 import { createSlug } from "../server/utils/slugify";
 import { eq, sql } from "drizzle-orm";
 import { scrypt, randomBytes } from "crypto";
