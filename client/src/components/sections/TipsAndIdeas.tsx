@@ -1,4 +1,3 @@
-
 import { useQuery } from "@tanstack/react-query";
 import { useRef } from "react";
 import { Button } from "@/components/ui/button";
@@ -70,7 +69,7 @@ const TipsAndIdeas = ({ category }: TipsAndIdeasProps) => {
           >
             <ChevronLeft className="w-5 h-5" />
           </button>
-          
+
           <button 
             onClick={() => handleScroll('right')}
             className="absolute right-0 top-1/2 -translate-y-1/2 z-10 bg-white/80 hover:bg-white text-primary p-2 rounded-full shadow-md"
@@ -104,7 +103,7 @@ const TipsAndIdeas = ({ category }: TipsAndIdeasProps) => {
                         </div>
                       </div>
                     </div>
-                    
+
                     <div className="p-6">
                       <div className="flex items-center gap-2 mb-3">
                         <Badge variant="outline" className="text-xs">
@@ -114,15 +113,15 @@ const TipsAndIdeas = ({ category }: TipsAndIdeasProps) => {
                           {tip.seasonality}
                         </Badge>
                       </div>
-                      
+
                       <h3 className="font-heading font-bold text-xl mb-3 group-hover:text-primary transition-colors">
                         {tip.title}
                       </h3>
-                      
+
                       <p className="text-neutral-dark/80 mb-4 line-clamp-2">
                         {tip.description}
                       </p>
-                      
+
                       <div className="flex items-center justify-between text-sm text-neutral-dark/60">
                         <div className="flex items-center gap-4">
                           <span className="flex items-center gap-1">
@@ -140,7 +139,7 @@ const TipsAndIdeas = ({ category }: TipsAndIdeasProps) => {
                         </div>
                       </div>
                     </div>
-                    
+
                     <div className="p-6 pt-0">
                       <Button 
                         variant="ghost" 
