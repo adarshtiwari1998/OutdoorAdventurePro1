@@ -87,7 +87,7 @@ const TipsAndIdeas = ({ category }: TipsAndIdeasProps) => {
           {tips.map((tip: any, index: number) => {
             const Icon = getIconByCategory(tip.category);
             return (
-              <div
+              <motion.div
                 key={tip.id}
                 className="flex-none w-[300px] snap-start"
               >
