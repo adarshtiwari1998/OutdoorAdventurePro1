@@ -1527,7 +1527,7 @@ const tipsAndIdeasData = [
     image: "https://images.unsplash.com/photo-1516399662004-ee8259d135ee",
     iconType: "fish",
     parentCategory: "fishing-basics"
-  }
+  },
   {
     title: "Campfire Cooking Mastery",
     description: "Transform your outdoor cooking game with these professional campfire cooking techniques and recipes.",
