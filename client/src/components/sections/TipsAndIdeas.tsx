@@ -84,76 +84,77 @@ const TipsAndIdeas = ({ category }: TipsAndIdeasProps) => {
             className="flex overflow-x-auto gap-4 pb-4 snap-x snap-mandatory scrollbar-hide"
             style={{ scrollBehavior: 'smooth' }}
           >
-          {tips.map((tip: any, index: number) => {
-            const Icon = getIconByCategory(tip.category);
-            return (
-              <motion.div
-                key={tip.id}
-                className="flex-none w-[300px] snap-start"
-              >
-                <Card className="group hover:shadow-lg transition-all duration-300 overflow-hidden h-[380px]">
-                  <div className="relative">
-                    <img 
-                      src={tip.image} 
-                      alt={tip.title}
-                      className="w-full h-48 object-cover transition-transform duration-300 group-hover:scale-105"
-                    />
-                    <div className="absolute top-4 right-4">
-                      <div className="bg-white/90 backdrop-blur-sm p-2 rounded-full">
-                        <Icon className="w-6 h-6 text-primary" />
+            {tips.map((tip: any, index: number) => {
+              const Icon = getIconByCategory(tip.category);
+              return (
+                <motion.div
+                  key={tip.id}
+                  className="flex-none w-[300px] snap-start"
+                >
+                  <Card className="group hover:shadow-lg transition-all duration-300 overflow-hidden h-[380px]">
+                    <div className="relative">
+                      <img 
+                        src={tip.image} 
+                        alt={tip.title}
+                        className="w-full h-48 object-cover transition-transform duration-300 group-hover:scale-105"
+                      />
+                      <div className="absolute top-4 right-4">
+                        <div className="bg-white/90 backdrop-blur-sm p-2 rounded-full">
+                          <Icon className="w-6 h-6 text-primary" />
+                        </div>
                       </div>
                     </div>
-                  </div>
-                  
-                  <div className="p-6">
-                    <div className="flex items-center gap-2 mb-3">
-                      <Badge variant="outline" className="text-xs">
-                        {tip.difficultyLevel}
-                      </Badge>
-                      <Badge variant="outline" className="text-xs">
-                        {tip.seasonality}
-                      </Badge>
-                    </div>
                     
-                    <h3 className="font-heading font-bold text-xl mb-3 group-hover:text-primary transition-colors">
-                      {tip.title}
-                    </h3>
-                    
-                    <p className="text-neutral-dark/80 mb-4 line-clamp-2">
-                      {tip.description}
-                    </p>
-                    
-                    <div className="flex items-center justify-between text-sm text-neutral-dark/60">
-                      <div className="flex items-center gap-4">
-                        <span className="flex items-center gap-1">
-                          <Clock className="w-4 h-4" />
-                          {tip.estimatedTime}
-                        </span>
-                        <span className="flex items-center gap-1">
-                          <ThumbsUp className="w-4 h-4" />
-                          {tip.likes}
-                        </span>
-                        <span className="flex items-center gap-1">
-                          <Eye className="w-4 h-4" />
-                          {tip.views}
-                        </span>
+                    <div className="p-6">
+                      <div className="flex items-center gap-2 mb-3">
+                        <Badge variant="outline" className="text-xs">
+                          {tip.difficultylevel}
+                        </Badge>
+                        <Badge variant="outline" className="text-xs">
+                          {tip.seasonality}
+                        </Badge>
+                      </div>
+                      
+                      <h3 className="font-heading font-bold text-xl mb-3 group-hover:text-primary transition-colors">
+                        {tip.title}
+                      </h3>
+                      
+                      <p className="text-neutral-dark/80 mb-4 line-clamp-2">
+                        {tip.description}
+                      </p>
+                      
+                      <div className="flex items-center justify-between text-sm text-neutral-dark/60">
+                        <div className="flex items-center gap-4">
+                          <span className="flex items-center gap-1">
+                            <Clock className="w-4 h-4" />
+                            {tip.estimatedtime}
+                          </span>
+                          <span className="flex items-center gap-1">
+                            <ThumbsUp className="w-4 h-4" />
+                            {tip.likes}
+                          </span>
+                          <span className="flex items-center gap-1">
+                            <Eye className="w-4 h-4" />
+                            {tip.views}
+                          </span>
+                        </div>
                       </div>
                     </div>
-                  </div>
-                  
-                  <div className="p-6 pt-0">
-                    <Button 
-                      variant="ghost" 
-                      className="w-full justify-between hover:text-primary"
-                    >
-                      Read More
-                      <ArrowRight className="w-4 h-4" />
-                    </Button>
-                  </div>
-                </Card>
-              </motion.div>
-            );
-          })}
+                    
+                    <div className="p-6 pt-0">
+                      <Button 
+                        variant="ghost" 
+                        className="w-full justify-between hover:text-primary"
+                      >
+                        Read More
+                        <ArrowRight className="w-4 h-4" />
+                      </Button>
+                    </div>
+                  </Card>
+                </motion.div>
+              );
+            })}
+          </div>
         </div>
       </div>
     </section>
