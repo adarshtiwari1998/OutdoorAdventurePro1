@@ -337,9 +337,9 @@ async function seed() {
     category TEXT NOT NULL,
     difficultylevel TEXT NOT NULL,
     seasonality TEXT NOT NULL,
-    estimated_time TEXT NOT NULL,
+    estimatedtime TEXT NOT NULL,
     image TEXT NOT NULL,
-    icon_type TEXT NOT NULL,
+    icontype TEXT NOT NULL,
     parentcategory TEXT,
     created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
