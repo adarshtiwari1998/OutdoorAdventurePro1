@@ -1510,12 +1510,12 @@ const tipsAndIdeasData = [
     title: "Advanced Camping Setup",
     description: "Learn expert techniques for setting up your campsite efficiently and safely in any terrain.",
     category: "camping",
-    difficultyLevel: "advanced",
+    difficultylevel: "advanced",
     seasonality: "summer",
-    estimatedTime: "30 minutes",
+    estimatedtime: "30 minutes",
     image: "https://images.unsplash.com/photo-1504280390367-361c6d9f38f4",
-    iconType: "tent",
-    parentCategory: "camp-skills"
+    icontype: "tent",
+    parentcategory: "camp-skills"
   },
   {
     title: "Fishing Basics Guide",
