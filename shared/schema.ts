@@ -537,7 +537,7 @@ export const tipsAndIdeas = pgTable("tips_and_ideas", {
   title: text("title").notNull(),
   description: text("description").notNull(),
   category: text("category").notNull(), // hiking, camping, fishing etc
-  parentCategory: text("parent_category"), // For hierarchical organization
+  parentCategory: text("parentcategory"), // For hierarchical organization
   difficultyLevel: text("difficulty_level"), // beginner, intermediate, expert
   seasonality: text("seasonality"), // spring, summer, fall, winter
   estimatedTime: text("estimated_time"),

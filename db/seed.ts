@@ -340,7 +340,7 @@ async function seed() {
     estimated_time TEXT NOT NULL,
     image TEXT NOT NULL,
     icon_type TEXT NOT NULL,
-    parent_category TEXT,
+    parentcategory TEXT,
     created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
   `);
