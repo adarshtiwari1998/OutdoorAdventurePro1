@@ -1,9 +1,12 @@
 
 import { useQuery } from "@tanstack/react-query";
+import { useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
-import { 
+import {
+  ChevronLeft,
+  ChevronRight, 
   Calendar, 
   Clock, 
   ThumbsUp, 
@@ -47,29 +50,48 @@ const TipsAndIdeas = ({ category }: TipsAndIdeasProps) => {
   });
 
   return (
-    <section className="py-16 bg-gradient-to-b from-white to-primary/5">
+    <section className="py-12 bg-gradient-to-b from-white to-primary/5">
       <div className="container mx-auto px-4">
-        <div className="flex flex-col items-center mb-12 text-center">
+        <div className="flex flex-col items-center mb-8 text-center">
           <Badge className="bg-primary/10 text-primary mb-2">Expert Knowledge</Badge>
-          <h2 className="font-heading font-bold text-3xl md:text-4xl text-neutral-dark mb-4">
+          <h2 className="font-heading font-bold text-2xl md:text-3xl text-neutral-dark mb-3">
             Tips & Ideas Worth Sharing
           </h2>
-          <p className="text-neutral-dark/80 max-w-2xl">
+          <p className="text-neutral-dark/80 max-w-2xl text-sm md:text-base">
             Discover expert-curated tips and innovative ideas to enhance your outdoor adventures
           </p>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+        <div className="relative">
+          {/* Navigation Arrows */}
+          <button 
+            onClick={() => handleScroll('left')}
+            className="absolute left-0 top-1/2 -translate-y-1/2 z-10 bg-white/80 hover:bg-white text-primary p-2 rounded-full shadow-md"
+          >
+            <ChevronLeft className="w-5 h-5" />
+          </button>
+          
+          <button 
+            onClick={() => handleScroll('right')}
+            className="absolute right-0 top-1/2 -translate-y-1/2 z-10 bg-white/80 hover:bg-white text-primary p-2 rounded-full shadow-md"
+          >
+            <ChevronRight className="w-5 h-5" />
+          </button>
+
+          {/* Scrollable Container */}
+          <div 
+            ref={scrollContainerRef}
+            className="flex overflow-x-auto gap-4 pb-4 snap-x snap-mandatory scrollbar-hide"
+            style={{ scrollBehavior: 'smooth' }}
+          >
           {tips.map((tip: any, index: number) => {
             const Icon = getIconByCategory(tip.category);
             return (
-              <motion.div
+              <div
                 key={tip.id}
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: index * 0.1 }}
+                className="flex-none w-[300px] snap-start"
               >
-                <Card className="group h-full hover:shadow-xl transition-all duration-300 overflow-hidden">
+                <Card className="group hover:shadow-lg transition-all duration-300 overflow-hidden h-[380px]">
                   <div className="relative">
                     <img 
                       src={tip.image} 

@@ -1,5 +1,5 @@
 import { db, pool } from "./index";
-import * as schema from "@shared/schema";
+import * * as schema from "@shared/schema";
 import { createSlug } from "../server/utils/slugify";
 import { eq, sql } from "drizzle-orm";
 import { scrypt, randomBytes } from "crypto";
@@ -1508,14 +1508,13 @@ const tipsAndIdeasData = [
   },
   {
     title: "Advanced Camping Setup",
+    image: "https://images.unsplash.com/photo-1504280390367-361c6d9f38f4",
     description: "Learn expert techniques for setting up your campsite efficiently and safely in any terrain.",
     category: "camping",
-    difficultylevel: "advanced",
-    seasonality: "summer",
-    estimatedtime: "30 minutes",
-    image: "https://images.unsplash.com/photo-1504280390367-361c6d9f38f4",
-    icontype: "tent",
-    parentcategory: "camp-skills"
+    seasonality: "summer", 
+    difficultyLevel: "Advanced",
+    views: 1205,
+    duration: "15 min",
   },
   {
     title: "Fishing Basics Guide",
