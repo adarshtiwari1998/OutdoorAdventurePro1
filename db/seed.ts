@@ -1507,6 +1507,28 @@ const tipsAndIdeasData = [
     parentCategory: "outdoor-skills"
   },
   {
+    title: "Advanced Camping Setup",
+    description: "Learn expert techniques for setting up your campsite efficiently and safely in any terrain.",
+    category: "camping",
+    difficultyLevel: "advanced",
+    seasonality: "summer",
+    estimatedTime: "30 minutes",
+    image: "https://images.unsplash.com/photo-1504280390367-361c6d9f38f4",
+    iconType: "tent",
+    parentCategory: "camp-skills"
+  },
+  {
+    title: "Fishing Basics Guide",
+    description: "Get started with fishing through this comprehensive guide covering essential techniques and gear.",
+    category: "fishing",
+    difficultyLevel: "beginner",
+    seasonality: "spring",
+    estimatedTime: "45 minutes",
+    image: "https://images.unsplash.com/photo-1516399662004-ee8259d135ee",
+    iconType: "fish",
+    parentCategory: "fishing-basics"
+  }
+  {
     title: "Campfire Cooking Mastery",
     description: "Transform your outdoor cooking game with these professional campfire cooking techniques and recipes.",
     category: "camping",
