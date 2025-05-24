@@ -537,16 +537,13 @@ export const tipsAndIdeas = pgTable("tips_and_ideas", {
   title: text("title").notNull(),
   description: text("description").notNull(),
   category: text("category").notNull(), // hiking, camping, fishing etc
-  parentCategory: text("parentcategory"), // For hierarchical organization
+  parentcategory: text("parentcategory"), // For hierarchical organization
   difficultylevel: text("difficultylevel"), // beginner, intermediate, expert
-  seasonality: text("seasonality"), // spring, summer, fall, winter
-  estimatedTime: text("estimated_time"),
+  seasonality: text("seasonality").notNull(), // spring, summer, fall, winter
+  estimatedtime: text("estimatedtime").notNull(),
   image: text("image").notNull(),
-  iconType: text("icon_type"), // For custom icon display
-  likes: integer("likes").default(0),
-  views: integer("views").default(0),
-  createdAt: timestamp("created_at").defaultNow().notNull(),
-  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+  icontype: text("icontype").notNull(), // For custom icon display
+  created_at: timestamp("created_at").defaultNow().notNull()
 });
 
 export const insertTipsAndIdeasSchema = createInsertSchema(tipsAndIdeas, {
