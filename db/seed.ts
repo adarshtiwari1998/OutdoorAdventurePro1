@@ -1532,12 +1532,12 @@ const tipsAndIdeasData = [
     title: "Campfire Cooking Mastery",
     description: "Transform your outdoor cooking game with these professional campfire cooking techniques and recipes.",
     category: "camping",
-    difficultyLevel: "beginner",
+    difficultylevel: "beginner",
     seasonality: "all-season", 
-    estimatedTime: "20 minutes",
+    estimatedtime: "20 minutes",
     image: "https://images.unsplash.com/photo-1523987355523-c7b5b0dd90a7",
-    iconType: "fire",
-    parentCategory: "food-and-cooking"
+    icontype: "fire",
+    parentcategory: "food-and-cooking"
   },
   {
     title: "Advanced Fly Fishing Techniques",
