@@ -36,9 +36,12 @@ const getIconByCategory = (category: string) => {
 
 const TipsAndIdeas = ({ category }: TipsAndIdeasProps) => {
   const { data: tips = [] } = useQuery({
-    queryKey: ["tips", category],
+    queryKey: ["admin-tips", category],
     queryFn: async () => {
-      const response = await fetch(`/api/tips${category ? `?category=${category}` : ''}`);
+      const response = await fetch(`/api/admin/tips${category ? `?category=${category}` : ''}`);
+      if (!response.ok) {
+        throw new Error('Failed to fetch tips');
+      }
       return response.json();
     }
   });
