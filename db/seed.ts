@@ -1521,12 +1521,12 @@ const tipsAndIdeasData = [
     title: "Fishing Basics Guide",
     description: "Get started with fishing through this comprehensive guide covering essential techniques and gear.",
     category: "fishing",
-    difficultyLevel: "beginner",
+    difficultylevel: "beginner",
     seasonality: "spring",
-    estimatedTime: "45 minutes",
+    estimatedtime: "45 minutes",
     image: "https://images.unsplash.com/photo-1516399662004-ee8259d135ee",
-    iconType: "fish",
-    parentCategory: "fishing-basics"
+    icontype: "fish",
+    parentcategory: "fishing-basics"
   },
   {
     title: "Campfire Cooking Mastery",
