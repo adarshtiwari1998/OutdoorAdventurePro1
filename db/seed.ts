@@ -1499,7 +1499,7 @@ const tipsAndIdeasData = [
     title: "Essential Trail Navigation",
     description: "Master the art of trail navigation with these fundamental techniques that combine traditional methods with modern technology.",
     category: "hiking",
-    difficultyLevel: "intermediate",
+    difficultyLevel: "intermediate", 
     seasonality: "all-season",
     estimatedTime: "15 minutes",
     image: "https://images.unsplash.com/photo-1522163182402-834f871fd851",
@@ -1511,7 +1511,7 @@ const tipsAndIdeasData = [
     description: "Transform your outdoor cooking game with these professional campfire cooking techniques and recipes.",
     category: "camping",
     difficultyLevel: "beginner",
-    seasonality: "all-season",
+    seasonality: "all-season", 
     estimatedTime: "20 minutes",
     image: "https://images.unsplash.com/photo-1523987355523-c7b5b0dd90a7",
     iconType: "fire",
@@ -1527,6 +1527,39 @@ const tipsAndIdeasData = [
     image: "https://images.unsplash.com/photo-1516939884455-1445c8652f83",
     iconType: "fish",
     parentCategory: "water-activities"
+  },
+  {
+    title: "Mountain Safety Guide",
+    description: "Essential safety tips and guidelines for mountain hiking and climbing adventures.",
+    category: "hiking",
+    difficultyLevel: "advanced",
+    seasonality: "summer",
+    estimatedTime: "30 minutes",
+    image: "https://images.unsplash.com/photo-1551632436-cbf8dd35adfa",
+    iconType: "mountain",
+    parentCategory: "safety-guides"
+  },
+  {
+    title: "Winter Camping Essentials",
+    description: "Complete guide to staying warm and safe during winter camping expeditions.",
+    category: "camping",
+    difficultyLevel: "expert",
+    seasonality: "winter",
+    estimatedTime: "40 minutes",
+    image: "https://images.unsplash.com/photo-1517823382935-51bfcb0ec6bc",
+    iconType: "snow",
+    parentCategory: "seasonal-guides"
+  },
+  {
+    title: "River Fishing Basics",
+    description: "Learn the fundamentals of river fishing, including equipment selection and techniques.",
+    category: "fishing",
+    difficultyLevel: "beginner",
+    seasonality: "summer",
+    estimatedTime: "35 minutes",
+    image: "https://images.unsplash.com/photo-1499242611767-cf8b9be02854",
+    iconType: "river",
+    parentCategory: "fishing-basics"
   }
 ];
 
