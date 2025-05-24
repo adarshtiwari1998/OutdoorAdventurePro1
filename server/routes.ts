@@ -875,8 +875,7 @@ app.post(`${apiPrefix}/admin/blog/import/wordpress`, async (req, res) => {
 
       return res.json(headerConfig);
     } catch (error) {
-      console.error("Error fetching header config:", error);
-      return res.status(500).json({ message: "Failed to fetch header configuration" });
+      console.error("Error fetching header config:", error);      return res.status(500).json({ message: "Failed to fetch header configuration" });
     }
   });
 
@@ -1623,5 +1622,34 @@ app.post(`${apiPrefix}/admin/blog/import/wordpress`, async (req, res) => {
     }
   });
 
-  return httpServer;
-}
+// Tips API routes
+app.get(`${apiPrefix}/admin/tips`, async (req, res) => {
+  try {
+    const tips = await db.query.tipsAndIdeas.findMany({
+      orderBy: (ideas) => [asc(ideas.title)]
+    });
+    res.json(tips);
+  } catch (error) {
+    console.error("Error fetching tips:", error);
+    res.status(500).json({ message: "Failed to fetch tips" });
+  }
+});
+
+app.get(`${apiPrefix}/admin/tips/:id`, async (req, res) => {
+  try {
+    const { id } = req.params;
+    const tip = await db.query.tipsAndIdeas.findFirst({
+      where: eq(schema.tipsAndIdeas.id, parseInt(id))
+    });
+    if (!tip) {
+      return res.status(404).json({ message: "Tip not found" });
+    }
+    res.json(tip);
+  } catch (error) {
+    console.error("Error fetching tip:", error);
+    res.status(500).json({ message: "Failed to fetch tip" });
+  }
+});
+
+  // Tips and Ideas 
+export const tipsAndIdeas = pgTable("tips_and_ideas", {
