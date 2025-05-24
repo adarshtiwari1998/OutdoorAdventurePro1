@@ -1543,45 +1543,45 @@ const tipsAndIdeasData = [
     title: "Advanced Fly Fishing Techniques",
     description: "Take your fly fishing skills to the next level with these expert casting and presentation techniques.",
     category: "fishing",
-    difficultyLevel: "expert",
+    difficultylevel: "expert",
     seasonality: "spring",
-    estimatedTime: "25 minutes",
+    estimatedtime: "25 minutes",
     image: "https://images.unsplash.com/photo-1516939884455-1445c8652f83",
-    iconType: "fish",
-    parentCategory: "water-activities"
+    icontype: "fish",
+    parentcategory: "water-activities"
   },
   {
     title: "Mountain Safety Guide",
     description: "Essential safety tips and guidelines for mountain hiking and climbing adventures.",
     category: "hiking",
-    difficultyLevel: "advanced",
+    difficultylevel: "advanced",
     seasonality: "summer",
-    estimatedTime: "30 minutes",
+    estimatedtime: "30 minutes",
     image: "https://images.unsplash.com/photo-1551632436-cbf8dd35adfa",
-    iconType: "mountain",
-    parentCategory: "safety-guides"
+    icontype: "mountain",
+    parentcategory: "safety-guides"
   },
   {
     title: "Winter Camping Essentials",
     description: "Complete guide to staying warm and safe during winter camping expeditions.",
     category: "camping",
-    difficultyLevel: "expert",
+    difficultylevel: "expert",
     seasonality: "winter",
-    estimatedTime: "40 minutes",
+    estimatedtime: "40 minutes",
     image: "https://images.unsplash.com/photo-1517823382935-51bfcb0ec6bc",
-    iconType: "snow",
-    parentCategory: "seasonal-guides"
+    icontype: "snow",
+    parentcategory: "seasonal-guides"
   },
   {
     title: "River Fishing Basics",
     description: "Learn the fundamentals of river fishing, including equipment selection and techniques.",
     category: "fishing",
-    difficultyLevel: "beginner",
+    difficultylevel: "beginner",
     seasonality: "summer",
-    estimatedTime: "35 minutes",
+    estimatedtime: "35 minutes",
     image: "https://images.unsplash.com/photo-1499242611767-cf8b9be02854",
-    iconType: "river",
-    parentCategory: "fishing-basics"
+    icontype: "river",
+    parentcategory: "fishing-basics"
   }
 ];
 
