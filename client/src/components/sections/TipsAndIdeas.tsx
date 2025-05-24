@@ -37,6 +37,19 @@ const getIconByCategory = (category: string) => {
 };
 
 const TipsAndIdeas = ({ category }: TipsAndIdeasProps) => {
+  const scrollContainerRef = useRef<HTMLDivElement>(null);
+
+  const handleScroll = (direction: 'left' | 'right') => {
+    const container = scrollContainerRef.current;
+    if (!container) return;
+    
+    const scrollAmount = 300;
+    container.scrollTo({
+      left: container.scrollLeft + (direction === 'left' ? -scrollAmount : scrollAmount),
+      behavior: 'smooth'
+    });
+  };
+
   const { data: tips = [] } = useQuery({
     queryKey: ["admin-tips", category],
     queryFn: async () => {
