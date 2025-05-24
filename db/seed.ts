@@ -335,7 +335,7 @@ async function seed() {
     title TEXT NOT NULL,
     description TEXT NOT NULL,
     category TEXT NOT NULL,
-    difficulty_level TEXT NOT NULL,
+    difficultylevel TEXT NOT NULL,
     seasonality TEXT NOT NULL,
     estimated_time TEXT NOT NULL,
     image TEXT NOT NULL,
