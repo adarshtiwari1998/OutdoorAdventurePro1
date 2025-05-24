@@ -335,12 +335,11 @@ async function seed() {
     title TEXT NOT NULL,
     description TEXT NOT NULL,
     category TEXT NOT NULL,
-    difficultyLevel TEXT NOT NULL,
+    difficulty_level TEXT NOT NULL,
     seasonality TEXT NOT NULL,
-    estimatedTime TEXT NOT NULL,
+    estimated_time TEXT NOT NULL,
     image TEXT NOT NULL,
-    iconType TEXT NOT NULL,
-    parentCategory TEXT NOT NULL,
+    icon_type TEXT NOT NULL,
     created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
   `);
