@@ -533,8 +533,6 @@ export type SidebarItem = typeof sidebarItems.$inferSelect;
 
 // Tips and Ideas 
 export const tipsAndIdeas = pgTable("tips_and_ideas", {
-  views: integer("views").default(0).notNull(),
-  duration: varchar("duration", { length: 50 }).default('5 min').notNull(),
   id: serial("id").primaryKey(),
   title: text("title").notNull(),
   description: text("description").notNull(),
