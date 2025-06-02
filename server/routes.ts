@@ -603,14 +603,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Blog routes
   app.get(`${apiPrefix}/admin/blog/posts`, async (req, res) => {
     try {
-      const { page = 1, status, category, search } = req.query;
-      const pageSize = 10;
+      const { page = 1, status, category, search, pageSize } = req.query;
 
-      console.log(`Fetching blog posts - Page: ${page}, Status: ${status}, Category: ${category}, Search: ${search}`);
+      // For category details, use a large page size or no limit
+      const effectivePageSize = pageSize && parseInt(pageSize as string) > 100 
+        ? parseInt(pageSize as string) 
+        : 10;
+
+      console.log(`Fetching blog posts - Page: ${page}, Status: ${status}, Category: ${category}, Search: ${search}, PageSize: ${effectivePageSize}`);
 
       const result = await storage.getAdminBlogPosts({
         page: Number(page),
-        pageSize,
+        pageSize: effectivePageSize,
         status: status as string,
         categoryId: category as string,
         searchQuery: search as string,
@@ -1798,8 +1802,7 @@ app.delete(`${apiPrefix}/admin/wordpress/credentials`, async (req, res) => {
     try {
       const { id } = req.params;
 
-      const existingStyle = await db.query.categoryStyles.findFirst({
-        where: eq(schema.categoryStyles.id, Number(id))
+      const existingStyle = await db.query.categoryStyles.findFirst({        where: eq(schema.categoryStyles.id, Number(id))
       });
 
       if (!existingStyle) {

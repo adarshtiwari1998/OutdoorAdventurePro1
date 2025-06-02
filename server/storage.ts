@@ -853,85 +853,116 @@ export const storage = {
 
   async getAdminBlogPosts({ page, pageSize, status, categoryId, searchQuery, includeContent = false }: any) {
     try {
-      // Build where conditions separately
-      const whereConditions = [];
+      const offset = (page - 1) * pageSize;
 
-      // Apply status filter
+      let whereConditions: any[] = [];
+
+      // Status filter
       if (status && status !== 'all') {
         whereConditions.push(eq(blogPosts.status, status));
       }
 
-      // Apply category filter - need to handle this differently
-      let categoryFilter = null;
+      // Category filter - handle both numeric IDs and category names
       if (categoryId && categoryId !== 'all') {
-        // First find the category by name to get the ID
-        const category = await db.query.categories.findFirst({
-          where: eq(categories.name, categoryId)
-        });
-        
-        if (category) {
-          categoryFilter = eq(blogPosts.categoryId, category.id);
-          whereConditions.push(categoryFilter);
+        if (isNaN(parseInt(categoryId))) {
+          // It's a category name, find the category ID
+          const category = await db.query.categories.findFirst({
+            where: eq(categories.name, categoryId)
+          });
+          if (category) {
+            whereConditions.push(eq(blogPosts.categoryId, category.id));
+          }
+        } else {
+          // It's a numeric category ID
+          whereConditions.push(eq(blogPosts.categoryId, parseInt(categoryId)));
         }
       }
 
-      // Apply search filter
+      // Search filter
       if (searchQuery) {
         whereConditions.push(
           sql`(${blogPosts.title} ILIKE ${`%${searchQuery}%`} OR ${blogPosts.content} ILIKE ${`%${searchQuery}%`})`
         );
       }
 
-      // Combine conditions with AND
-      const whereClause = whereConditions.length > 0 
-        ? and(...whereConditions) 
+      // Combine all conditions
+      const combinedWhere = whereConditions.length > 0 
+        ? whereConditions.reduce((acc, condition) => and(acc, condition))
         : undefined;
 
-      // Count total results for pagination using the corrected query
-      const countResult = await db.select({
-        count: sql<number>`count(*)`,
-      })
-      .from(blogPosts)
-      .where(whereClause)
-      .execute();
+      // Get total count for pagination
+      const countQuery = db.select({
+        count: sql<number>`count(*)`
+      }).from(blogPosts)
+        .leftJoin(categories, eq(blogPosts.categoryId, categories.id));
 
-      const count = countResult[0]?.count || 0;
+      if (combinedWhere) {
+        countQuery.where(combinedWhere);
+      }
+
+      const [{ count }] = await countQuery;
       const totalPages = Math.ceil(count / pageSize);
 
-      // Execute query with joins using the relational query API
-      const posts = await db.query.blogPosts.findMany({
-        where: whereClause,
-        limit: pageSize,
-        offset: (page - 1) * pageSize,
-        orderBy: desc(blogPosts.createdAt),
-        with: {
-          category: true,
-          author: true,
+      // Build the main query
+      let query = db.select({
+        id: blogPosts.id,
+        title: blogPosts.title,
+        content: includeContent ? blogPosts.content : sql<string>`NULL`,
+        excerpt: blogPosts.excerpt,
+        featuredImage: blogPosts.featuredImage,
+        status: blogPosts.status,
+        publishedAt: blogPosts.publishedAt,
+        createdAt: blogPosts.createdAt,
+        updatedAt: blogPosts.updatedAt,
+        tags: blogPosts.tags,
+        slug: blogPosts.slug,
+        categoryId: blogPosts.categoryId,
+        categoryName: categories.name,
+        categorySlug: categories.slug,
+        authorId: blogPosts.authorId
+      })
+        .from(blogPosts)
+        .leftJoin(categories, eq(blogPosts.categoryId, categories.id))
+        .leftJoin(users, eq(blogPosts.authorId, users.id));
+
+      if (combinedWhere) {
+        query = query.where(combinedWhere);
+      }
+
+      // Apply limit and offset only if pageSize is reasonable (not trying to fetch all)
+      const finalQuery = pageSize < 1000 
+        ? query.orderBy(desc(blogPosts.createdAt)).limit(pageSize).offset(offset)
+        : query.orderBy(desc(blogPosts.createdAt));
+
+      const posts = await finalQuery;
+
+      // Format the results
+      const formattedPosts = posts.map(post => ({
+        id: post.id.toString(),
+        title: post.title,
+        content: post.content,
+        excerpt: post.excerpt,
+        featuredImage: post.featuredImage,
+        category: {
+          id: post.categoryId?.toString() || '',
+          name: post.categoryName || 'Uncategorized'
         },
-      });
+        status: post.status,
+        publishedAt: post.publishedAt,
+        author: {
+          name: 'Admin User', // Default author since we don't have detailed author info
+          avatar: 'https://ui-avatars.com/api/?name=Admin%20User&background=random'
+        },
+        tags: post.tags ? post.tags.split(',').map(tag => tag.trim()) : [],
+        slug: post.slug,
+        createdAt: post.createdAt,
+        updatedAt: post.updatedAt
+      }));
 
       return {
-        posts: posts.map(post => ({
-          id: post.id.toString(),
-          title: post.title,
-          content: post.content || '',
-          excerpt: post.excerpt,
-          featuredImage: post.featuredImage,
-          category: {
-            id: post.category?.id.toString() || '',
-            name: post.category?.name || 'Uncategorized',
-          },
-          status: post.status,
-          publishedAt: post.publishedAt,
-          author: {
-            name: post.author?.fullName || post.author?.username || 'Unknown',
-            avatar: post.author?.fullName 
-              ? `https://ui-avatars.com/api/?name=${encodeURIComponent(post.author.fullName)}&background=random`
-              : `https://ui-avatars.com/api/?name=Unknown&background=random`,
-          },
-          tags: post.tags as string[] || [],
-        })),
+        posts: formattedPosts,
         totalPages,
+        totalCount: count
       };
     } catch (error) {
       console.error('Error getting admin blog posts:', error);
