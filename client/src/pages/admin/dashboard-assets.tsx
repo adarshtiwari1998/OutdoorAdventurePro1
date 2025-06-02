@@ -26,18 +26,59 @@ const URLStatus = ({ url }: { url: string }) => {
 
   useEffect(() => {
     const validateURL = async () => {
-      try {
-        const response = await fetch(url, { method: 'HEAD', mode: 'no-cors' });
-        setStatus('valid');
-      } catch {
-        // Try with a simple img element test for better CORS handling
+      // For Cloudinary URLs, we need to properly check if the image exists
+      if (url.includes('cloudinary.com')) {
+        // Use a more reliable method for Cloudinary URLs
         const img = new Image();
-        img.onload = () => setStatus('valid');
-        img.onerror = () => setStatus('invalid');
+        
+        const timeout = setTimeout(() => {
+          setStatus('invalid');
+        }, 10000); // 10 second timeout
+        
+        img.onload = () => {
+          clearTimeout(timeout);
+          // Double check that the image actually loaded with valid dimensions
+          if (img.width > 0 && img.height > 0) {
+            setStatus('valid');
+          } else {
+            setStatus('invalid');
+          }
+        };
+        
+        img.onerror = () => {
+          clearTimeout(timeout);
+          setStatus('invalid');
+        };
+        
+        // Set crossOrigin to handle CORS properly
+        img.crossOrigin = 'anonymous';
         img.src = url;
+      } else {
+        // For non-Cloudinary URLs, use the original method
+        try {
+          const controller = new AbortController();
+          const timeoutId = setTimeout(() => controller.abort(), 8000);
+          
+          const response = await fetch(url, { 
+            method: 'HEAD', 
+            mode: 'no-cors',
+            signal: controller.signal
+          });
+          
+          clearTimeout(timeoutId);
+          setStatus('valid');
+        } catch (error) {
+          // Fallback to image element test
+          const img = new Image();
+          img.onload = () => setStatus('valid');
+          img.onerror = () => setStatus('invalid');
+          img.src = url;
+        }
       }
     };
 
+    // Reset status when URL changes
+    setStatus('loading');
     validateURL();
   }, [url]);
 
@@ -57,16 +98,27 @@ const URLStatus = ({ url }: { url: string }) => {
       case 'loading':
         return 'Checking...';
       case 'valid':
-        return 'Valid';
+        return 'Available';
       case 'invalid':
-        return 'Invalid URL';
+        return 'Broken URL';
+    }
+  };
+
+  const getStatusColor = () => {
+    switch (status) {
+      case 'loading':
+        return 'text-yellow-600';
+      case 'valid':
+        return 'text-green-600';
+      case 'invalid':
+        return 'text-red-600 font-medium';
     }
   };
 
   return (
     <div className="flex items-center gap-1">
       {getStatusIcon()}
-      <span className="text-xs">{getStatusText()}</span>
+      <span className={`text-xs ${getStatusColor()}`}>{getStatusText()}</span>
     </div>
   );
 };
@@ -93,7 +145,10 @@ const DashboardAssetsAdmin = () => {
   // Fetch admin assets from API with real-time updates
   const { data: assets, isLoading, error } = useQuery<AdminAsset[]>({
     queryKey: ['/api/admin/dashboard-assets'],
-    refetchInterval: 2000, // Refetch every 2 seconds for real-time updates
+    refetchInterval: 5000, // Refetch every 5 seconds for real-time updates
+    refetchOnWindowFocus: true,
+    refetchOnMount: true,
+    staleTime: 1000, // Consider data stale after 1 second
   });
 
   // Upload asset mutation
@@ -445,7 +500,11 @@ const DashboardAssetsAdmin = () => {
                   {filteredAssets.map((asset) => (
                     <div 
                       key={asset.id} 
-                      className={`border rounded-lg p-4 ${asset.isActive ? 'border-primary bg-primary/5' : 'border-border'}`}
+                      className={`border rounded-lg p-4 ${
+                        asset.isActive 
+                          ? 'border-primary bg-primary/5' 
+                          : 'border-border'
+                      } relative`}
                     >
                       <div className="flex items-center justify-between mb-3">
                         <div className="flex items-center space-x-3">
@@ -478,10 +537,12 @@ const DashboardAssetsAdmin = () => {
                           </div>
                           <div>
                             <h4 className="font-medium">{asset.name}</h4>
-                            {asset.isActive && (
-                              <span className="text-xs text-primary font-medium">Active</span>
-                            )}
-                            <URLStatus url={asset.url} />
+                            <div className="flex items-center gap-2">
+                              {asset.isActive && (
+                                <span className="text-xs text-primary font-medium">Active</span>
+                              )}
+                              <URLStatus url={asset.url} />
+                            </div>
                           </div>
                         </div>
                         <div className="flex space-x-2">
