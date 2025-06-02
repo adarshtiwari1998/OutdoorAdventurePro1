@@ -580,10 +580,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       // Get blog categories
       const blogCategories = await storage.getBlogCategories();
-      
+
       // Get header categories (these can also be used for blog posts)
       const headerConfigs = await db.query.headerConfigs.findMany();
-      
+
       // Convert header configs to category format
       const headerCategories = headerConfigs.map(config => ({
         id: `header_${config.id}`,
@@ -591,10 +591,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
         slug: config.category,
         type: 'header'
       }));
-      
+
       // Combine both types of categories
       const allCategories = [...blogCategories, ...headerCategories];
-      
+
       res.json(allCategories);
     } catch (error) {
       console.error("Error fetching blog categories:", error);
@@ -605,7 +605,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post(`${apiPrefix}/admin/blog/categories`, async (req, res) => {
     try {
       const { name, slug, description } = req.body;
-      
+
       if (!name || !slug) {
         return res.status(400).json({ message: "Name and slug are required" });
       }
@@ -616,7 +616,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         description: description || null,
         type: 'blog'
       });
-      
+
       res.status(201).json(newCategory);
     } catch (error) {
       console.error("Error creating blog category:", error);
@@ -628,7 +628,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const { id } = req.params;
       const categoryId = parseInt(id);
-      
+
       if (isNaN(categoryId)) {
         return res.status(400).json({ message: "Invalid category ID" });
       }
@@ -653,9 +653,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       // Get all header configs
       const headerConfigs = await db.query.headerConfigs.findMany();
-      
+
       let syncedCount = 0;
-      
+
       // Ensure each header category has a corresponding blog category
       for (const config of headerConfigs) {
         try {
@@ -665,7 +665,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           console.error(`Failed to sync header category ${config.category}:`, error);
         }
       }
-      
+
       res.json({ success: true, syncedCount });
     } catch (error) {
       console.error("Error syncing header categories:", error);
@@ -687,11 +687,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.patch(`${apiPrefix}/admin/blog/posts/bulk-category`, async (req, res) => {
     try {
       const { ids, categoryId } = req.body;
-      
+
       if (!ids || !Array.isArray(ids) || ids.length === 0) {
         return res.status(400).json({ message: "Post IDs are required" });
       }
-      
+
       if (!categoryId || isNaN(parseInt(categoryId))) {
         return res.status(400).json({ message: "Valid category ID is required" });
       }
@@ -709,11 +709,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const { id } = req.params;
       const postData = req.body;
       const postId = parseInt(id);
-      
+
       if (isNaN(postId)) {
         return res.status(400).json({ message: "Invalid post ID" });
       }
-      
+
       const updatedPost = await storage.updateBlogPost(postId, postData);
       res.json(updatedPost);
     } catch (error) {
@@ -872,7 +872,8 @@ app.delete(`${apiPrefix}/admin/wordpress/credentials`, async (req, res) => {
       const newChannel = await storage.createYoutubeChannel({
         channelId,
         name: channelName,
-        description: channelDetails.description,
+        description:```python
+channelDetails.description,
         image: channelDetails.thumbnailUrl,
         subscribers: channelDetails.subscriberCount,
         videoCount: channelDetails.videoCount

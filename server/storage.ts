@@ -893,6 +893,7 @@ export const storage = {
         status: postData.status,
         publishedAt: finalPublishedAt,
         tags,
+        wordpressId: postData.wordpressId || null, // Store WordPress ID to avoid duplicates
       };
 
       // Add scheduled date if provided

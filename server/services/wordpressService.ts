@@ -61,7 +61,7 @@ async importPosts(options: WordPressPostImportOptions): Promise<WordPressPost[]>
 
             // Build exclude parameter if we have IDs to exclude
             const excludeParam = excludeIds.length > 0 ? `&exclude=${excludeIds.join(',')}` : '';
-            
+
             // First get list of posts, excluding already imported ones
             const postsListUrl = `${baseUrl}/wp-json/wp/v2/posts?_embed&per_page=${count}&status=publish${excludeParam}&orderby=id&order=asc`;
             const posts = [];
@@ -73,7 +73,7 @@ async importPosts(options: WordPressPostImportOptions): Promise<WordPressPost[]>
             console.log(`Excluding ${excludeIds.length} already imported post IDs:`, excludeIds);
 
             const authHeader = "Basic " + Buffer.from(username + ":" + applicationPassword).toString("base64");
-            
+
             const listResponse = await fetch(postsListUrl, {
                 headers: {
                     Authorization: authHeader,
