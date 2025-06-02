@@ -373,6 +373,50 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Dashboard Assets routes
+  app.get(`${apiPrefix}/admin/dashboard-assets`, async (req, res) => {
+    try {
+      const assets = await storage.getAdminDashboardAssets();
+      res.json(assets);
+    } catch (error) {
+      console.error("Error fetching dashboard assets:", error);
+      res.status(500).json({ message: "Failed to fetch dashboard assets" });
+    }
+  });
+
+  app.post(`${apiPrefix}/admin/dashboard-assets`, async (req, res) => {
+    try {
+      const asset = await storage.createAdminDashboardAsset(req);
+      res.status(201).json(asset);
+    } catch (error) {
+      console.error("Error creating dashboard asset:", error);
+      res.status(500).json({ message: "Failed to create dashboard asset" });
+    }
+  });
+
+  app.patch(`${apiPrefix}/admin/dashboard-assets/:id/activate`, async (req, res) => {
+    try {
+      const { id } = req.params;
+      const { type } = req.body;
+      const asset = await storage.activateAdminDashboardAsset(id, type);
+      res.json(asset);
+    } catch (error) {
+      console.error("Error activating dashboard asset:", error);
+      res.status(500).json({ message: "Failed to activate dashboard asset" });
+    }
+  });
+
+  app.delete(`${apiPrefix}/admin/dashboard-assets/:id`, async (req, res) => {
+    try {
+      const { id } = req.params;
+      await storage.deleteAdminDashboardAsset(id);
+      res.json({ message: "Asset deleted successfully" });
+    } catch (error) {
+      console.error("Error deleting dashboard asset:", error);
+      res.status(500).json({ message: "Failed to delete dashboard asset" });
+    }
+  });
+
   // Admin API routes
   app.get(`${apiPrefix}/admin/stats`, async (req, res) => {
     try {

@@ -1,3 +1,4 @@
+typescript
 import { db } from '@db';
 import { 
   users, 
@@ -955,7 +956,7 @@ export const storage = {
         },
         tags: (() => {
           if (!post.tags) return [];
-          if (Array.isArray(post.tags)) return post.tags;
+          if (Array.isArray(post.tags), return post.tags;
           if (typeof post.tags === 'string') return post.tags.split(',').map(tag => tag.trim());
           return [];
         })(),

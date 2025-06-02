@@ -457,6 +457,17 @@ export const megaMenuItemsRelations = relations(megaMenuItems, ({ one }) => ({
   })
 }));
 
+export const adminDashboardAssets = pgTable("admin_dashboard_assets", {
+  id: serial("id").primaryKey(),
+  type: text("type").notNull(), // 'logo' or 'favicon'
+  name: text("name").notNull(),
+  url: text("url").notNull(),
+  cloudinaryPublicId: text("cloudinary_public_id"),
+  isActive: boolean("is_active").default(false),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull()
+});
+
 export const insertHeaderConfigSchema = createInsertSchema(headerConfigs, {
   category: (schema) => schema.min(2, "Category must be at least 2 characters"),
   logoText: (schema) => schema.min(2, "Logo text must be at least 2 characters"),

@@ -32,6 +32,7 @@ import { ProtectedRoute } from "@/lib/protected-route";
 import { ReactNode, useEffect, useState } from "react";
 import TravelersChoice from "@/pages/admin/home-blocks/travelers-choice";
 import TipsManagement from "@/pages/admin/home-blocks/tips-management";
+import DashboardAssets from "@/pages/admin/dashboard-assets";
 // No need to import QueryClient or QueryClientProvider here as they are used in main.tsx
 
 function Router() {
@@ -71,6 +72,7 @@ function Router() {
       <ProtectedRoute path="/admin/home-blocks/travelers-choice" component={TravelersChoice} />
 
        <ProtectedRoute path="/admin/home-blocks/tips-management" component={TipsManagement} />
+      <ProtectedRoute path="/admin/dashboard-assets" component={DashboardAssets} />
       {/* Landing page style routes */}
       <ProtectedRoute path="/admin/styles/home" component={LandingPageStyle} />
       <ProtectedRoute path="/admin/styles/outdoors" component={LandingPageStyle} />

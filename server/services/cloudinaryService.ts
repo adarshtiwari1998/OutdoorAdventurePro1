@@ -26,7 +26,8 @@ enum AssetFolders {
   ACTIVITIES = 'activities',
   SLIDERS = 'sliders',
   PROFILES = 'profiles',
-  CATEGORIES = 'categories'
+  CATEGORIES = 'categories',
+  ADMIN_DASHBOARD = 'AdminDashboard_Assets'
 }
 
 /**
@@ -258,6 +259,39 @@ export class CloudinaryService {
       url,
       AssetFolders.CATEGORIES,
       categoryId
+    );
+  }
+
+  /**
+   * Upload an admin dashboard logo
+   */
+  async uploadAdminLogo(url: string, logoId: string): Promise<string> {
+    return this.uploadImageFromUrl(
+      url,
+      `${AssetFolders.ADMIN_DASHBOARD}/logos`,
+      logoId
+    );
+  }
+
+  /**
+   * Upload an admin dashboard favicon
+   */
+  async uploadAdminFavicon(url: string, faviconId: string): Promise<string> {
+    return this.uploadImageFromUrl(
+      url,
+      `${AssetFolders.ADMIN_DASHBOARD}/favicons`,
+      faviconId
+    );
+  }
+
+  /**
+   * Upload any admin dashboard asset
+   */
+  async uploadAdminAsset(url: string, assetType: 'logos' | 'favicons' | 'general', assetId: string): Promise<string> {
+    return this.uploadImageFromUrl(
+      url,
+      `${AssetFolders.ADMIN_DASHBOARD}/${assetType}`,
+      assetId
     );
   }
 }
