@@ -53,7 +53,7 @@ const StatCard = ({ title, value, description, icon, trend, loading }: StatCardP
 
 const AdminDashboard = () => {
   const [statsPeriod, setStatsPeriod] = useState<"7d" | "30d" | "90d">("30d");
-  
+
   const { data: stats, isLoading: statsLoading } = useQuery<{
     orders: number;
     revenue: number;
@@ -68,7 +68,7 @@ const AdminDashboard = () => {
   }>({
     queryKey: ['/api/admin/stats', { period: statsPeriod }],
   });
-  
+
   const { data: chartData, isLoading: chartLoading } = useQuery<{
     sales: { name: string; revenue: number }[];
     traffic: { name: string; users: number }[];
@@ -97,7 +97,7 @@ const AdminDashboard = () => {
             <TabsTrigger value="30d">Last 30 Days</TabsTrigger>
             <TabsTrigger value="90d">Last 90 Days</TabsTrigger>
           </TabsList>
-          
+
           <TabsContent value="7d" className="space-y-8">
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
               <StatCard
@@ -110,7 +110,7 @@ const AdminDashboard = () => {
               />
               <StatCard
                 title="Revenue"
-                value={`$${stats?.revenue.toLocaleString() || 0}`}
+                value={`$${stats?.revenue?.toLocaleString() || '0'}`}
                 description="Revenue this period"
                 icon={<TrendingUp className="h-4 w-4 text-muted-foreground" />}
                 trend={stats?.revenueTrend}
@@ -134,7 +134,7 @@ const AdminDashboard = () => {
               />
             </div>
           </TabsContent>
-          
+
           <TabsContent value="30d" className="space-y-8">
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
               <StatCard
@@ -147,7 +147,7 @@ const AdminDashboard = () => {
               />
               <StatCard
                 title="Revenue"
-                value={`$${stats?.revenue.toLocaleString() || 0}`}
+                value={`$${stats?.revenue?.toLocaleString() || '0'}`}
                 description="Revenue this period"
                 icon={<TrendingUp className="h-4 w-4 text-muted-foreground" />}
                 trend={stats?.revenueTrend}
@@ -171,7 +171,7 @@ const AdminDashboard = () => {
               />
             </div>
           </TabsContent>
-          
+
           <TabsContent value="90d" className="space-y-8">
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
               <StatCard
@@ -184,7 +184,7 @@ const AdminDashboard = () => {
               />
               <StatCard
                 title="Revenue"
-                value={`$${stats?.revenue.toLocaleString() || 0}`}
+                value={`$${stats?.revenue?.toLocaleString() || '0'}`}
                 description="Revenue this period"
                 icon={<TrendingUp className="h-4 w-4 text-muted-foreground" />}
                 trend={stats?.revenueTrend}
@@ -210,7 +210,7 @@ const AdminDashboard = () => {
           </TabsContent>
         </Tabs>
       </div>
-      
+
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
         <Card>
           <CardHeader>
@@ -232,7 +232,7 @@ const AdminDashboard = () => {
             )}
           </CardContent>
         </Card>
-        
+
         <Card>
           <CardHeader>
             <CardTitle className="text-lg font-medium">Website Traffic</CardTitle>
@@ -254,7 +254,7 @@ const AdminDashboard = () => {
           </CardContent>
         </Card>
       </div>
-      
+
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <Card>
           <CardHeader className="pb-2">
@@ -314,7 +314,7 @@ const AdminDashboard = () => {
             )}
           </CardContent>
         </Card>
-        
+
         <Card>
           <CardHeader className="pb-2">
             <CardTitle className="text-lg font-medium">Quick Links</CardTitle>
