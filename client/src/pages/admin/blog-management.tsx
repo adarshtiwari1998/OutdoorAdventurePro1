@@ -1005,6 +1005,8 @@ const BlogManagement = () => {
                 <div className="space-y-2">
                   <Label htmlFor="categoryId">Category</Label>
                   <Select 
+                    ```python
+// Modified code to include header categories in the import dialog by removing the filter.
                     value={importForm.watch("categoryId")} 
                     onValueChange={(value) => importForm.setValue("categoryId", value)}
                   >
@@ -1500,7 +1502,7 @@ const BlogManagement = () => {
                         <FormControl>
                           <SelectTrigger>
                             <SelectValue placeholder="Select a status" />
-                          </SelectTrigger>
+                        </SelectTrigger>
                         </FormControl>
                         <SelectContent>
                           <SelectItem value="draft">Draft</SelectItem>
