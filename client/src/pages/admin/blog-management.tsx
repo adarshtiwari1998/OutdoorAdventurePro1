@@ -462,9 +462,19 @@ const BlogManagement = () => {
       return;
     }
 
+    // Validate and parse categoryId
+    if (!values.categoryId || values.categoryId === "" || values.categoryId === "NaN") {
+      toast({
+        title: "Error",
+        description: "Please select a category",
+        variant: "destructive",
+      });
+      return;
+    }
+
     // Validate that categoryId is a valid number
-    const categoryId = parseInt(values.categoryId);
-    if (isNaN(categoryId) || categoryId <= 0) {
+    const parsedCategoryId = parseInt(values.categoryId);
+    if (isNaN(parsedCategoryId) || parsedCategoryId <= 0) {
       toast({
         title: "Error",
         description: "Please select a valid category",
@@ -476,7 +486,7 @@ const BlogManagement = () => {
     // Prepare submit data
     const submitData = {
       ...values,
-      categoryId: categoryId.toString(), // Ensure it's a string representation of a valid number
+      categoryId: parsedCategoryId.toString(), // Ensure it's a string representation of a valid number
       postsCount: parseInt(values.postsCount) || 10,
     };
 
@@ -993,8 +1003,7 @@ const BlogManagement = () => {
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="categoryId">Category</Label>
-                  <Select 
+                  <Label htmlFor="categoryId">Category</Label                  <Select 
                     value={importForm.watch("categoryId")} 
                     onValueChange={(value) => importForm.setValue("categoryId", value)}
                   >
