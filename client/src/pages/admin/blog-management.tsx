@@ -91,6 +91,7 @@ const BlogManagement = () => {
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [isImportDialogOpen, setIsImportDialogOpen] = useState(false);
+  const [bulkCategoryId, setBulkCategoryId] = useState<string>("");
 
   // Queries
   const { data: postsData, isLoading } = useQuery<{
@@ -238,6 +239,28 @@ const BlogManagement = () => {
     }
   });
 
+  const bulkCategoryChangeMutation = useMutation({
+    mutationFn: async ({ ids, categoryId }: { ids: string[], categoryId: string }) => {
+      return apiRequest('PATCH', '/api/admin/blog/posts/bulk-category', { ids, categoryId });
+    },
+    onSuccess: () => {
+      toast({
+        title: "Success",
+        description: "Blog posts category updated successfully",
+      });
+      queryClient.invalidateQueries({ queryKey: ['/api/admin/blog/posts'] });
+      setSelectedPosts([]);
+      setBulkCategoryId("");
+    },
+    onError: (error) => {
+      toast({
+        title: "Error",
+        description: `Failed to update category: ${error}`,
+        variant: "destructive",
+      });
+    }
+  });
+
   // Event handlers
   const onSearch = (e: React.FormEvent) => {
     e.preventDefault();
@@ -296,6 +319,15 @@ const BlogManagement = () => {
 
   const onImportSubmit = (values: any) => {
     importFromWordPressMutation.mutate(values);
+  };
+
+  const handleBulkCategoryChange = () => {
+    if (selectedPosts.length > 0 && bulkCategoryId) {
+      bulkCategoryChangeMutation.mutate({ 
+        ids: selectedPosts, 
+        categoryId: bulkCategoryId 
+      });
+    }
   };
 
   return (
@@ -629,27 +661,70 @@ const BlogManagement = () => {
           </Dialog>
 
           {selectedPosts.length > 0 && (
-            <AlertDialog>
-              <AlertDialogTrigger asChild>
-                <Button variant="destructive">
-                  <Trash2 className="mr-1" size={16} /> Delete Selected
-                </Button>
-              </AlertDialogTrigger>
-              <AlertDialogContent>
-                <AlertDialogHeader>
-                  <AlertDialogTitle>Delete Posts</AlertDialogTitle>
-                  <AlertDialogDescription>
-                    Are you sure you want to delete {selectedPosts.length} selected posts? This action cannot be undone.
-                  </AlertDialogDescription>
-                </AlertDialogHeader>
-                <AlertDialogFooter>
-                  <AlertDialogCancel>Cancel</AlertDialogCancel>
-                  <AlertDialogAction onClick={() => deletePostsMutation.mutate(selectedPosts)}>
-                    Delete
-                  </AlertDialogAction>
-                </AlertDialogFooter>
-              </AlertDialogContent>
-            </AlertDialog>
+            <>
+              <Dialog>
+                <DialogTrigger asChild>
+                  <Button variant="outline">
+                    <Edit className="mr-1" size={16} /> Change Category ({selectedPosts.length})
+                  </Button>
+                </DialogTrigger>
+                <DialogContent>
+                  <DialogHeader>
+                    <DialogTitle>Change Category</DialogTitle>
+                    <DialogDescription>
+                      Change the category for {selectedPosts.length} selected posts.
+                    </DialogDescription>
+                  </DialogHeader>
+                  <div className="space-y-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="bulkCategory">New Category</Label>
+                      <Select onValueChange={(value) => setBulkCategoryId(value)}>
+                        <SelectTrigger id="bulkCategory">
+                          <SelectValue placeholder="Select a category" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {categories?.map(category => (
+                            <SelectItem key={category.id} value={category.id.toString()}>
+                              {category.name}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  </div>
+                  <DialogFooter>
+                    <Button 
+                      onClick={() => handleBulkCategoryChange()}
+                      disabled={!bulkCategoryId || bulkCategoryChangeMutation.isPending}
+                    >
+                      {bulkCategoryChangeMutation.isPending ? "Updating..." : "Update Category"}
+                    </Button>
+                  </DialogFooter>
+                </DialogContent>
+              </Dialog>
+
+              <AlertDialog>
+                <AlertDialogTrigger asChild>
+                  <Button variant="destructive">
+                    <Trash2 className="mr-1" size={16} /> Delete Selected
+                  </Button>
+                </AlertDialogTrigger>
+                <AlertDialogContent>
+                  <AlertDialogHeader>
+                    <AlertDialogTitle>Delete Posts</AlertDialogTitle>
+                    <AlertDialogDescription>
+                      Are you sure you want to delete {selectedPosts.length} selected posts? This action cannot be undone.
+                    </AlertDialogDescription>
+                  </AlertDialogHeader>
+                  <AlertDialogFooter>
+                    <AlertDialogCancel>Cancel</AlertDialogCancel>
+                    <AlertDialogAction onClick={() => deletePostsMutation.mutate(selectedPosts)}>
+                      Delete
+                    </AlertDialogAction>
+                  </AlertDialogFooter>
+                </AlertDialogContent>
+                </AlertDialog>
+            </>
           )}
         </div>
       </div>
