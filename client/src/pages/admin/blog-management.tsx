@@ -1005,6 +1005,7 @@ const BlogManagement = () => {
                         {...importForm.register("wordpressUrl")}
                       />
                     </div>
+```text
                     <div className="space-y-2">
                       <Label htmlFor="username">Username</Label>
                       <Input 
@@ -1316,6 +1317,10 @@ const BlogManagement = () => {
 
               {postsData && postsData.totalPages > 1 && (
                 <div className="flex items-center justify-center py-4">
+                  {/* Pagination Summary */}
+                  <div className="text-sm text-neutral-700 mr-4">
+                    Showing {((currentPage - 1) * 10) + 1} to {Math.min(currentPage * 10, postsData.posts.length + ((currentPage - 1) * 10))} of {postsData.totalPages * 10} total posts
+                  </div>
                   <Pagination>
                     <PaginationContent>
                       <PaginationItem>
