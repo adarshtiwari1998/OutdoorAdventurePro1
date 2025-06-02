@@ -1456,18 +1456,33 @@ export const storage = {
       // Delete from Cloudinary if we have a public ID
       if (asset.cloudinaryPublicId) {
         try {
-          const { default: cloudinaryService } = await import('./services/cloudinaryService.js');
-          await cloudinaryService.deleteAsset(asset.cloudinaryPublicId);
+          // Import cloudinary service properly
+          const cloudinaryService = await import('./services/cloudinaryService');
+          const service = cloudinaryService.default;
+          
+          // Construct the full public ID path for Cloudinary deletion
+          const fullPublicId = `HTHFO_Assets/AdminDashboard_Assets/${asset.type}s/${asset.cloudinaryPublicId}`;
+          console.log(`Attempting to delete from Cloudinary with public ID: ${fullPublicId}`);
+          
+          const deleteResult = await service.deleteAsset(fullPublicId);
+          
+          if (deleteResult) {
+            console.log(`Successfully deleted asset from Cloudinary: ${fullPublicId}`);
+          } else {
+            console.warn(`Cloudinary deletion returned false for: ${fullPublicId}`);
+          }
         } catch (cloudinaryError) {
           console.error(`Failed to delete asset from Cloudinary (${asset.cloudinaryPublicId}):`, cloudinaryError);
           // Continue with database deletion even if Cloudinary deletion fails
         }
+      } else {
+        console.warn(`No Cloudinary public ID found for asset ${id}, skipping Cloudinary deletion`);
       }
 
       // Delete from database
       await db.delete(schema.dashboardAssets).where(eq(schema.dashboardAssets.id, id));
       
-      console.log(`Successfully deleted dashboard asset ${id} from database and Cloudinary`);
+      console.log(`Successfully deleted dashboard asset ${id} from database`);
     } catch (error) {
       console.error(`Error deleting dashboard asset ${id}:`, error);
       throw error;
