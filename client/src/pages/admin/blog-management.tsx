@@ -1000,7 +1000,7 @@ const BlogManagement = () => {
                   >
                     <SelectTrigger>
                       <SelectValue placeholder="Select a category" />
-                    </Select                    </SelectTrigger>
+                    </SelectTrigger>
                     <SelectContent>
                       {categories?.map(category => (
                         <SelectItem key={category.id} value={category.id.toString()}>
