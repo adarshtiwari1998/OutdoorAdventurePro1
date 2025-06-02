@@ -1322,13 +1322,18 @@ app.delete(`${apiPrefix}/admin/wordpress/credentials`, async (req, res) => {
       let importedCount = 0;
       let skippedCount = 0;
 
+      // Get all existing video IDs for this channel to avoid duplicates
+      const existingVideos = await storage.getYoutubeVideosByChannel(channel.id.toString());
+      const existingVideoIds = new Set(existingVideos.map((v: any) => v.videoId));
+      
+      console.log(`📊 Found ${existingVideoIds.size} existing videos in database for this channel`);
+
       // Save videos to database
       for (const video of videos) {
         try {
-          // Check if video already exists
-          const existingVideo = await storage.getYoutubeVideoByVideoId(video.id);
-          if (existingVideo) {
-            console.log(`⏭️ Video already exists: ${video.title}`);
+          // Check if video already exists using our Set for faster lookup
+          if (existingVideoIds.has(video.id)) {
+            console.log(`⏭️ Video already exists: ${video.title} (${video.id})`);
             skippedCount++;
             continue;
           }
@@ -1342,7 +1347,7 @@ app.delete(`${apiPrefix}/admin/wordpress/credentials`, async (req, res) => {
             channelId: channel.id
           });
           
-          console.log(`✅ Imported video: ${video.title}`);
+          console.log(`✅ Imported video ${importedCount + 1}/${maxResults}: ${video.title}`);
           importedCount++;
         } catch (error) {
           console.error(`❌ Error saving video ${video.id}:`, error);

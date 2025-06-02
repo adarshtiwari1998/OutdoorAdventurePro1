@@ -160,7 +160,7 @@ export class YouTubeService {
         title: video.snippet.title,
         description: video.snippet.description,
         thumbnailUrl: video.snippet.thumbnails.high.url,
-        publishedAt: new Date(video.snippet.publishedAt).toISOString(),
+        publishedAt: new Date(video.snippet.publishedAt),
         channelId: video.snippet.channelId,
         channelTitle: video.snippet.channelTitle
       }));
@@ -198,7 +198,7 @@ export class YouTubeService {
         title: video.snippet.title,
         description: video.snippet.description,
         thumbnailUrl: video.snippet.thumbnails.high.url,
-        publishedAt: new Date(video.snippet.publishedAt).toISOString(),
+        publishedAt: new Date(video.snippet.publishedAt),
         channelId: video.snippet.channelId,
         channelTitle: video.snippet.channelTitle
       }));

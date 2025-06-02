@@ -87,7 +87,7 @@ const YoutubeImport = () => {
     skippedCount: 0,
     logs: [] as string[]
   });
-  
+
   // Queries
   const { data: channels, isLoading: channelsLoading } = useQuery<YoutubeChannel[]>({
     queryKey: ['/api/admin/youtube/channels'],
@@ -176,7 +176,7 @@ const YoutubeImport = () => {
   const importChannelVideosMutation = useMutation({
     mutationFn: async ({ channelId, limit }: { channelId: string, limit: number }) => {
       console.log(`🎬 Importing ${limit} videos for channel: ${channelId}`);
-      
+
       // Reset progress
       setImportProgress({
         isImporting: true,
@@ -220,7 +220,7 @@ const YoutubeImport = () => {
         }));
 
         const data = await response.json();
-        
+
         // Step 3: Complete
         setImportProgress(prev => ({
           ...prev,
@@ -249,14 +249,14 @@ const YoutubeImport = () => {
     },
     onSuccess: (data) => {
       const { count = 0, skipped = 0, message } = data || {};
-      
+
       // Show success message after a brief delay
       setTimeout(() => {
         toast({
           title: "Import Complete",
           description: message || `Successfully imported ${count} videos${skipped ? `, ${skipped} skipped` : ''}`,
         });
-        
+
         // Close dialog after showing success
         setTimeout(() => {
           setShowImportDialog(false);
@@ -279,13 +279,13 @@ const YoutubeImport = () => {
     onError: (error: any) => {
       console.error('Import error:', error);
       let errorMessage = "Failed to import videos";
-      
+
       if (error.message) {
         errorMessage = error.message;
       } else if (typeof error === 'string') {
         errorMessage = error;
       }
-      
+
       toast({
         title: "Import Failed",
         description: errorMessage,
@@ -466,7 +466,7 @@ const YoutubeImport = () => {
           <TabsTrigger value="videos" disabled={!selectedChannelId}>Videos</TabsTrigger>
           <TabsTrigger value="add">Add New</TabsTrigger>
         </TabsList>
-        
+
         <TabsContent value="channels">
           <Card>
             <CardHeader>
@@ -564,7 +564,7 @@ const YoutubeImport = () => {
             </CardContent>
           </Card>
         </TabsContent>
-        
+
         <TabsContent value="videos">
           <Card>
             <CardHeader>
@@ -684,7 +684,7 @@ const YoutubeImport = () => {
                                         type="hidden" 
                                         {...importForm.register("videoId")}
                                       />
-                                      
+
                                       <div className="space-y-2">
                                         <label htmlFor="title" className="text-sm font-medium">
                                           Blog Post Title
@@ -695,7 +695,7 @@ const YoutubeImport = () => {
                                           {...importForm.register("title")}
                                         />
                                       </div>
-                                      
+
                                       <div className="space-y-2">
                                         <label htmlFor="category" className="text-sm font-medium">
                                           Blog Category
@@ -716,7 +716,7 @@ const YoutubeImport = () => {
                                           <p className="text-sm text-destructive">Category is required</p>
                                         )}
                                       </div>
-                                      
+
                                       <div className="flex items-center space-x-2">
                                         <input 
                                           type="checkbox" 
@@ -728,7 +728,7 @@ const YoutubeImport = () => {
                                           Include AI-generated summary
                                         </label>
                                       </div>
-                                      
+
                                       <div className="flex items-center space-x-2">
                                         <input 
                                           type="checkbox" 
@@ -741,7 +741,7 @@ const YoutubeImport = () => {
                                         </label>
                                       </div>
                                     </div>
-                                    
+
                                     <AlertDialogFooter>
                                       <AlertDialogCancel>Cancel</AlertDialogCancel>
                                       <Button 
@@ -755,7 +755,7 @@ const YoutubeImport = () => {
                                 </AlertDialogContent>
                               </AlertDialog>
                             )}
-                            
+
                             <AlertDialog>
                               <AlertDialogTrigger asChild>
                                 <Button variant="destructive" size="sm">
@@ -790,7 +790,7 @@ const YoutubeImport = () => {
             </CardContent>
           </Card>
         </TabsContent>
-        
+
         <TabsContent value="add">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <Card>
@@ -841,7 +841,7 @@ const YoutubeImport = () => {
                 </Form>
               </CardContent>
             </Card>
-            
+
             <Card>
               <CardHeader>
                 <CardTitle>Add Individual Video</CardTitle>
@@ -911,12 +911,12 @@ const YoutubeImport = () => {
       <AlertDialog open={showImportDialog} onOpenChange={setShowImportDialog}>
         <AlertDialogContent className="max-w-md">
           <AlertDialogHeader>
-            <AlertDialogTitle>Import Videos</AlertDialogTitle>
+            <AlertDialogTitle>Import YouTube Videos</AlertDialogTitle>
             <AlertDialogDescription>
-              Configure how many videos to import from this channel.
+              This will import the latest videos from the selected YouTube channel. Choose how many videos to import to avoid overloading the API.
             </AlertDialogDescription>
           </AlertDialogHeader>
-          
+
           {!importProgress.isImporting ? (
             <div className="space-y-4">
               <div>
