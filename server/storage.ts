@@ -288,6 +288,17 @@ export const storage = {
     }
   },
 
+  async getYoutubeVideoByVideoId(videoId: string) {
+    try {
+      return await db.query.youtubeVideos.findFirst({
+        where: eq(youtubeVideos.videoId, videoId)
+      });
+    } catch (error) {
+      console.error(`Error checking for existing YouTube video ${videoId}:`, error);
+      throw error;
+    }
+  },
+
   async linkYoutubeVideoToBlogPost(videoId: number, blogPostId: number) {
     try {
       await db.update(youtubeVideos)

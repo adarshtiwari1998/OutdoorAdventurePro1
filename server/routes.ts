@@ -1281,18 +1281,53 @@ app.delete(`${apiPrefix}/admin/wordpress/credentials`, async (req, res) => {
   app.post(`${apiPrefix}/admin/youtube/channels/:id/import`, async (req, res) => {
     try {
       const { id } = req.params;
+      console.log(`🎬 Starting video import for channel ID: ${id}`);
+      
       const channel = await storage.getYoutubeChannelById(parseInt(id));
 
       if (!channel) {
+        console.error(`❌ Channel not found for ID: ${id}`);
         return res.status(404).json({ message: "Channel not found" });
       }
 
+      console.log(`📺 Found channel: ${channel.name} (YouTube ID: ${channel.channelId})`);
+
+      // Check if YouTube API key is configured
+      if (!process.env.YOUTUBE_API_KEY) {
+        console.error("❌ YouTube API key not configured");
+        return res.status(500).json({ 
+          message: "YouTube API key not configured. Please set YOUTUBE_API_KEY environment variable." 
+        });
+      }
+
       // Get latest videos from YouTube API
+      console.log(`🔍 Fetching videos from YouTube API for channel: ${channel.channelId}`);
       const videos = await youtubeService.getChannelVideos(channel.channelId, 10);
+      console.log(`📋 Found ${videos.length} videos from YouTube API`);
+
+      if (videos.length === 0) {
+        console.warn(`⚠️ No videos found for channel ${channel.channelId}`);
+        return res.json({ 
+          success: true, 
+          count: 0, 
+          message: "No videos found for this channel" 
+        });
+      }
+
+      let importedCount = 0;
+      let skippedCount = 0;
 
       // Save videos to database
       for (const video of videos) {
         try {
+          // Check if video already exists
+          const existingVideo = await storage.getYoutubeVideoByVideoId(video.id);
+          if (existingVideo) {
+            console.log(`⏭️ Video already exists: ${video.title}`);
+            skippedCount++;
+            continue;
+          }
+
           await storage.createYoutubeVideo({
             videoId: video.id,
             title: video.title,
@@ -1301,18 +1336,41 @@ app.delete(`${apiPrefix}/admin/wordpress/credentials`, async (req, res) => {
             publishedAt: video.publishedAt,
             channelId: channel.id
           });
+          
+          console.log(`✅ Imported video: ${video.title}`);
+          importedCount++;
         } catch (error) {
-          console.error(`Error saving video ${video.id}:`, error);
+          console.error(`❌ Error saving video ${video.id}:`, error);
+          skippedCount++;
         }
       }
 
       // Update channel's lastImport date
       await storage.updateYoutubeChannelLastImport(parseInt(id));
 
-      res.json({ success: true, count: videos.length });
+      console.log(`📊 Import complete: ${importedCount} imported, ${skippedCount} skipped`);
+      
+      res.json({ 
+        success: true, 
+        count: importedCount,
+        skipped: skippedCount,
+        total: videos.length,
+        message: `Successfully imported ${importedCount} videos. ${skippedCount} videos were skipped (already exist or failed).`
+      });
     } catch (error) {
-      console.error(`Error importing videos for channel ${req.params.id}:`, error);
-      res.status(500).json({ message: "Failed to import videos from channel" });
+      console.error(`❌ Error importing videos for channel ${req.params.id}:`, error);
+      
+      // Provide more specific error messages
+      let errorMessage = "Failed to import videos from channel";
+      if (error.message.includes("YouTube API error")) {
+        errorMessage = "YouTube API error: " + error.message;
+      } else if (error.message.includes("Channel not found")) {
+        errorMessage = "YouTube channel not found or invalid channel ID";
+      } else if (error.message.includes("quota")) {
+        errorMessage = "YouTube API quota exceeded. Please try again later.";
+      }
+      
+      res.status(500).json({ message: errorMessage, error: error.message });
     }
   });
 

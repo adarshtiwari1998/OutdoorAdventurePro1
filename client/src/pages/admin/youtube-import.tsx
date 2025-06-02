@@ -161,19 +161,33 @@ const YoutubeImport = () => {
 
   const importChannelVideosMutation = useMutation({
     mutationFn: async (channelId: string) => {
-      return apiRequest('POST', `/api/admin/youtube/channels/${channelId}/import`, {});
+      console.log(`🎬 Importing videos for channel: ${channelId}`);
+      const response = await apiRequest('POST', `/api/admin/youtube/channels/${channelId}/import`, {});
+      return response;
     },
-    onSuccess: () => {
+    onSuccess: (data) => {
+      console.log('Import success:', data);
+      const message = data.message || `Successfully imported ${data.count || 0} videos${data.skipped ? `, ${data.skipped} skipped` : ''}`;
       toast({
-        title: "Success",
-        description: "Videos are being imported. Check back soon.",
+        title: "Import Complete",
+        description: message,
       });
       queryClient.invalidateQueries({ queryKey: ['/api/admin/youtube/videos'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/admin/youtube/channels'] });
     },
-    onError: (error) => {
+    onError: (error: any) => {
+      console.error('Import error:', error);
+      let errorMessage = "Failed to import videos";
+      
+      if (error.message) {
+        errorMessage = error.message;
+      } else if (typeof error === 'string') {
+        errorMessage = error;
+      }
+      
       toast({
-        title: "Error",
-        description: `Failed to import videos: ${error}`,
+        title: "Import Failed",
+        description: errorMessage,
         variant: "destructive",
       });
     }
@@ -258,6 +272,7 @@ const YoutubeImport = () => {
   };
 
   const handleImportFromChannel = (channelId: string) => {
+    console.log(`Starting import for channel: ${channelId}`);
     importChannelVideosMutation.mutate(channelId);
   };
 

@@ -38,17 +38,30 @@ export class YouTubeService {
       key: this.apiKey
     });
 
+    const url = `${this.baseUrl}/${endpoint}?${searchParams.toString()}`;
+    console.log(`🔗 YouTube API Request: ${endpoint} with params:`, params);
+
     try {
-      const response = await fetch(`${this.baseUrl}/${endpoint}?${searchParams.toString()}`);
+      const response = await fetch(url);
 
       if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(`YouTube API error: ${JSON.stringify(errorData)}`);
+        const errorData = await response.json().catch(() => ({ error: 'Unknown error' }));
+        console.error(`❌ YouTube API Error (${response.status}):`, errorData);
+        
+        if (response.status === 403) {
+          throw new Error(`YouTube API quota exceeded or invalid API key: ${JSON.stringify(errorData)}`);
+        } else if (response.status === 404) {
+          throw new Error(`YouTube resource not found: ${JSON.stringify(errorData)}`);
+        } else {
+          throw new Error(`YouTube API error (${response.status}): ${JSON.stringify(errorData)}`);
+        }
       }
 
-      return await response.json();
+      const data = await response.json();
+      console.log(`✅ YouTube API Response for ${endpoint}:`, data);
+      return data;
     } catch (error) {
-      console.error('Error making YouTube API request:', error);
+      console.error('❌ Error making YouTube API request:', error);
       throw error;
     }
   }
