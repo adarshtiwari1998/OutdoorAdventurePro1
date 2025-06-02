@@ -96,6 +96,19 @@ const YoutubeImport = () => {
   const { data: videos, isLoading: videosLoading } = useQuery<YoutubeVideo[]>({
     queryKey: ['/api/admin/youtube/videos', { channelId: selectedChannelId }],
     enabled: !!selectedChannelId,
+    queryFn: async ({ queryKey }) => {
+      const [, params] = queryKey;
+      console.log(`🎬 Fetching videos for channel:`, params);
+      const response = await fetch(`/api/admin/youtube/videos?channelId=${params.channelId}`);
+      if (!response.ok) {
+        const error = await response.text();
+        console.error(`❌ Error fetching videos:`, error);
+        throw new Error(error);
+      }
+      const data = await response.json();
+      console.log(`📹 Received ${data.length} videos for channel ${params.channelId}`);
+      return data;
+    },
   });
 
   const { data: blogCategories } = useQuery<{id: string, name: string}[]>({
@@ -382,12 +395,27 @@ const YoutubeImport = () => {
   };
 
   const onChannelSelect = (channelId: string) => {
+    console.log(`🎯 Selecting channel: ${channelId}`);
     setSelectedChannelId(channelId);
     setActiveTab("videos");
   };
 
   const handleImportFromChannel = (channelId: string) => {
+    console.log(`🚀 Starting import for channel: ${channelId}`);
     setImportChannelId(channelId);
+    
+    // Reset import progress state
+    setImportProgress({
+      isImporting: false,
+      currentStep: '',
+      progress: 0,
+      processedCount: 0,
+      totalCount: 0,
+      importedCount: 0,
+      skippedCount: 0,
+      logs: []
+    });
+    
     setShowImportDialog(true);
   };
 
@@ -502,7 +530,7 @@ const YoutubeImport = () => {
                           <TableCell>
                             <div 
                               className="font-medium cursor-pointer hover:text-primary"
-                              onClick={() => onChannelSelect(channel.id)}
+                              onClick={() => onChannelSelect(channel.id.toString())}
                             >
                               {channel.name}
                             </div>
@@ -520,7 +548,7 @@ const YoutubeImport = () => {
                               variant="outline" 
                               size="sm" 
                               className="mr-2"
-                              onClick={() => handleImportFromChannel(channel.id)}
+                              onClick={() => handleImportFromChannel(channel.id.toString())}
                               disabled={importChannelVideosMutation.isPending || importProgress.isImporting}
                             >
                               {importProgress.isImporting && importChannelId === channel.id ? (
@@ -547,7 +575,7 @@ const YoutubeImport = () => {
                                 <AlertDialogFooter>
                                   <AlertDialogCancel>Cancel</AlertDialogCancel>
                                   <AlertDialogAction 
-                                    onClick={() => handleDeleteChannel(channel.id)}
+                                    onClick={() => handleDeleteChannel(channel.id.toString())}
                                   >
                                     Delete
                                   </AlertDialogAction>
