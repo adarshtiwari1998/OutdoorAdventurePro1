@@ -433,7 +433,7 @@ const BlogManagement = () => {
       });
       return;
     }
-    
+
     if (!values.username && !savedCredentials?.hasCredentials) {
       toast({
         title: "Error", 
@@ -442,7 +442,7 @@ const BlogManagement = () => {
       });
       return;
     }
-    
+
     // Only require password if we don't have saved credentials
     if (!values.password && !savedCredentials?.hasCredentials) {
       toast({
@@ -452,7 +452,7 @@ const BlogManagement = () => {
       });
       return;
     }
-    
+
     if (!values.categoryId) {
       toast({
         title: "Error",
@@ -801,9 +801,9 @@ const BlogManagement = () => {
                               </SelectTrigger>
                             </FormControl>
                             <SelectContent>
-                              {categories?.map(category => (
+                              {categories?.filter(category => category.type !== 'header').map(category => (
                                 <SelectItem key={category.id} value={category.id.toString()}>
-                                  {category.name} {category.type === 'header' ? '(Category Page)' : ''}
+                                  {category.name}
                                 </SelectItem>
                               ))}
                             </SelectContent>
@@ -1004,7 +1004,7 @@ const BlogManagement = () => {
                     <SelectContent>
                       {categories?.filter(category => !category.id.toString().startsWith('header_')).map(category => (
                         <SelectItem key={category.id} value={category.id.toString()}>
-                          {category.name} {category.type === 'header' ? '(Category Page)' : ''}
+                          {category.name}
                         </SelectItem>
                       ))}
                     </SelectContent>
@@ -1047,9 +1047,9 @@ const BlogManagement = () => {
                           <SelectValue placeholder="Select a category" />
                         </SelectTrigger>
                         <SelectContent>
-                          {categories?.map(category => (
+                          {categories?.filter(category => category.type !== 'header').map(category => (
                             <SelectItem key={category.id} value={category.id.toString()}>
-                              {category.name} {category.type === 'header' ? '(Category Page)' : ''}
+                              {category.name}
                             </SelectItem>
                           ))}
                         </SelectContent>
@@ -1419,7 +1419,7 @@ const BlogManagement = () => {
           // Try the most popular premium features until May 29, 2025:
           'checklist', 'mediaembed', 'casechange', 'formatpainter', 'pageembed', 'a11ychecker', 'tinymcespellchecker', 'permanentpen', 'powerpaste', 'advtable', 'advcode', 'editimage', 'advtemplate', 'ai', 'mentions', 'tinycomments', 'tableofcontents', 'footnotes', 'mergetags', 'autocorrect', 'typography', 'inlinecss', 'markdown','importword', 'exportword', 'exportpdf'
         ],
-        toolbar: 'undo redo | blocks fontfamily fontsize | bold italic underline strikethrough | link image media table mergetags | addcomment showcomments | spellcheckdialog a11ycheck typography | align lineheight | checklist numlist bullist indent outdent | emoticons charmap | removeformat',
+        toolbar: 'undo redo | blocks fontfamily fontsize | bold italic underline strikethrough | link image media table mergetags | addcomment showcomments | spellcheckdialog a11ycheck typography | align lineheight | checklist numlist indent outdent | emoticons charmap | removeformat',
         tinycomments_mode: 'embedded',
         tinycomments_author: 'Author name',
                                 }}
@@ -1454,9 +1454,9 @@ const BlogManagement = () => {
                           </SelectTrigger>
                         </FormControl>
                         <SelectContent>
-                          {categories?.map(category => (
+                          {categories?.filter(category => category.type !== 'header').map(category => (
                             <SelectItem key={category.id} value={category.id.toString()}>
-                              {category.name} {category.type === 'header' ? '(Category Page)' : ''}
+                              {category.name}
                             </SelectItem>
                           ))}
                         </SelectContent>
