@@ -386,12 +386,65 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.post(`${apiPrefix}/admin/dashboard-assets`, async (req, res) => {
     try {
+      const contentType = req.headers['content-type'] || '';
+      
       // Handle multipart form data for file uploads
-      if (req.headers['content-type']?.includes('multipart/form-data')) {
-        // For now, return an error as we need to implement file upload handling
-        return res.status(400).json({ 
-          message: "File upload not yet implemented. Please use URL upload method." 
+      if (contentType.includes('multipart/form-data')) {
+        // Use multer or similar to handle file uploads
+        const multer = require('multer');
+        const cloudinaryService = require('./services/cloudinaryService').default;
+        
+        const upload = multer({ 
+          storage: multer.memoryStorage(),
+          limits: { fileSize: 10 * 1024 * 1024 } // 10MB limit
         });
+
+        // Parse the multipart form data
+        upload.single('file')(req, res, async (err) => {
+          if (err) {
+            return res.status(400).json({ message: "File upload error: " + err.message });
+          }
+
+          const { type, name, uploadMethod } = req.body;
+          
+          if (!type || !name) {
+            return res.status(400).json({ 
+              message: "Type and name are required" 
+            });
+          }
+
+          if (!req.file) {
+            return res.status(400).json({ 
+              message: "No file provided" 
+            });
+          }
+
+          try {
+            // Upload file to Cloudinary
+            const assetId = `${type}_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+            const cloudinaryUrl = await cloudinaryService.uploadAdminAsset(
+              `data:${req.file.mimetype};base64,${req.file.buffer.toString('base64')}`,
+              type === 'logo' ? 'logos' : 'favicons',
+              assetId
+            );
+
+            const assetData = {
+              type,
+              name,
+              url: cloudinaryUrl,
+              cloudinaryPublicId: assetId,
+              isActive: false
+            };
+
+            const asset = await storage.createDashboardAsset(assetData);
+            res.status(201).json(asset);
+          } catch (uploadError) {
+            console.error("Error uploading to Cloudinary:", uploadError);
+            res.status(500).json({ message: "Failed to upload asset to cloud storage" });
+          }
+        });
+
+        return; // Exit early since we're handling the response in the callback
       }
 
       // Handle regular JSON data for URL uploads
@@ -409,11 +462,32 @@ export async function registerRoutes(app: Express): Promise<Server> {
         });
       }
 
+      // For URL uploads, also upload to Cloudinary for consistency
+      let finalUrl = url;
+      let cloudinaryPublicId = null;
+
+      if (url && uploadMethod === 'url') {
+        try {
+          const cloudinaryService = require('./services/cloudinaryService').default;
+          const assetId = `${type}_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+          finalUrl = await cloudinaryService.uploadAdminAsset(
+            url,
+            type === 'logo' ? 'logos' : 'favicons',
+            assetId
+          );
+          cloudinaryPublicId = assetId;
+        } catch (cloudinaryError) {
+          console.error("Error uploading URL to Cloudinary:", cloudinaryError);
+          // Continue with original URL if Cloudinary fails
+        }
+      }
+
       const assetData = {
         type,
         name,
-        url: url || '',
-        isActive: false // Default to inactive
+        url: finalUrl,
+        cloudinaryPublicId,
+        isActive: false
       };
 
       const asset = await storage.createDashboardAsset(assetData);

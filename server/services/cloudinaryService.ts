@@ -285,14 +285,43 @@ export class CloudinaryService {
   }
 
   /**
-   * Upload any admin dashboard asset
+   * Upload any admin dashboard asset (supports both URL and base64 data)
    */
-  async uploadAdminAsset(url: string, assetType: 'logos' | 'favicons' | 'general', assetId: string): Promise<string> {
-    return this.uploadImageFromUrl(
-      url,
-      `${AssetFolders.ADMIN_DASHBOARD}/${assetType}`,
-      assetId
-    );
+  async uploadAdminAsset(urlOrData: string, assetType: 'logos' | 'favicons' | 'general', assetId: string): Promise<string> {
+    if (urlOrData.startsWith('data:')) {
+      // Handle base64 data upload
+      return this.uploadImageFromBase64(
+        urlOrData,
+        `${AssetFolders.ADMIN_DASHBOARD}/${assetType}`,
+        assetId
+      );
+    } else {
+      // Handle URL upload
+      return this.uploadImageFromUrl(
+        urlOrData,
+        `${AssetFolders.ADMIN_DASHBOARD}/${assetType}`,
+        assetId
+      );
+    }
+  }
+
+  /**
+   * Upload image from base64 data
+   */
+  private async uploadImageFromBase64(base64Data: string, folder: string, publicId: string): Promise<string> {
+    try {
+      const result = await cloudinary.uploader.upload(base64Data, {
+        folder,
+        public_id: publicId,
+        overwrite: true,
+        resource_type: 'auto',
+      });
+
+      return result.secure_url;
+    } catch (error) {
+      console.error('Error uploading image from base64 to Cloudinary:', error);
+      throw new Error('Failed to upload image to Cloudinary');
+    }
   }
 }
 
