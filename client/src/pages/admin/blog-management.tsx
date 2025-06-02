@@ -44,7 +44,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Pagination, PaginationContent, PaginationItem, PaginationLink, PaginationNext, PaginationPrevious } from "@/components/ui/pagination";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { Checkbox } from "@/components/ui/checkbox";
-import { FileText, Edit, Trash2, Plus, Filter, Search, ChevronDown } from "lucide-react";
+import { FileText, Edit, Trash2, Plus, Filter, Search, ChevronDown, Tag, FolderPlus } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
 import { format } from "date-fns";
@@ -59,6 +59,12 @@ const blogPostSchema = z.object({
   status: z.enum(["draft", "published", "scheduled"]),
   scheduledDate: z.string().optional(),
   tags: z.string().optional()
+});
+
+const categorySchema = z.object({
+  name: z.string().min(2, "Name must be at least 2 characters"),
+  slug: z.string().min(2, "Slug must be at least 2 characters"),
+  description: z.string().optional()
 });
 
 type BlogPost = {
@@ -98,6 +104,8 @@ const BlogManagement = () => {
     url?: string;
     username?: string;
   }>({ hasCredentials: false });
+  const [isCategoryDialogOpen, setIsCategoryDialogOpen] = useState(false);
+  const [categoryToDelete, setCategoryToDelete] = useState<{id: number, name: string} | null>(null);
 
   // Load saved credentials from localStorage on component mount
   useState(() => {
@@ -142,6 +150,16 @@ const BlogManagement = () => {
       featuredImage: "",
       status: "draft",
       tags: ""
+    }
+  });
+
+  // Category form setup
+  const categoryForm = useForm<z.infer<typeof categorySchema>>({
+    resolver: zodResolver(categorySchema),
+    defaultValues: {
+      name: "",
+      slug: "",
+      description: ""
     }
   });
 
@@ -317,6 +335,50 @@ const BlogManagement = () => {
     }
   });
 
+  const createCategoryMutation = useMutation({
+    mutationFn: async (values: z.infer<typeof categorySchema>) => {
+      return apiRequest('POST', '/api/admin/blog/categories', values);
+    },
+    onSuccess: () => {
+      toast({
+        title: "Success",
+        description: "Category created successfully",
+      });
+      queryClient.invalidateQueries({ queryKey: ['/api/admin/blog/categories'] });
+      categoryForm.reset();
+      setIsCategoryDialogOpen(false);
+    },
+    onError: (error) => {
+      toast({
+        title: "Error",
+        description: `Failed to create category: ${error}`,
+        variant: "destructive",
+      });
+    }
+  });
+
+  const deleteCategoryMutation = useMutation({
+    mutationFn: async (categoryId: number) => {
+      return apiRequest('DELETE', `/api/admin/blog/categories/${categoryId}`);
+    },
+    onSuccess: () => {
+      toast({
+        title: "Success",
+        description: "Category deleted successfully",
+      });
+      queryClient.invalidateQueries({ queryKey: ['/api/admin/blog/categories'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/admin/blog/posts'] });
+      setCategoryToDelete(null);
+    },
+    onError: (error) => {
+      toast({
+        title: "Error",
+        description: `Failed to delete category: ${error}`,
+        variant: "destructive",
+      });
+    }
+  });
+
   // Event handlers
   const onSearch = (e: React.FormEvent) => {
     e.preventDefault();
@@ -386,11 +448,148 @@ const BlogManagement = () => {
     }
   };
 
+  const onCreateCategory = (values: z.infer<typeof categorySchema>) => {
+    createCategoryMutation.mutate(values);
+  };
+
+  const handleDeleteCategory = (category: {id: number, name: string}) => {
+    setCategoryToDelete(category);
+  };
+
+  const confirmDeleteCategory = () => {
+    if (categoryToDelete) {
+      deleteCategoryMutation.mutate(categoryToDelete.id);
+    }
+  };
+
+  // Auto-generate slug when name changes
+  const generateSlug = (name: string) => {
+    return name
+      .toLowerCase()
+      .replace(/[^a-z0-9 -]/g, '')
+      .replace(/\s+/g, '-')
+      .replace(/-+/g, '-')
+      .trim();
+  };
+
   return (
     <div className="container mx-auto px-4 py-10">
       <div className="flex justify-between items-center mb-8">
         <h1 className="text-3xl font-heading font-bold">Blog Management</h1>
         <div className="flex space-x-2">
+          <Dialog open={isCategoryDialogOpen} onOpenChange={(open) => {
+            if (open) {
+              categoryForm.reset({
+                name: "",
+                slug: "",
+                description: ""
+              });
+            }
+            setIsCategoryDialogOpen(open);
+          }}>
+            <DialogTrigger asChild>
+              <Button variant="outline">
+                <Tag className="mr-1" size={16} /> Manage Categories
+              </Button>
+            </DialogTrigger>
+            <DialogContent className="max-w-md">
+              <DialogHeader>
+                <DialogTitle>Category Management</DialogTitle>
+                <DialogDescription>
+                  Create new categories and manage existing ones.
+                </DialogDescription>
+              </DialogHeader>
+              
+              <div className="space-y-6">
+                {/* Create New Category Form */}
+                <div className="border-b pb-4">
+                  <h3 className="font-medium mb-3">Create New Category</h3>
+                  <Form {...categoryForm}>
+                    <form onSubmit={categoryForm.handleSubmit(onCreateCategory)} className="space-y-3">
+                      <FormField
+                        control={categoryForm.control}
+                        name="name"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Name</FormLabel>
+                            <FormControl>
+                              <Input 
+                                placeholder="Category name" 
+                                {...field} 
+                                onChange={(e) => {
+                                  field.onChange(e);
+                                  // Auto-generate slug
+                                  const slug = generateSlug(e.target.value);
+                                  categoryForm.setValue("slug", slug);
+                                }}
+                              />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                      <FormField
+                        control={categoryForm.control}
+                        name="slug"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Slug</FormLabel>
+                            <FormControl>
+                              <Input placeholder="category-slug" {...field} />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                      <FormField
+                        control={categoryForm.control}
+                        name="description"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Description (Optional)</FormLabel>
+                            <FormControl>
+                              <Textarea placeholder="Category description" {...field} rows={2} />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                      <Button 
+                        type="submit" 
+                        disabled={createCategoryMutation.isPending}
+                        className="w-full"
+                      >
+                        {createCategoryMutation.isPending ? "Creating..." : "Create Category"}
+                      </Button>
+                    </form>
+                  </Form>
+                </div>
+
+                {/* Existing Categories */}
+                <div>
+                  <h3 className="font-medium mb-3">Existing Categories</h3>
+                  <div className="max-h-48 overflow-y-auto space-y-2">
+                    {categories?.map(category => (
+                      <div key={category.id} className="flex items-center justify-between p-2 border rounded">
+                        <div>
+                          <div className="font-medium text-sm">{category.name}</div>
+                          <div className="text-xs text-gray-500">{category.slug}</div>
+                        </div>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => handleDeleteCategory({id: category.id, name: category.name})}
+                          className="text-destructive hover:text-destructive"
+                        >
+                          <Trash2 size={14} />
+                        </Button>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            </DialogContent>
+          </Dialog>
           <Dialog open={isCreateDialogOpen} onOpenChange={(open) => {
             if (open) {
               form.reset({
@@ -1286,6 +1485,29 @@ const BlogManagement = () => {
           </Form>
         </DialogContent>
       </Dialog>
+
+      {/* Category Delete Confirmation Dialog */}
+      <AlertDialog open={!!categoryToDelete} onOpenChange={() => setCategoryToDelete(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete Category</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to delete the category "{categoryToDelete?.name}"? 
+              This action cannot be undone. Make sure there are no blog posts in this category.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction 
+              onClick={confirmDeleteCategory}
+              disabled={deleteCategoryMutation.isPending}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              {deleteCategoryMutation.isPending ? "Deleting..." : "Delete Category"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 };

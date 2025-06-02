@@ -712,9 +712,54 @@ export const storage = {
 
   async getBlogCategories() {
     try {
-      return await db.query.categories.findMany();
+      return await db.query.categories.findMany({
+        where: eq(categories.type, 'blog'),
+        orderBy: asc(categories.name),
+      });
     } catch (error) {
       console.error('Error getting blog categories:', error);
+      throw error;
+    }
+  },
+
+  async createBlogCategory(categoryData: {
+    name: string;
+    slug: string;
+    description?: string | null;
+    type: string;
+  }) {
+    try {
+      const [newCategory] = await db.insert(categories)
+        .values({
+          ...categoryData,
+          createdAt: new Date()
+        })
+        .returning();
+      return newCategory;
+    } catch (error) {
+      console.error('Error creating blog category:', error);
+      throw error;
+    }
+  },
+
+  async deleteBlogCategory(categoryId: number) {
+    try {
+      await db.delete(categories)
+        .where(eq(categories.id, categoryId));
+    } catch (error) {
+      console.error('Error deleting blog category:', error);
+      throw error;
+    }
+  },
+
+  async getBlogPostsCountByCategory(categoryId: number) {
+    try {
+      const posts = await db.query.blogPosts.findMany({
+        where: eq(blogPosts.categoryId, categoryId),
+      });
+      return posts.length;
+    } catch (error) {
+      console.error('Error getting blog posts count by category:', error);
       throw error;
     }
   },
@@ -919,8 +964,7 @@ export const storage = {
     try {
       const allTestimonials = await db.query.testimonials.findMany({
         where: eq(testimonials.isActive, true),
-        orderBy: desc(testimonials.createdAt),
-      });
+        orderBy: desc(testimonials.createdAt),      });
 
       // Return only 3 testimonials for the home page
       return allTestimonials.slice(0, 3).map(testimonial => ({
@@ -1153,7 +1197,7 @@ export const storage = {
   async saveWordPressCredentials(credentials: { url: string; username: string; password: string }) {
     try {
       const existingCredentials = await db.query.wordpressCredentials.findFirst();
-      
+
       if (existingCredentials) {
         await db.update(wordpressCredentials)
           .set({

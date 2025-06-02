@@ -586,6 +586,53 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  app.post(`${apiPrefix}/admin/blog/categories`, async (req, res) => {
+    try {
+      const { name, slug, description } = req.body;
+      
+      if (!name || !slug) {
+        return res.status(400).json({ message: "Name and slug are required" });
+      }
+
+      const newCategory = await storage.createBlogCategory({
+        name,
+        slug,
+        description: description || null,
+        type: 'blog'
+      });
+      
+      res.status(201).json(newCategory);
+    } catch (error) {
+      console.error("Error creating blog category:", error);
+      res.status(500).json({ message: "Failed to create blog category" });
+    }
+  });
+
+  app.delete(`${apiPrefix}/admin/blog/categories/:id`, async (req, res) => {
+    try {
+      const { id } = req.params;
+      const categoryId = parseInt(id);
+      
+      if (isNaN(categoryId)) {
+        return res.status(400).json({ message: "Invalid category ID" });
+      }
+
+      // Check if category has posts
+      const postsInCategory = await storage.getBlogPostsCountByCategory(categoryId);
+      if (postsInCategory > 0) {
+        return res.status(400).json({ 
+          message: `Cannot delete category. It contains ${postsInCategory} blog posts. Please move or delete these posts first.` 
+        });
+      }
+
+      await storage.deleteBlogCategory(categoryId);
+      res.json({ success: true });
+    } catch (error) {
+      console.error("Error deleting blog category:", error);
+      res.status(500).json({ message: "Failed to delete blog category" });
+    }
+  });
+
   app.post(`${apiPrefix}/admin/blog/posts`, async (req, res) => {
     try {
       const postData = req.body;
