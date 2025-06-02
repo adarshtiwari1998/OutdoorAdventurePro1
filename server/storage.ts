@@ -849,8 +849,7 @@ export const storage = {
       console.error("Error fetching blog analytics:", error);
       throw error;
     }
-  }
-,
+  },
 
   async getAdminBlogPosts({ page, pageSize, status, categoryId, searchQuery, includeContent = false }: any) {
     try {
