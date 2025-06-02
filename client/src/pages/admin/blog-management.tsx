@@ -425,7 +425,7 @@ const BlogManagement = () => {
 
   const onImportSubmit = (values: any) => {
     // Validate required fields
-    if (!values.wordpressUrl) {
+    if (!values.wordpressUrl && !savedCredentials?.hasCredentials) {
       toast({
         title: "Error",
         description: "WordPress URL is required",
@@ -434,7 +434,7 @@ const BlogManagement = () => {
       return;
     }
     
-    if (!values.username) {
+    if (!values.username && !savedCredentials?.hasCredentials) {
       toast({
         title: "Error", 
         description: "WordPress username is required",
@@ -443,7 +443,8 @@ const BlogManagement = () => {
       return;
     }
     
-    if (!values.password) {
+    // Only require password if we don't have saved credentials
+    if (!values.password && !savedCredentials?.hasCredentials) {
       toast({
         title: "Error",
         description: "WordPress application password is required", 
@@ -461,16 +462,17 @@ const BlogManagement = () => {
       return;
     }
 
-    // If using saved credentials and password is masked, send the masked password
-    // The backend will handle getting the real password from the database
+    // Prepare submit data
     const submitData = {
       ...values,
       postsCount: parseInt(values.postsCount) || 10,
     };
 
-    // If we have saved credentials and password is masked, ensure backend knows to use saved password
-    if (savedCredentials?.hasCredentials && values.password === "***") {
-      submitData.password = "***";
+    // If using saved credentials, use those values
+    if (savedCredentials?.hasCredentials && !isEditingCredentials) {
+      submitData.wordpressUrl = savedCredentials.url;
+      submitData.username = savedCredentials.username;
+      submitData.password = "***"; // Signal to backend to use saved password
     }
 
     importFromWordPressMutation.mutate(submitData);
@@ -880,6 +882,7 @@ const BlogManagement = () => {
               // Auto-fill saved credentials
               importForm.setValue("wordpressUrl", savedCredentials.url || "");
               importForm.setValue("username", savedCredentials.username || "");
+              importForm.setValue("password", "***"); // Set masked password
             } else if (open && (!savedCredentials?.hasCredentials || isEditingCredentials)) {
               // Reset form if no saved credentials or editing
               importForm.reset();
@@ -966,7 +969,7 @@ const BlogManagement = () => {
                 )}
 
                 {savedCredentials?.hasCredentials && !isEditingCredentials && (
-                  <input type="hidden" {...importForm.register("password")} />
+                  <input type="hidden" {...importForm.register("password")} value="***" />
                 )}
                 <div className="space-y-2">
                   <Label htmlFor="postsCount">Number of Posts</Label>
