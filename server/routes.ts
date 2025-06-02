@@ -597,15 +597,29 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  app.patch(`${apiPrefix}/admin/blog/posts/bulk-category`, async (req, res) => {
+    try {
+      const { ids, categoryId } = req.body;
+      
+      if (!ids || !Array.isArray(ids) || ids.length === 0) {
+        return res.status(400).json({ message: "Post IDs are required" });
+      }
+      
+      if (!categoryId || isNaN(parseInt(categoryId))) {
+        return res.status(400).json({ message: "Valid category ID is required" });
+      }
+
+      await storage.updateBlogPostsCategory(ids, parseInt(categoryId));
+      res.json({ success: true });
+    } catch (error) {
+      console.error("Error updating blog posts category:", error);
+      res.status(500).json({ message: "Failed to update blog posts category" });
+    }
+  });
+
   app.patch(`${apiPrefix}/admin/blog/posts/:id`, async (req, res) => {
     try {
       const { id } = req.params;
-      
-      // Check if this is a bulk category update
-      if (id === 'bulk-category') {
-        return res.status(400).json({ message: "Use /bulk-category endpoint for bulk updates" });
-      }
-      
       const postData = req.body;
       const postId = parseInt(id);
       
@@ -629,26 +643,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error deleting blog posts:", error);
       res.status(500).json({ message: "Failed to delete blog posts" });
-    }
-  });
-
-  app.patch(`${apiPrefix}/admin/blog/posts/bulk-category`, async (req, res) => {
-    try {
-      const { ids, categoryId } = req.body;
-      
-      if (!ids || !Array.isArray(ids) || ids.length === 0) {
-        return res.status(400).json({ message: "Post IDs are required" });
-      }
-      
-      if (!categoryId || isNaN(parseInt(categoryId))) {
-        return res.status(400).json({ message: "Valid category ID is required" });
-      }
-
-      await storage.updateBlogPostsCategory(ids, parseInt(categoryId));
-      res.json({ success: true });
-    } catch (error) {
-      console.error("Error updating blog posts category:", error);
-      res.status(500).json({ message: "Failed to update blog posts category" });
     }
   });
 
