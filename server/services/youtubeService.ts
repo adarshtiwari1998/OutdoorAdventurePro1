@@ -47,7 +47,7 @@ export class YouTubeService {
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({ error: 'Unknown error' }));
         console.error(`❌ YouTube API Error (${response.status}):`, errorData);
-        
+
         if (response.status === 403) {
           throw new Error(`YouTube API quota exceeded or invalid API key: ${JSON.stringify(errorData)}`);
         } else if (response.status === 404) {
@@ -160,7 +160,7 @@ export class YouTubeService {
         title: video.snippet.title,
         description: video.snippet.description,
         thumbnailUrl: video.snippet.thumbnails.high.url,
-        publishedAt: video.snippet.publishedAt,
+        publishedAt: new Date(video.snippet.publishedAt).toISOString(),
         channelId: video.snippet.channelId,
         channelTitle: video.snippet.channelTitle
       }));
@@ -198,7 +198,7 @@ export class YouTubeService {
         title: video.snippet.title,
         description: video.snippet.description,
         thumbnailUrl: video.snippet.thumbnails.high.url,
-        publishedAt: video.snippet.publishedAt,
+        publishedAt: new Date(video.snippet.publishedAt).toISOString(),
         channelId: video.snippet.channelId,
         channelTitle: video.snippet.channelTitle
       }));
@@ -213,10 +213,10 @@ export class YouTubeService {
       // Unfortunately, YouTube's official API doesn't provide direct access to transcripts
       // This would typically require a third-party service or library
       // For this implementation, we'll use a placeholder approach
-      
+
       // In a real implementation, you might use a library like youtube-transcript or
       // make a request to a service that can extract transcripts
-      
+
       // Sample implementation using fetch to a hypothetical transcript service:
       /* 
       const response = await fetch(`https://transcript-service.example.com/api/transcript?videoId=${videoId}`, {
@@ -224,15 +224,15 @@ export class YouTubeService {
           'Authorization': `Bearer ${this.transcriptServiceApiKey}`
         }
       });
-      
+
       if (!response.ok) {
         throw new Error(`Failed to fetch transcript: ${response.statusText}`);
       }
-      
+
       const data = await response.json();
       return data.transcript;
       */
-      
+
       // For demonstration purposes, we'll return the video details with a note
       const videoDetails = await this.getVideoDetails(videoId);
       return `This is a placeholder for the transcript of "${videoDetails.title}". In a real implementation, this would contain the actual transcript text extracted from YouTube's closed captions or subtitles.
