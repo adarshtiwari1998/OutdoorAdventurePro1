@@ -8,6 +8,16 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Skeleton } from "@/components/ui/skeleton";
+import { 
+  AlertDialog, 
+  AlertDialogAction, 
+  AlertDialogCancel, 
+  AlertDialogContent, 
+  AlertDialogDescription, 
+  AlertDialogFooter, 
+  AlertDialogHeader, 
+  AlertDialogTitle 
+} from "@/components/ui/alert-dialog";
 import { toast } from "@/hooks/use-toast";
 import { Upload, Link as LinkIcon, Save, Trash2, Eye } from "lucide-react";
 
@@ -27,6 +37,7 @@ const DashboardAssetsAdmin = () => {
   const [uploadMethod, setUploadMethod] = useState<'url' | 'file'>('url');
   const [assetUrl, setAssetUrl] = useState('');
   const [assetName, setAssetName] = useState('');
+  const [assetToDelete, setAssetToDelete] = useState<AdminAsset | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Fetch admin assets from API
@@ -132,6 +143,17 @@ const DashboardAssetsAdmin = () => {
       console.error("Activation error:", error);
     }
   });
+
+  const handleDeleteClick = (asset: AdminAsset) => {
+    setAssetToDelete(asset);
+  };
+
+  const confirmDelete = () => {
+    if (assetToDelete) {
+      deleteAsset.mutate(assetToDelete.id);
+      setAssetToDelete(null);
+    }
+  };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -365,7 +387,7 @@ const DashboardAssetsAdmin = () => {
                           <Button
                             size="sm"
                             variant="destructive"
-                            onClick={() => deleteAsset.mutate(asset.id)}
+                            onClick={() => handleDeleteClick(asset)}
                             disabled={deleteAsset.isPending}
                           >
                             <Trash2 className="w-4 h-4" />
@@ -407,6 +429,28 @@ const DashboardAssetsAdmin = () => {
           </div>
         </div>
       </Tabs>
+
+      {/* Delete Confirmation Dialog */}
+      <AlertDialog open={!!assetToDelete} onOpenChange={() => setAssetToDelete(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete Asset</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to delete "{assetToDelete?.name}"? This action cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction 
+              onClick={confirmDelete}
+              disabled={deleteAsset.isPending}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              {deleteAsset.isPending ? "Deleting..." : "Delete Asset"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 };
