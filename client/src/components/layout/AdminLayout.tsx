@@ -10,7 +10,6 @@ import {
   FileText, 
   Video, 
   SlidersHorizontal, 
-  Image, 
   Settings, 
   Type, 
   Menu, 
@@ -19,7 +18,6 @@ import {
   Star,
   Compass,
   ChevronDown,
-  ChevronRight,
   Palette
 } from "lucide-react";
 import { 
@@ -54,17 +52,16 @@ interface AdminMenuItemProps {
 
 const AdminMenuItem = ({ icon: Icon, label, href, isActive }: AdminMenuItemProps) => {
   return (
-    <Link 
-      href={href}
-      className={cn(
-        "flex items-center gap-3 px-4 py-3 text-sm font-medium rounded-md hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors",
+    <Link href={href}>
+      <a className={cn(
+        "group flex items-center gap-3 px-3 py-2 text-sm font-medium rounded-md transition-colors",
         isActive 
-          ? "bg-[hsl(var(--theme-primary))] text-white hover:bg-[hsl(var(--theme-primary-dark))]" 
-          : "text-slate-700 dark:text-slate-300"
-      )}
-    >
-      <Icon size={18} />
-      <span>{label}</span>
+          ? "bg-blue-100 text-blue-900 dark:bg-blue-900 dark:text-blue-100" 
+          : "text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800"
+      )}>
+        <Icon size={18} />
+        <span>{label}</span>
+      </a>
     </Link>
   );
 };
@@ -95,19 +92,6 @@ const AdminLayout = ({ children, title }: AdminLayoutProps) => {
     });
   };
 
-  const menuItems = [
-    { icon: Home, label: "Dashboard", href: "/admin/dashboard" },
-    { icon: FileText, label: "Blog Management", href: "/admin/blog-management" },
-    { icon: Video, label: "YouTube Import", href: "/admin/youtube-import" },
-    { icon: Settings, label: "Category Headers", href: "/admin/category-headers" },
-    { icon: Settings, label: "Header Menus", href: "/admin/header-menus" },
-    { icon: Settings, label: "Sidebar Configs", href: "/admin/sidebar-configs" },
-    { icon: Settings, label: "Category Colors", href: "/admin/category-colors" },
-    { icon: Type, label: "Font Families", href: "/admin/font-families" },
-  ];
-
-  const [isHomeBlocksOpen, setIsHomeBlocksOpen] = useState(false);
-
   return (
     <div className="flex min-h-screen bg-slate-50 dark:bg-slate-900">
       {/* Mobile sidebar toggle */}
@@ -131,403 +115,204 @@ const AdminLayout = ({ children, title }: AdminLayoutProps) => {
       )}>
         <div className="flex flex-col h-full">
           <div className="mb-6">
-            <nav className="text-xl font-bold text-[hsl(var(--theme-primary))]">
+            <h2 className="text-xl font-bold text-blue-600 dark:text-blue-400">
               Admin Dashboard
-            </nav>
+            </h2>
           </div>
 
-          <nav className="space-y-1">
-            <Link href="/admin/dashboard">
-              <a className={`group flex items-center px-2 py-2 text-sm font-medium rounded-md ${
-                location.pathname === '/admin/dashboard'
-                  ? 'bg-gray-100 text-gray-900'
-                  : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
-              }`}>
-                <Home size={18} />
-                Dashboard
-              </a>
-            </Link>
+          <nav className="space-y-6 flex-1">
+            {/* Dashboard */}
+            <div>
+              <AdminMenuItem
+                icon={Home}
+                label="Dashboard"
+                href="/admin/dashboard"
+                isActive={location === '/admin/dashboard'}
+              />
+            </div>
 
-            {/* Content Management Section */}
-            <div className="mt-8">
-              <h3 className="px-3 text-xs font-semibold uppercase text-slate-500 dark:text-slate-400">
+            {/* Content Management */}
+            <div>
+              <h3 className="px-3 py-2 text-xs font-semibold uppercase text-slate-500 dark:text-slate-400">
                 Content Management
               </h3>
-              <div className="mt-2 space-y-1">
-                <Link href="/admin/blog-management">
-                  <a className={`group flex items-center px-2 py-2 text-sm font-medium rounded-md ${
-                    location.pathname === '/admin/blog-management'
-                      ? 'bg-gray-100 text-gray-900'
-                      : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
-                  }`}>
-                    <FileText size={18} />
-                    Blog Management
-                  </a>
-                </Link>
-
-                <Link href="/admin/youtube-import">
-                  <a className={`group flex items-center px-2 py-2 text-sm font-medium rounded-md ${
-                    location.pathname === '/admin/youtube-import'
-                      ? 'bg-gray-100 text-gray-900'
-                      : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
-                  }`}>
-                    <Video size={18} />
-                    YouTube Import
-                  </a>
-                </Link>
-
-                <Link href="/admin/sliders">
-                  <a className={`group flex items-center px-2 py-2 text-sm font-medium rounded-md ${
-                    location.pathname === '/admin/sliders'
-                      ? 'bg-gray-100 text-gray-900'
-                      : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
-                  }`}>
-                    <SlidersHorizontal size={18} />
-                    Sliders
-                  </a>
-                </Link>
+              <div className="space-y-1">
+                <AdminMenuItem
+                  icon={FileText}
+                  label="Blog Management"
+                  href="/admin/blog-management"
+                  isActive={location === '/admin/blog-management'}
+                />
+                <AdminMenuItem
+                  icon={Video}
+                  label="YouTube Import"
+                  href="/admin/youtube-import"
+                  isActive={location === '/admin/youtube-import'}
+                />
+                <AdminMenuItem
+                  icon={SlidersHorizontal}
+                  label="Sliders"
+                  href="/admin/sliders"
+                  isActive={location === '/admin/sliders'}
+                />
               </div>
             </div>
 
-            {/* Navigation Section */}
-            <div className="mt-8">
-              <h3 className="px-3 text-xs font-semibold uppercase text-slate-500 dark:text-slate-400">
+            {/* Navigation */}
+            <div>
+              <h3 className="px-3 py-2 text-xs font-semibold uppercase text-slate-500 dark:text-slate-400">
                 Navigation
               </h3>
-              <div className="mt-2 space-y-1">
-                <Link href="/admin/category-headers">
-                  <a className={`group flex items-center px-2 py-2 text-sm font-medium rounded-md ${
-                    location.pathname === '/admin/category-headers'
-                      ? 'bg-gray-100 text-gray-900'
-                      : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
-                  }`}>
-                    <Settings size={18} />
-                    Category Headers
-                  </a>
-                </Link>
-
-                <Link href="/admin/header-menus">
-                  <a className={`group flex items-center px-2 py-2 text-sm font-medium rounded-md ${
-                    location.pathname === '/admin/header-menus'
-                      ? 'bg-gray-100 text-gray-900'
-                      : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
-                  }`}>
-                    <Menu size={18} />
-                    Header Menus
-                  </a>
-                </Link>
-
-                <Link href="/admin/sidebar-configs">
-                  <a className={`group flex items-center px-2 py-2 text-sm font-medium rounded-md ${
-                    location.pathname === '/admin/sidebar-configs'
-                      ? 'bg-gray-100 text-gray-900'
-                      : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
-                  }`}>
-                    <Settings size={18} />
-                    Sidebar Configs
-                  </a>
-                </Link>
+              <div className="space-y-1">
+                <AdminMenuItem
+                  icon={Settings}
+                  label="Category Headers"
+                  href="/admin/category-headers"
+                  isActive={location === '/admin/category-headers'}
+                />
+                <AdminMenuItem
+                  icon={Menu}
+                  label="Header Menus"
+                  href="/admin/header-menus"
+                  isActive={location === '/admin/header-menus'}
+                />
+                <AdminMenuItem
+                  icon={Settings}
+                  label="Sidebar Configs"
+                  href="/admin/sidebar-configs"
+                  isActive={location === '/admin/sidebar-configs'}
+                />
               </div>
             </div>
 
-            {/* Global Design Section */}
-            <div className="mt-8">
-              <h3 className="px-3 text-xs font-semibold uppercase text-slate-500 dark:text-slate-400">
+            {/* Global Design */}
+            <div>
+              <h3 className="px-3 py-2 text-xs font-semibold uppercase text-slate-500 dark:text-slate-400">
                 Global Design
               </h3>
-              <div className="mt-2 space-y-1">
-                <Link href="/admin/font-families">
-                  <a className={`group flex items-center px-2 py-2 text-sm font-medium rounded-md ${
-                    location.pathname === '/admin/font-families'
-                      ? 'bg-gray-100 text-gray-900'
-                      : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
-                  }`}>
-                    <Type size={18} />
-                    Font Families
-                  </a>
-                </Link>
-
-                <Link href="/admin/category-colors">
-                  <a className={`group flex items-center px-2 py-2 text-sm font-medium rounded-md ${
-                    location.pathname === '/admin/category-colors'
-                      ? 'bg-gray-100 text-gray-900'
-                      : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
-                  }`}>
-                    <Palette size={18} />
-                    Category Colors
-                  </a>
-                </Link>
+              <div className="space-y-1">
+                <AdminMenuItem
+                  icon={Type}
+                  label="Font Families"
+                  href="/admin/font-families"
+                  isActive={location === '/admin/font-families'}
+                />
+                <AdminMenuItem
+                  icon={Palette}
+                  label="Category Colors"
+                  href="/admin/category-colors"
+                  isActive={location === '/admin/category-colors'}
+                />
               </div>
             </div>
 
-            {/* Home Page Blocks Section */}
-            <div className="mt-8">
-              <h3 className="px-3 text-xs font-semibold uppercase text-slate-500 dark:text-slate-400">
+            {/* Home Page Blocks */}
+            <div>
+              <h3 className="px-3 py-2 text-xs font-semibold uppercase text-slate-500 dark:text-slate-400">
                 Home Page Blocks
               </h3>
-              <div className="mt-2 space-y-1">
-                <Link href="/admin/home-blocks/favorite-destinations">
-                  <a className={`group flex items-center px-2 py-2 text-sm font-medium rounded-md ${
-                    location.pathname === '/admin/home-blocks/favorite-destinations'
-                      ? 'bg-gray-100 text-gray-900'
-                      : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
-                  }`}>
-                    <Compass size={18} />
-                    Favorite Destinations
-                  </a>
-                </Link>
-
-                <Link href="/admin/home-blocks/travelers-choice">
-                  <a className={`group flex items-center px-2 py-2 text-sm font-medium rounded-md ${
-                    location.pathname === '/admin/home-blocks/travelers-choice'
-                      ? 'bg-gray-100 text-gray-900'
-                      : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
-                  }`}>
-                    <Star size={18} />
-                    Travelers Choice
-                  </a>
-                </Link>
-
-                <Link href="/admin/home-blocks/tips-management">
-                  <a className={`group flex items-center px-2 py-2 text-sm font-medium rounded-md ${
-                    location.pathname === '/admin/home-blocks/tips-management'
-                      ? 'bg-gray-100 text-gray-900'
-                      : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
-                  }`}>
-                    <Compass size={18} />
-                    Tips Management
-                  </a>
-                </Link>
+              <div className="space-y-1">
+                <AdminMenuItem
+                  icon={Compass}
+                  label="Favorite Destinations"
+                  href="/admin/home-blocks/favorite-destinations"
+                  isActive={location === '/admin/home-blocks/favorite-destinations'}
+                />
+                <AdminMenuItem
+                  icon={Star}
+                  label="Travelers Choice"
+                  href="/admin/home-blocks/travelers-choice"
+                  isActive={location === '/admin/home-blocks/travelers-choice'}
+                />
+                <AdminMenuItem
+                  icon={Compass}
+                  label="Tips Management"
+                  href="/admin/home-blocks/tips-management"
+                  isActive={location === '/admin/home-blocks/tips-management'}
+                />
               </div>
             </div>
 
-            {/* Page Styling Section */}
-            <div className="mt-8">
-              <h3 className="px-3 text-xs font-semibold uppercase text-slate-500 dark:text-slate-400">
+            {/* Page Styling */}
+            <div>
+              <h3 className="px-3 py-2 text-xs font-semibold uppercase text-slate-500 dark:text-slate-400">
                 Page Styling
               </h3>
-              <div className="mt-2 space-y-1">
-                <Link href="/admin/styles/home">
-                  <a className={`group flex items-center px-2 py-2 text-sm font-medium rounded-md ${
-                    location.pathname === '/admin/styles/home'
-                      ? 'bg-gray-100 text-gray-900'
-                      : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
-                  }`}>
-                    <Home size={18} />
-                    Home Style
-                  </a>
-                </Link>
-
-                <Link href="/admin/styles/outdoors">
-                  <a className={`group flex items-center px-2 py-2 text-sm font-medium rounded-md ${
-                    location.pathname === '/admin/styles/outdoors'
-                      ? 'bg-gray-100 text-gray-900'
-                      : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
-                  }`}>
-                    <Compass size={18} />
-                    Outdoors Style
-                  </a>
-                </Link>
-
-                <Link href="/admin/styles/cruising">
-                  <a className={`group flex items-center px-2 py-2 text-sm font-medium rounded-md ${
-                    location.pathname === '/admin/styles/cruising'
-                      ? 'bg-gray-100 text-gray-900'
-                      : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
-                  }`}>
-                    <Compass size={18} />
-                    Cruising Style
-                  </a>
-                </Link>
-
-                <Link href="/admin/styles/fishing">
-                  <a className={`group flex items-center px-2 py-2 text-sm font-medium rounded-md ${
-                    location.pathname === '/admin/styles/fishing'
-                      ? 'bg-gray-100 text-gray-900'
-                      : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
-                  }`}>
-                    <Compass size={18} />
-                    Fishing Style
-                  </a>
-                </Link>
-
-                <Link href="/admin/styles/hiking">
-                  <a className={`group flex items-center px-2 py-2 text-sm font-medium rounded-md ${
-                    location.pathname === '/admin/styles/hiking'
-                      ? 'bg-gray-100 text-gray-900'
-                      : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
-                  }`}>
-                    <Compass size={18} />
-                    Hiking Style
-                  </a>
-                </Link>
-
-                <Link href="/admin/styles/camping">
-                  <a className={`group flex items-center px-2 py-2 text-sm font-medium rounded-md ${
-                    location.pathname === '/admin/styles/camping'
-                      ? 'bg-gray-100 text-gray-900'
-                      : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
-                  }`}>
-                    <Compass size={18} />
-                    Camping Style
-                  </a>
-                </Link>
-
-                <Link href="/admin/styles/four-x-four">
-                  <a className={`group flex items-center px-2 py-2 text-sm font-medium rounded-md ${
-                    location.pathname === '/admin/styles/four-x-four'
-                      ? 'bg-gray-100 text-gray-900'
-                      : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
-                  }`}>
-                    <Compass size={18} />
-                    4x4 Style
-                  </a>
-                </Link>
+              <div className="space-y-1">
+                <AdminMenuItem
+                  icon={Home}
+                  label="Home Style"
+                  href="/admin/styles/home"
+                  isActive={location === '/admin/styles/home'}
+                />
+                <AdminMenuItem
+                  icon={Compass}
+                  label="Outdoors Style"
+                  href="/admin/styles/outdoors"
+                  isActive={location === '/admin/styles/outdoors'}
+                />
+                <AdminMenuItem
+                  icon={Compass}
+                  label="Cruising Style"
+                  href="/admin/styles/cruising"
+                  isActive={location === '/admin/styles/cruising'}
+                />
+                <AdminMenuItem
+                  icon={Compass}
+                  label="Fishing Style"
+                  href="/admin/styles/fishing"
+                  isActive={location === '/admin/styles/fishing'}
+                />
+                <AdminMenuItem
+                  icon={Compass}
+                  label="Hiking Style"
+                  href="/admin/styles/hiking"
+                  isActive={location === '/admin/styles/hiking'}
+                />
+                <AdminMenuItem
+                  icon={Compass}
+                  label="Camping Style"
+                  href="/admin/styles/camping"
+                  isActive={location === '/admin/styles/camping'}
+                />
+                <AdminMenuItem
+                  icon={Compass}
+                  label="4x4 Style"
+                  href="/admin/styles/four-x-four"
+                  isActive={location === '/admin/styles/four-x-four'}
+                />
               </div>
             </div>
 
-            {/* Account Section */}
-            <div className="mt-8">
-              <h3 className="px-3 text-xs font-semibold uppercase text-slate-500 dark:text-slate-400">
+            {/* Account */}
+            <div>
+              <h3 className="px-3 py-2 text-xs font-semibold uppercase text-slate-500 dark:text-slate-400">
                 Account
               </h3>
-              <div className="mt-2 space-y-1">
-                <Link href="/admin/profile">
-                  <a className={`group flex items-center px-2 py-2 text-sm font-medium rounded-md ${
-                    location.pathname === '/admin/profile'
-                      ? 'bg-gray-100 text-gray-900'
-                      : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
-                  }`}>
-                    <User size={18} />
-                    Profile
-                  </a>
-                </Link>
-
-                <Link href="/admin/settings">
-                  <a className={`group flex items-center px-2 py-2 text-sm font-medium rounded-md ${
-                    location.pathname === '/admin/settings'
-                      ? 'bg-gray-100 text-gray-900'
-                      : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
-                  }`}>
-                    <Settings size={18} />
-                    Settings
-                  </a>
-                </Link>
+              <div className="space-y-1">
+                <AdminMenuItem
+                  icon={User}
+                  label="Profile"
+                  href="/admin/profile"
+                  isActive={location === '/admin/profile'}
+                />
+                <AdminMenuItem
+                  icon={Settings}
+                  label="Settings"
+                  href="/admin/settings"
+                  isActive={location === '/admin/settings'}
+                />
               </div>
             </div>
           </nav>
 
-          {/* Quick Links Section */}
+          {/* Back to Website */}
           <div className="mt-4 pt-4 border-t border-slate-200 dark:border-slate-800">
-            <h3 className="px-4 py-2 text-xs font-semibold uppercase text-slate-500 dark:text-slate-400">
-              Landing Pages
-            </h3>
-            <div className="space-y-1">
-              <Link 
-                href="/outdoors"
-                className="flex items-center gap-2 px-4 py-2 text-sm text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-md transition-colors cursor-pointer"
-              >
-                Outdoors
-              </Link>
-              <Link 
-                href="/cruising"
-                className="flex items-center gap-2 px-4 py-2 text-sm text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-md transition-colors cursor-pointer"
-              >
-                Cruising
-              </Link>
-              <Link 
-                href="/fishing"
-                className="flex items-center gap-2 px-4 py-2 text-sm text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-md transition-colors cursor-pointer"
-              >
-                Fishing
-              </Link>
-              <Link 
-                href="/hiking"
-                className="flex items-center gap-2 px-4 py-2 text-sm text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-md transition-colors cursor-pointer"
-              >
-                Hiking
-              </Link>
-              <Link 
-                href="/camping"
-                className="flex items-center gap-2 px-4 py-2 text-sm text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-md transition-colors cursor-pointer"
-              >
-                Camping
-              </Link>
-              <Link 
-                href="/four-x-four"
-                className="flex items-center gap-2 px-4 py-2 text-sm text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-md transition-colors cursor-pointer"
-              >
-                4x4 Adventures
-              </Link>
-            </div>
-          </div>
-
-          {/* Landing Page Styles */}
-          <div className="mt-4 pt-4 border-t border-slate-200 dark:border-slate-800">
-            <h3 className="px-4 py-2 text-xs font-semibold uppercase text-slate-500 dark:text-slate-400">
-              Landing Page Styles
-            </h3>
-            <div className="space-y-1">
-              <Link 
-                href="/admin/styles/home"
-                className="flex items-center gap-2 px-4 py-2 text-sm text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-md transition-colors cursor-pointer"
-              >
-                <Palette size={16} />
-                Home Style
-              </Link>
-              <Link 
-                href="/admin/styles/outdoors"
-                className="flex items-center gap-2 px-4 py-2 text-sm text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-md transition-colors cursor-pointer"
-              >
-                <Palette size={16} />
-                Outdoors Style
-              </Link>
-              <Link 
-                href="/admin/styles/cruising"
-                className="flex items-center gap-2 px-4 py-2 text-sm text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-md transition-colors cursor-pointer"
-              >
-                <Palette size={16} />
-                Cruising Style
-              </Link>
-              <Link 
-                href="/admin/styles/fishing"
-                className="flex items-center gap-2 px-4 py-2 text-sm text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-md transition-colors cursor-pointer"
-              >
-                <Palette size={16} />
-                Fishing Style
-              </Link>
-              <Link 
-                href="/admin/styles/hiking"
-                className="flex items-center gap-2 px-4 py-2 text-sm text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-md transition-colors cursor-pointer"
-              >
-                <Palette size={16} />
-                Hiking Style
-              </Link>
-              <Link 
-                href="/admin/styles/camping"
-                className="flex items-center gap-2 px-4 py-2 text-sm text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-md transition-colors cursor-pointer"
-              >
-                <Palette size={16} />
-                Camping Style
-              </Link>
-              <Link 
-                href="/admin/styles/four-x-four"
-                className="flex items-center gap-2 px-4 py-2 text-sm text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-md transition-colors cursor-pointer"
-              >
-                <Palette size={16} />
-                4x4 Style
-              </Link>
-            </div>
-          </div>
-
-          {/* Back to Website Link */}
-          <div className="mt-4 pt-4 border-t border-slate-200 dark:border-slate-800">
-            <Link 
-              href="/"
-              className="flex items-center gap-3 px-4 py-3 text-sm font-medium rounded-md text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors cursor-pointer"
-            >
-              <Home size={18} />
-              <span>Back to Website</span>
+            <Link href="/">
+              <a className="flex items-center gap-3 px-3 py-2 text-sm font-medium rounded-md text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors">
+                <Home size={18} />
+                <span>Back to Website</span>
+              </a>
             </Link>
           </div>
         </div>
@@ -543,11 +328,10 @@ const AdminLayout = ({ children, title }: AdminLayoutProps) => {
                 alt="Logo" 
                 className="h-8" 
                 onError={(e) => {
-                  // Use a div with styled background instead of placeholder image
                   const parent = e.currentTarget.parentElement;
                   if (parent) {
                     const div = document.createElement('div');
-                    div.className = "h-8 w-8 bg-primary rounded flex items-center justify-center text-primary-foreground text-xs font-bold";
+                    div.className = "h-8 w-8 bg-blue-600 rounded flex items-center justify-center text-white text-xs font-bold";
                     div.textContent = "OA";
                     parent.replaceChild(div, e.currentTarget);
                   }
@@ -562,7 +346,7 @@ const AdminLayout = ({ children, title }: AdminLayoutProps) => {
             <DropdownMenu>
               <DropdownMenuTrigger className="flex items-center gap-2 cursor-pointer outline-none">
                 <Avatar className="h-8 w-8">
-                  <AvatarFallback className="bg-primary text-primary-foreground">
+                  <AvatarFallback className="bg-blue-600 text-white">
                     {user?.fullName ? user.fullName.charAt(0).toUpperCase() : 'A'}
                   </AvatarFallback>
                 </Avatar>
