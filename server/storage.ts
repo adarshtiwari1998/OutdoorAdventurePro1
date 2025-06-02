@@ -213,7 +213,7 @@ export const storage = {
   async updateYoutubeChannelLastImport(id: number) {
     try {
       await db.update(youtubeChannels)
-        .set({ lastImport: new Date().toISOString() })
+        .set({ lastImport: new Date() })
         .where(eq(youtubeChannels.id, id));
     } catch (error) {
       console.error(`Error updating YouTube channel last import for ID ${id}:`, error);
