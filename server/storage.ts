@@ -964,8 +964,7 @@ export const storage = {
         excerpt: decode(postData.excerpt || ''),
         featuredImage: postData.featuredImage,
         categoryId: categoryId,
-        authorId: 1, // Default to first user, would be replaced with actual```tool_code
- user ID in real app
+        authorId: 1, // Default to first user, would be replaced with actual user ID in real app
         status: postData.status,
         publishedAt: finalPublishedAt,
         tags,
