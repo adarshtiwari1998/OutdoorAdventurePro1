@@ -882,13 +882,22 @@ export const storage = {
       const finalPublishedAt = postData.date ? new Date(postData.date) : publishedAt;
 
 
+      // Parse and validate categoryId
+      let categoryId = 1; // Default category
+      if (postData.categoryId) {
+        const parsedCategoryId = parseInt(postData.categoryId);
+        if (!isNaN(parsedCategoryId)) {
+          categoryId = parsedCategoryId;
+        }
+      }
+
       const blogPostData: any = {
         title: decode(postData.title || ''),
         slug,
         content: decode(postData.content || ''),
         excerpt: decode(postData.excerpt || ''),
         featuredImage: postData.featuredImage,
-        categoryId: parseInt(postData.categoryId),
+        categoryId: categoryId,
         authorId: 1, // Default to first user, would be replaced with actual user ID in real app
         status: postData.status,
         publishedAt: finalPublishedAt,

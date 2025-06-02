@@ -754,6 +754,16 @@ app.post(`${apiPrefix}/admin/blog/import/wordpress`, async (req, res) => {
       return res.status(400).json({ message: "WordPress URL, username, and password are required" });
     }
 
+    // Validate and parse categoryId
+    if (!categoryId || categoryId === "" || categoryId === "NaN") {
+      return res.status(400).json({ message: "Valid category ID is required" });
+    }
+
+    const parsedCategoryId = parseInt(categoryId);
+    if (isNaN(parsedCategoryId)) {
+      return res.status(400).json({ message: "Category ID must be a valid number" });
+    }
+
     // Get all existing blog posts to check against
     const existingPosts = await db.query.blogPosts.findMany({
       columns: {
@@ -823,7 +833,7 @@ app.post(`${apiPrefix}/admin/blog/import/wordpress`, async (req, res) => {
             content: post.content,
             excerpt: post.excerpt,
             featuredImage: post.featuredImage,
-            categoryId: categoryId || '1',
+            categoryId: parsedCategoryId.toString(),
             status: 'published',
             tags: post.tags,
             slug: post.slug

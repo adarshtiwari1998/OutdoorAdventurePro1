@@ -959,7 +959,14 @@ const BlogManagement = () => {
                   <select 
                     id="categoryId"
                     className="w-full px-3 py-2 border border-input rounded-md focus:outline-none focus:ring-2 focus:ring-primary"
-                    {...importForm.register("categoryId", { required: true })}
+                    {...importForm.register("categoryId", { 
+                      required: "Please select a category",
+                      validate: (value) => {
+                        if (!value || value === "") return "Please select a category";
+                        const num = parseInt(value);
+                        return !isNaN(num) && num > 0 ? true : "Please select a valid category";
+                      }
+                    })}
                   >
                     <option value="">Select a category</option>
                     {categories?.map(category => (
@@ -969,7 +976,9 @@ const BlogManagement = () => {
                     ))}
                   </select>
                   {importForm.formState.errors.categoryId && (
-                    <p className="text-sm text-destructive">Category is required</p>
+                    <p className="text-sm text-destructive">
+                      {importForm.formState.errors.categoryId.message || "Category is required"}
+                    </p>
                   )}
                 </div>
                 <DialogFooter>
