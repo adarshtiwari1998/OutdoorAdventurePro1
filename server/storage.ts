@@ -16,7 +16,8 @@ import {
   adminStats,
   InsertBlogPost,
   sliders,
-  InsertSlider
+  InsertSlider,
+  wordpressCredentials
 } from '@shared/schema';
 import { eq, and, like, desc, sql, asc, not, isNull, inArray } from 'drizzle-orm';
 import { format, subDays } from 'date-fns';
