@@ -902,7 +902,7 @@ export const storage = {
     const numericIds = ids.map(id => parseInt(id));
     await db.delete(blogPosts)
       .where(inArray(blogPosts.id, numericIds));
-  }
+  },
 
   async updateBlogPostsCategory(ids: string[], categoryId: number) {
     const numericIds = ids.map(id => parseInt(id));
@@ -912,7 +912,7 @@ export const storage = {
         updatedAt: new Date()
       })
       .where(inArray(blogPosts.id, numericIds));
-  }
+  },
 
   // Testimonials
   async getTestimonials() {
