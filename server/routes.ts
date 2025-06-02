@@ -391,8 +391,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Handle multipart form data for file uploads
       if (contentType.includes('multipart/form-data')) {
         // Use multer or similar to handle file uploads
-        const multer = require('multer');
-        const cloudinaryService = require('./services/cloudinaryService').default;
+        const { default: multer } = await import('multer');
+        const { default: cloudinaryService } = await import('./services/cloudinaryService.js');
         
         const upload = multer({ 
           storage: multer.memoryStorage(),
@@ -468,7 +468,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       if (url && uploadMethod === 'url') {
         try {
-          const cloudinaryService = require('./services/cloudinaryService').default;
+          const { default: cloudinaryService } = await import('./services/cloudinaryService.js');
           const assetId = `${type}_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
           finalUrl = await cloudinaryService.uploadAdminAsset(
             url,
