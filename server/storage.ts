@@ -928,7 +928,7 @@ export const storage = {
       console.error('Error getting admin blog posts:', error);
       throw error;
     }
-  },
+  },,
 
   async createBlogPost(postData: any) {
     try {
