@@ -44,12 +44,13 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Pagination, PaginationContent, PaginationItem, PaginationLink, PaginationNext, PaginationPrevious } from "@/components/ui/pagination";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { Checkbox } from "@/components/ui/checkbox";
-import { FileText, Edit, Trash2, Plus, Filter, Search, ChevronDown, Tag, FolderPlus, BarChart3 } from "lucide-react";
+import { FileText, Edit, Trash2, Plus, Filter, Search, ChevronDown, Tag, FolderPlus, BarChart3, X, Loader2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
 import { format } from "date-fns";
 import { CheckCircle2 } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Progress } from "@/components/ui/progress";
 
 // Schemas
 const blogPostSchema = z.object({
@@ -111,6 +112,26 @@ const BlogManagement = () => {
   const [analytics, setAnalytics] = useState<any>(null);
   const [isAnalyticsLoading, setIsAnalyticsLoading] = useState(false);
   const [selectedCategoryAnalytics, setSelectedCategoryAnalytics] = useState<any>(null);
+  const [categoryDetailsOpen, setCategoryDetailsOpen] = useState(false);
+  const [categoryPosts, setCategoryPosts] = useState<any[]>([]);
+  const [selectedCategoryForDetails, setSelectedCategoryForDetails] = useState<any>(null);
+  const [importProgress, setImportProgress] = useState<{
+    isImporting: boolean;
+    currentStep: string;
+    progress: number;
+    logs: string[];
+    totalPosts: number;
+    importedCount: number;
+    skippedCount: number;
+  }>({
+    isImporting: false,
+    currentStep: '',
+    progress: 0,
+    logs: [],
+    totalPosts: 0,
+    importedCount: 0,
+    skippedCount: 0
+  });
 
   // Load saved credentials from localStorage on component mount
   useState(() => {
@@ -127,11 +148,13 @@ const BlogManagement = () => {
   }, []);
 
   // Queries
-  const { data: postsData, isLoading } = useQuery<{
+  const { data: postsData, isLoading, refetch: refetchPosts } = useQuery<{
     posts: BlogPost[];
     totalPages: number;
   }>({
     queryKey: ['/api/admin/blog/posts', { page: currentPage, status: statusFilter, category: categoryFilter, search: searchQuery }],
+    refetchOnWindowFocus: false,
+    staleTime: 0
   });
 
   const { data: categories } = useQuery<{id: number, name: string, slug: string, type: string}[]>({
@@ -248,15 +271,86 @@ const BlogManagement = () => {
 
   const importFromWordPressMutation = useMutation({
     mutationFn: async (values: any) => {
-      return apiRequest('POST', '/api/admin/blog/import/wordpress', values);
+      setImportProgress({
+        isImporting: true,
+        currentStep: 'Starting import...',
+        progress: 10,
+        logs: ['🚀 Starting WordPress import...'],
+        totalPosts: values.postsCount || 10,
+        importedCount: 0,
+        skippedCount: 0
+      });
+
+      // Simulate progress updates
+      const updateProgress = (step: string, progress: number, log: string) => {
+        setImportProgress(prev => ({
+          ...prev,
+          currentStep: step,
+          progress,
+          logs: [...prev.logs, log]
+        }));
+      };
+
+      try {
+        updateProgress('Connecting to WordPress...', 20, '🔗 Connecting to WordPress API...');
+        
+        const result = await apiRequest('POST', '/api/admin/blog/import/wordpress', values);
+        
+        updateProgress('Processing posts...', 50, '📦 Processing fetched posts...');
+        
+        // Simulate individual post imports
+        if (result.importedPosts) {
+          for (let i = 0; i < result.importedPosts.length; i++) {
+            const post = result.importedPosts[i];
+            const progressPercent = 50 + ((i + 1) / result.importedPosts.length) * 40;
+            updateProgress(
+              `Importing post ${i + 1}/${result.importedPosts.length}`,
+              progressPercent,
+              `✅ Imported: "${post.title}"`
+            );
+            setImportProgress(prev => ({
+              ...prev,
+              importedCount: i + 1
+            }));
+            // Small delay to show progress
+            await new Promise(resolve => setTimeout(resolve, 100));
+          }
+        }
+        
+        updateProgress('Import completed!', 100, `📊 Import Summary: ${result.count} imported, ${result.skipped} skipped`);
+        
+        return result;
+      } catch (error) {
+        setImportProgress(prev => ({
+          ...prev,
+          currentStep: 'Import failed',
+          logs: [...prev.logs, `❌ Error: ${error}`]
+        }));
+        throw error;
+      }
     },
     onSuccess: (data, variables) => {
       const { count, skipped, fetched, message } = data;
+      
+      setTimeout(() => {
+        setImportProgress({
+          isImporting: false,
+          currentStep: '',
+          progress: 0,
+          logs: [],
+          totalPosts: 0,
+          importedCount: 0,
+          skippedCount: 0
+        });
+      }, 3000);
+
       toast({
         title: "Import Complete",
         description: message || `Imported ${count} new posts, skipped ${skipped} existing posts`,
       });
+      
       queryClient.invalidateQueries({ queryKey: ['/api/admin/blog/posts'] });
+      refetchAnalytics();
 
       // Save credentials to localStorage
       localStorage.setItem("wordpressUrl", variables.wordpressUrl);
@@ -271,6 +365,16 @@ const BlogManagement = () => {
       setIsEditingCredentials(false);
     },
     onError: (error) => {
+      setImportProgress({
+        isImporting: false,
+        currentStep: '',
+        progress: 0,
+        logs: [],
+        totalPosts: 0,
+        importedCount: 0,
+        skippedCount: 0
+      });
+      
       toast({
         title: "Error",
         description: `Failed to import from WordPress: ${error}`,
@@ -537,38 +641,63 @@ const BlogManagement = () => {
       .trim();
   };
 
-  useEffect(() => {
-    const fetchAnalytics = async () => {
-      setIsAnalyticsLoading(true);
-      try {
-        const response = await fetch('/api/admin/blog/analytics');
-        if (!response.ok) {
-          throw new Error('Failed to fetch analytics');
-        }
-        const data = await response.json();
-        setAnalytics(data);
-      } catch (error) {
-        console.error("Error fetching analytics:", error);
-        toast({
-          title: "Error",
-          description: `Failed to fetch blog analytics: ${error}`,
-          variant: "destructive",
-        });
-      } finally {
-        setIsAnalyticsLoading(false);
+  const refetchAnalytics = async () => {
+    setIsAnalyticsLoading(true);
+    try {
+      const response = await fetch('/api/admin/blog/analytics');
+      if (!response.ok) {
+        throw new Error('Failed to fetch analytics');
       }
-    };
+      const data = await response.json();
+      setAnalytics(data);
+    } catch (error) {
+      console.error("Error fetching analytics:", error);
+      toast({
+        title: "Error",
+        description: `Failed to fetch blog analytics: ${error}`,
+        variant: "destructive",
+      });
+    } finally {
+      setIsAnalyticsLoading(false);
+    }
+  };
 
-    fetchAnalytics();
+  useEffect(() => {
+    refetchAnalytics();
   }, []);
 
-  const openCategoryAnalytics = (category: any) => {
-    setSelectedCategoryAnalytics(category);
-    // Implement a dialog or modal to show detailed analytics for the category
-    toast({
-      title: "Category Analytics",
-      description: `Analytics for category: ${category.name} - Total posts: ${category.postCount}`,
-    });
+  // Force refetch posts when page changes
+  useEffect(() => {
+    refetchPosts();
+  }, [currentPage, statusFilter, categoryFilter, searchQuery]);
+
+  const openCategoryDetails = async (category: any) => {
+    setSelectedCategoryForDetails(category);
+    setIsAnalyticsLoading(true);
+    setCategoryDetailsOpen(true);
+    
+    try {
+      const response = await fetch(`/api/admin/blog/posts?category=${encodeURIComponent(category.name)}&page=1&pageSize=100`);
+      if (!response.ok) {
+        throw new Error('Failed to fetch category posts');
+      }
+      const data = await response.json();
+      setCategoryPosts(data.posts || []);
+    } catch (error) {
+      console.error("Error fetching category posts:", error);
+      toast({
+        title: "Error",
+        description: "Failed to fetch posts for this category",
+        variant: "destructive",
+      });
+      setCategoryPosts([]);
+    } finally {
+      setIsAnalyticsLoading(false);
+    }
+  };
+
+  const handlePageChange = (newPage: number) => {
+    setCurrentPage(newPage);
   };
 
   return (
@@ -937,20 +1066,23 @@ const BlogManagement = () => {
           </Dialog>
 
           <Dialog open={isImportDialogOpen} onOpenChange={(open) => {
-            setIsImportDialogOpen(open);
-            if (open && savedCredentials?.hasCredentials && !isEditingCredentials) {
-              // Auto-fill saved credentials
-              importForm.setValue("wordpressUrl", savedCredentials.url || "");
-              importForm.setValue("username", savedCredentials.username || "");
-              importForm.setValue("password", "***"); // Set masked password
-            } else if (open && (!savedCredentials?.hasCredentials || isEditingCredentials)) {
-              // Reset form if no saved credentials or editing
-              importForm.reset();
+            if (!importProgress.isImporting) {
+              setIsImportDialogOpen(open);
+              if (open && savedCredentials?.hasCredentials && !isEditingCredentials) {
+                // Auto-fill saved credentials
+                importForm.setValue("wordpressUrl", savedCredentials.url || "");
+                importForm.setValue("username", savedCredentials.username || "");
+                importForm.setValue("password", "***"); // Set masked password
+              } else if (open && (!savedCredentials?.hasCredentials || isEditingCredentials)) {
+                // Reset form if no saved credentials or editing
+                importForm.reset();
+              }
             }
           }}>
             <DialogTrigger asChild>
-              <Button variant="outline">
-                <FileText className="mr-1" size={16} /> Import from WordPress
+              <Button variant="outline" disabled={importProgress.isImporting}>
+                <FileText className="mr-1" size={16} /> 
+                {importProgress.isImporting ? 'Importing...' : 'Import from WordPress'}
               </Button>
             </DialogTrigger>
             <DialogContent>
@@ -960,6 +1092,37 @@ const BlogManagement = () => {
                   Connect to your WordPress site to import blog posts.
                 </DialogDescription>
               </DialogHeader>
+
+              {importProgress.isImporting && (
+                <div className="space-y-4 mb-4 p-4 bg-blue-50 border border-blue-200 rounded-lg">
+                  <div className="flex items-center justify-between">
+                    <h4 className="font-medium text-blue-800">Import in Progress</h4>
+                    <Loader2 className="h-4 w-4 animate-spin text-blue-600" />
+                  </div>
+                  
+                  <div className="space-y-2">
+                    <div className="flex justify-between text-sm text-blue-700">
+                      <span>{importProgress.currentStep}</span>
+                      <span>{Math.round(importProgress.progress)}%</span>
+                    </div>
+                    <Progress value={importProgress.progress} className="h-2" />
+                  </div>
+
+                  {importProgress.importedCount > 0 && (
+                    <div className="text-sm text-blue-700">
+                      Imported: {importProgress.importedCount} / {importProgress.totalPosts} posts
+                    </div>
+                  )}
+
+                  <div className="max-h-32 overflow-y-auto space-y-1">
+                    {importProgress.logs.slice(-5).map((log, index) => (
+                      <div key={index} className="text-xs text-blue-600 font-mono">
+                        {log}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
 
               {savedCredentials?.hasCredentials && !isEditingCredentials && (
                 <div className="bg-green-50 border border-green-200 rounded-lg p-4 mb-4">
@@ -1065,8 +1228,16 @@ const BlogManagement = () => {
                   )}
                 </div>
                 <DialogFooter>
-                  <Button type="submit" disabled={importFromWordPressMutation.isPending}>
-                    {importFromWordPressMutation.isPending ? "Importing..." : "Import Posts"}
+                  <Button 
+                    type="submit" 
+                    disabled={importFromWordPressMutation.isPending || importProgress.isImporting}
+                  >
+                    {importProgress.isImporting 
+                      ? `Importing... (${importProgress.importedCount}/${importProgress.totalPosts})` 
+                      : importFromWordPressMutation.isPending 
+                        ? "Starting..." 
+                        : "Import Posts"
+                    }
                   </Button>
                 </DialogFooter>
               </form>
@@ -1325,7 +1496,7 @@ const BlogManagement = () => {
                     <PaginationContent>
                       <PaginationItem>
                         <PaginationPrevious 
-                          onClick={() => setCurrentPage(p => Math.max(p - 1, 1))}
+                          onClick={() => handlePageChange(Math.max(currentPage - 1, 1))}
                           className={currentPage === 1 ? "pointer-events-none opacity-50" : "cursor-pointer"}
                         />
                       </PaginationItem>
@@ -1334,7 +1505,8 @@ const BlogManagement = () => {
                         <PaginationItem key={page}>
                           <PaginationLink
                             isActive={page === currentPage}
-                            onClick={() => setCurrentPage(page)}
+                            onClick={() => handlePageChange(page)}
+                            className="cursor-pointer"
                           >
                             {page}
                           </PaginationLink>
@@ -1343,7 +1515,7 @@ const BlogManagement = () => {
 
                       <PaginationItem>
                         <PaginationNext 
-                          onClick={() => setCurrentPage(p => Math.min(p + 1, postsData.totalPages))}
+                          onClick={() => handlePageChange(Math.min(currentPage + 1, postsData.totalPages))}
                           className={currentPage === postsData.totalPages ? "pointer-events-none opacity-50" : "cursor-pointer"}
                         />
                       </PaginationItem>
@@ -1358,10 +1530,23 @@ const BlogManagement = () => {
         <TabsContent value="analytics" className="space-y-6">
           <Card>
             <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <BarChart3 className="h-5 w-5" />
-                Blog Analytics
-              </CardTitle>
+              <div className="flex items-center justify-between">
+                <CardTitle className="flex items-center gap-2">
+                  <BarChart3 className="h-5 w-5" />
+                  Blog Analytics
+                </CardTitle>
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  onClick={refetchAnalytics}
+                  disabled={isAnalyticsLoading}
+                >
+                  {isAnalyticsLoading ? (
+                    <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                  ) : null}
+                  Refresh
+                </Button>
+              </div>
             </CardHeader>
             <CardContent>
               {analytics ? (
@@ -1404,7 +1589,7 @@ const BlogManagement = () => {
                             <Button
                               variant="outline"
                               size="sm"
-                              onClick={() => openCategoryAnalytics(category)}
+                              onClick={() => openCategoryDetails(category)}
                             >
                               View Details
                             </Button>
@@ -1416,7 +1601,9 @@ const BlogManagement = () => {
                 </div>
               ) : (
                 <div className="text-center py-8">
-                  <div className="text-muted-foreground">Loading analytics...</div>
+                  <div className="text-muted-foreground">
+                    {isAnalyticsLoading ? "Loading analytics..." : "No analytics data available"}
+                  </div>
                 </div>
               )}
             </CardContent>
@@ -1692,6 +1879,78 @@ const BlogManagement = () => {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      {/* Category Details Dialog */}
+      <Dialog open={categoryDetailsOpen} onOpenChange={setCategoryDetailsOpen}>
+        <DialogContent className="max-w-4xl max-h-[80vh]">
+          <DialogHeader>
+            <div className="flex items-center justify-between">
+              <DialogTitle className="flex items-center gap-2">
+                <Tag className="h-5 w-5" />
+                {selectedCategoryForDetails?.name} - Posts Details
+              </DialogTitle>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setCategoryDetailsOpen(false)}
+              >
+                <X className="h-4 w-4" />
+              </Button>
+            </div>
+            <DialogDescription>
+              All blog posts in the "{selectedCategoryForDetails?.name}" category ({categoryPosts.length} posts)
+            </DialogDescription>
+          </DialogHeader>
+          
+          <div className="overflow-y-auto max-h-[60vh]">
+            {isAnalyticsLoading ? (
+              <div className="flex items-center justify-center py-8">
+                <Loader2 className="h-6 w-6 animate-spin mr-2" />
+                Loading posts...
+              </div>
+            ) : categoryPosts.length > 0 ? (
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Title</TableHead>
+                    <TableHead>Status</TableHead>
+                    <TableHead>Author</TableHead>
+                    <TableHead>Date</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {categoryPosts.map((post) => (
+                    <TableRow key={post.id}>
+                      <TableCell>
+                        <div className="font-medium">{post.title}</div>
+                        <div className="text-sm text-muted-foreground truncate max-w-md">
+                          {post.excerpt?.replace(/<[^>]*>/g, '').substring(0, 100)}...
+                        </div>
+                      </TableCell>
+                      <TableCell>
+                        <Badge variant={
+                          post.status === 'published' ? 'default' : 
+                          post.status === 'draft' ? 'secondary' : 'outline'
+                        }>
+                          {post.status}
+                        </Badge>
+                      </TableCell>
+                      <TableCell>{post.author?.name}</TableCell>
+                      <TableCell>
+                        {post.publishedAt ? format(new Date(post.publishedAt), 'MMM d, yyyy') : '—'}
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            ) : (
+              <div className="text-center py-8">
+                <div className="text-muted-foreground">No posts found in this category</div>
+              </div>
+            )}
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
