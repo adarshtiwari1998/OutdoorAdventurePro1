@@ -19,7 +19,8 @@ import {
   Star,
   Compass,
   ChevronDown,
-  ChevronRight
+  ChevronRight,
+  Palette
 } from "lucide-react";
 import { 
   AlertDialog, 
@@ -31,6 +32,16 @@ import {
   AlertDialogHeader, 
   AlertDialogTitle 
 } from "@/components/ui/alert-dialog";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { Loader2 } from "lucide-react";
 import { Link } from "wouter";
 import type { LucideIcon } from "lucide-react";
 
