@@ -413,35 +413,54 @@ export async function registerRoutes(app: Express): Promise<Server> {
             });
           }
 
-          if (!req.file) {
+          // Handle both file and URL uploads in multipart form
+          let finalUrl, cloudinaryPublicId;
+
+          if (req.file) {
+            // File upload
+            try {
+              const assetId = `${type}_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+              finalUrl = await cloudinaryService.uploadAdminAsset(
+                `data:${req.file.mimetype};base64,${req.file.buffer.toString('base64')}`,
+                type === 'logo' ? 'logos' : 'favicons',
+                assetId
+              );
+              cloudinaryPublicId = assetId;
+            } catch (uploadError) {
+              console.error("Error uploading file to Cloudinary:", uploadError);
+              return res.status(500).json({ message: "Failed to upload file to cloud storage" });
+            }
+          } else if (req.body.url) {
+            // URL upload from multipart form
+            try {
+              const assetId = `${type}_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+              finalUrl = await cloudinaryService.uploadAdminAsset(
+                req.body.url,
+                type === 'logo' ? 'logos' : 'favicons',
+                assetId
+              );
+              cloudinaryPublicId = assetId;
+            } catch (uploadError) {
+              console.error("Error uploading URL to Cloudinary:", uploadError);
+              // Use original URL as fallback
+              finalUrl = req.body.url;
+            }
+          } else {
             return res.status(400).json({ 
-              message: "No file provided" 
+              message: "Either file or URL is required" 
             });
           }
 
-          try {
-            // Upload file to Cloudinary
-            const assetId = `${type}_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
-            const cloudinaryUrl = await cloudinaryService.uploadAdminAsset(
-              `data:${req.file.mimetype};base64,${req.file.buffer.toString('base64')}`,
-              type === 'logo' ? 'logos' : 'favicons',
-              assetId
-            );
+          const assetData = {
+            type,
+            name,
+            url: finalUrl,
+            cloudinaryPublicId,
+            isActive: false
+          };
 
-            const assetData = {
-              type,
-              name,
-              url: cloudinaryUrl,
-              cloudinaryPublicId: assetId,
-              isActive: false
-            };
-
-            const asset = await storage.createDashboardAsset(assetData);
-            res.status(201).json(asset);
-          } catch (uploadError) {
-            console.error("Error uploading to Cloudinary:", uploadError);
-            res.status(500).json({ message: "Failed to upload asset to cloud storage" });
-          }
+          const asset = await storage.createDashboardAsset(assetData);
+          res.status(201).json(asset);
         });
 
         return; // Exit early since we're handling the response in the callback
@@ -456,30 +475,28 @@ export async function registerRoutes(app: Express): Promise<Server> {
         });
       }
 
-      if (uploadMethod === 'url' && !url) {
+      if (!url) {
         return res.status(400).json({ 
-          message: "URL is required for URL upload method" 
+          message: "URL is required" 
         });
       }
 
-      // For URL uploads, also upload to Cloudinary for consistency
+      // For URL uploads, upload to Cloudinary for consistency
       let finalUrl = url;
       let cloudinaryPublicId = null;
 
-      if (url && uploadMethod === 'url') {
-        try {
-          const { default: cloudinaryService } = await import('./services/cloudinaryService.js');
-          const assetId = `${type}_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
-          finalUrl = await cloudinaryService.uploadAdminAsset(
-            url,
-            type === 'logo' ? 'logos' : 'favicons',
-            assetId
-          );
-          cloudinaryPublicId = assetId;
-        } catch (cloudinaryError) {
-          console.error("Error uploading URL to Cloudinary:", cloudinaryError);
-          // Continue with original URL if Cloudinary fails
-        }
+      try {
+        const { default: cloudinaryService } = await import('./services/cloudinaryService.js');
+        const assetId = `${type}_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+        finalUrl = await cloudinaryService.uploadAdminAsset(
+          url,
+          type === 'logo' ? 'logos' : 'favicons',
+          assetId
+        );
+        cloudinaryPublicId = assetId;
+      } catch (cloudinaryError) {
+        console.error("Error uploading URL to Cloudinary:", cloudinaryError);
+        // Continue with original URL if Cloudinary fails
       }
 
       const assetData = {

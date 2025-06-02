@@ -145,7 +145,41 @@ const DashboardAssetsAdmin = () => {
         });
         return;
       }
-      uploadAsset.mutate({ type: activeTab, name: assetName, url: assetUrl });
+      
+      // For URL uploads, use FormData to match server expectations
+      const formData = new FormData();
+      formData.append('type', activeTab);
+      formData.append('name', assetName);
+      formData.append('url', assetUrl);
+      formData.append('uploadMethod', 'url');
+
+      fetch('/api/admin/dashboard-assets', {
+        method: 'POST',
+        body: formData,
+      })
+      .then(response => {
+        if (!response.ok) {
+          throw new Error('Upload failed');
+        }
+        return response.json();
+      })
+      .then(() => {
+        queryClient.invalidateQueries({ queryKey: ['/api/admin/dashboard-assets'] });
+        setAssetUrl('');
+        setAssetName('');
+        toast({
+          title: "Asset uploaded successfully",
+          description: "The asset has been saved to Cloudinary.",
+        });
+      })
+      .catch((error) => {
+        toast({
+          title: "Upload failed",
+          description: "There was a problem uploading the asset.",
+          variant: "destructive",
+        });
+        console.error("Upload error:", error);
+      });
     } else {
       const file = fileInputRef.current?.files?.[0];
       if (!file || !assetName) {

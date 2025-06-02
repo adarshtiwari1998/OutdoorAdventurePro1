@@ -1,5 +1,6 @@
-import { ReactNode, useState } from "react";
+import { ReactNode, useState, useEffect } from "react";
 import { useLocation } from "wouter";
+import { useQuery } from "@tanstack/react-query";
 import { useMobile } from "@/hooks/use-mobile";
 import { useAuth } from "@/hooks/use-auth";
 import { useToast } from "@/hooks/use-toast";
@@ -81,6 +82,38 @@ const AdminLayout = ({ children, title }: AdminLayoutProps) => {
   const { toast } = useToast();
   const [, navigate] = useLocation();
 
+  // Fetch active dashboard assets
+  const { data: assets } = useQuery({
+    queryKey: ['/api/admin/dashboard-assets'],
+    refetchInterval: 5000, // Refetch every 5 seconds for real-time updates
+  });
+
+  // Get active logo and favicon
+  const activeLogo = assets?.find((asset: any) => asset.type === 'logo' && asset.isActive);
+  const activeFavicon = assets?.find((asset: any) => asset.type === 'favicon' && asset.isActive);
+
+  // Update favicon dynamically
+  useEffect(() => {
+    if (activeFavicon) {
+      // Remove existing favicon links
+      const existingFavicons = document.querySelectorAll('link[rel*="icon"]');
+      existingFavicons.forEach(link => link.remove());
+
+      // Add new favicon
+      const faviconLink = document.createElement('link');
+      faviconLink.rel = 'icon';
+      faviconLink.type = 'image/x-icon';
+      faviconLink.href = activeFavicon.url;
+      document.head.appendChild(faviconLink);
+
+      // Also add apple-touch-icon for better mobile support
+      const appleTouchLink = document.createElement('link');
+      appleTouchLink.rel = 'apple-touch-icon';
+      appleTouchLink.href = activeFavicon.url;
+      document.head.appendChild(appleTouchLink);
+    }
+  }, [activeFavicon]);
+
   const handleLogout = () => {
     logoutMutation.mutate(undefined, {
       onSuccess: () => {
@@ -126,20 +159,26 @@ const AdminLayout = ({ children, title }: AdminLayoutProps) => {
         <div className="flex flex-col h-full">
           <div className="mb-6 relative">
             <div className="flex items-center">
-              <img 
-                src="/logo.png" 
-                alt="Logo" 
-                className="h-10 w-auto" 
-                onError={(e) => {
-                  const parent = e.currentTarget.parentElement;
-                  if (parent) {
-                    const div = document.createElement('div');
-                    div.className = "h-10 w-10 bg-blue-600 rounded flex items-center justify-center text-white text-sm font-bold";
-                    div.textContent = "OA";
-                    parent.replaceChild(div, e.currentTarget);
-                  }
-                }} 
-              />
+              {activeLogo ? (
+                <img 
+                  src={activeLogo.url} 
+                  alt={activeLogo.name || "Admin Logo"} 
+                  className="h-10 w-auto" 
+                  onError={(e) => {
+                    const parent = e.currentTarget.parentElement;
+                    if (parent) {
+                      const div = document.createElement('div');
+                      div.className = "h-10 w-10 bg-blue-600 rounded flex items-center justify-center text-white text-sm font-bold";
+                      div.textContent = "OA";
+                      parent.replaceChild(div, e.currentTarget);
+                    }
+                  }} 
+                />
+              ) : (
+                <div className="h-10 w-10 bg-blue-600 rounded flex items-center justify-center text-white text-sm font-bold">
+                  OA
+                </div>
+              )}
             </div>
             <span className="absolute bottom-0 right-0 text-xs text-slate-500 dark:text-slate-400 font-medium">
               admin
@@ -355,20 +394,26 @@ const AdminLayout = ({ children, title }: AdminLayoutProps) => {
         <header className="sticky top-0 z-30 bg-white dark:bg-slate-950 border-b border-slate-200 dark:border-slate-800 h-16 flex items-center justify-between px-6">
           <div className="flex items-center">
             <div className="mr-4">
-              <img 
-                src="/logo.png" 
-                alt="Logo" 
-                className="h-8" 
-                onError={(e) => {
-                  const parent = e.currentTarget.parentElement;
-                  if (parent) {
-                    const div = document.createElement('div');
-                    div.className = "h-8 w-8 bg-blue-600 rounded flex items-center justify-center text-white text-xs font-bold";
-                    div.textContent = "OA";
-                    parent.replaceChild(div, e.currentTarget);
-                  }
-                }} 
-              />
+              {activeLogo ? (
+                <img 
+                  src={activeLogo.url} 
+                  alt={activeLogo.name || "Admin Logo"} 
+                  className="h-8" 
+                  onError={(e) => {
+                    const parent = e.currentTarget.parentElement;
+                    if (parent) {
+                      const div = document.createElement('div');
+                      div.className = "h-8 w-8 bg-blue-600 rounded flex items-center justify-center text-white text-xs font-bold";
+                      div.textContent = "OA";
+                      parent.replaceChild(div, e.currentTarget);
+                    }
+                  }} 
+                />
+              ) : (
+                <div className="h-8 w-8 bg-blue-600 rounded flex items-center justify-center text-white text-xs font-bold">
+                  OA
+                </div>
+              )}
             </div>
             <h1 className="text-2xl font-bold text-slate-900 dark:text-white">{title}</h1>
           </div>
