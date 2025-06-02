@@ -462,9 +462,21 @@ const BlogManagement = () => {
       return;
     }
 
+    // Validate that categoryId is a valid number
+    const categoryId = parseInt(values.categoryId);
+    if (isNaN(categoryId) || categoryId <= 0) {
+      toast({
+        title: "Error",
+        description: "Please select a valid category",
+        variant: "destructive",
+      });
+      return;
+    }
+
     // Prepare submit data
     const submitData = {
       ...values,
+      categoryId: categoryId.toString(), // Ensure it's a string representation of a valid number
       postsCount: parseInt(values.postsCount) || 10,
     };
 
@@ -990,9 +1002,9 @@ const BlogManagement = () => {
                       <SelectValue placeholder="Select a category" />
                     </SelectTrigger>
                     <SelectContent>
-                      {categories?.map(category => (
+                      {categories?.filter(category => !category.id.toString().startsWith('header_')).map(category => (
                         <SelectItem key={category.id} value={category.id.toString()}>
-                          {category.name}
+                          {category.name} {category.type === 'header' ? '(Category Page)' : ''}
                         </SelectItem>
                       ))}
                     </SelectContent>
