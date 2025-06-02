@@ -695,6 +695,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  app.get(`${apiPrefix}/admin/blog/analytics`, async (req, res) => {
+    try {
+      const analytics = await storage.getBlogAnalytics();
+      res.json(analytics);
+    } catch (error) {
+      console.error("Error fetching blog analytics:", error);
+      res.status(500).json({ message: "Failed to fetch blog analytics" });
+    }
+  });
+
   app.post(`${apiPrefix}/admin/blog/sync-header-categories`, async (req, res) => {
     try {
       // Get all header configs
@@ -829,6 +839,7 @@ app.post(`${apiPrefix}/admin/blog/import/wordpress`, async (req, res) => {
     let fetchedCount = 0;
     let currentPage = 1;
     const maxPages = 10; // Safety limit to prevent infinite loops
+    const importedPosts = []; // Track imported posts for frontend feedback
 
     while (importedCount < postsCount && currentPage <= maxPages) {
       console.log(`📄 Fetching page ${currentPage} from WordPress...`);
@@ -889,6 +900,12 @@ app.post(`${apiPrefix}/admin/blog/import/wordpress`, async (req, res) => {
           existingSlugs.add(postSlug);
           existingTitles.add(postTitle);
 
+          // Track imported post for frontend feedback
+          importedPosts.push({
+            title: post.title,
+            status: 'published'
+          });
+
           importedCount++;
           console.log(`✅ Imported post ${importedCount}/${postsCount}: "${post.title}"`);
         } catch (error) {
@@ -918,6 +935,7 @@ app.post(`${apiPrefix}/admin/blog/import/wordpress`, async (req, res) => {
       count: importedCount,
       skipped: skippedCount,
       fetched: fetchedCount,
+      importedPosts: importedPosts,
       message: `Successfully imported ${importedCount} new posts. Skipped ${skippedCount} existing posts.`
     });
   } catch (error) {

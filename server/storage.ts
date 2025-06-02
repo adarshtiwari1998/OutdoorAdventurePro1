@@ -773,17 +773,84 @@ export const storage = {
     }
   },
 
-  async getBlogPostsCountByCategory(categoryId: number) {
+  async getBlogPostsCountByCategory(categoryId: number): Promise<number> {
     try {
-      const posts = await db.query.blogPosts.findMany({
-        where: eq(blogPosts.categoryId, categoryId),
-      });
-      return posts.length;
+      const count = await db.select({ count: sql<number>`count(*)` })
+        .from(blogPosts)
+        .where(eq(blogPosts.categoryId, categoryId));
+      return count[0]?.count || 0;
     } catch (error) {
-      console.error('Error getting blog posts count by category:', error);
+      console.error(`Error counting blog posts for category ${categoryId}:`, error);
       throw error;
     }
-  },
+  }
+
+  async getBlogAnalytics() {
+    try {
+      // Get total posts count
+      const totalPostsResult = await db.select({ count: sql<number>`count(*)` })
+        .from(blogPosts);
+      const totalPosts = totalPostsResult[0]?.count || 0;
+
+      // Get published posts count
+      const publishedPostsResult = await db.select({ count: sql<number>`count(*)` })
+        .from(blogPosts)
+        .where(eq(blogPosts.status, 'published'));
+      const publishedPosts = publishedPostsResult[0]?.count || 0;
+
+      // Get draft posts count
+      const draftPostsResult = await db.select({ count: sql<number>`count(*)` })
+        .from(blogPosts)
+        .where(eq(blogPosts.status, 'draft'));
+      const draftPosts = draftPostsResult[0]?.count || 0;
+
+      // Get categories with post counts
+      const categoriesData = await db.select({
+        id: categories.id,
+        name: categories.name,
+        type: categories.type,
+        postCount: sql<number>`count(${blogPosts.id})`,
+        publishedCount: sql<number>`count(case when ${blogPosts.status} = 'published' then 1 end)`,
+        draftCount: sql<number>`count(case when ${blogPosts.status} = 'draft' then 1 end)`
+      })
+        .from(categories)
+        .leftJoin(blogPosts, eq(categories.id, blogPosts.categoryId))
+        .groupBy(categories.id, categories.name, categories.type);
+
+      // Get detailed posts for each category
+      const categoriesWithPosts = await Promise.all(
+        categoriesData.map(async (category) => {
+          const posts = await db.select({
+            id: blogPosts.id,
+            title: blogPosts.title,
+            status: blogPosts.status,
+            publishedAt: blogPosts.publishedAt,
+            createdAt: blogPosts.createdAt
+          })
+            .from(blogPosts)
+            .where(eq(blogPosts.categoryId, category.id))
+            .orderBy(desc(blogPosts.createdAt))
+            .limit(10);
+
+          return {
+            ...category,
+            posts
+          };
+        })
+      );
+
+      return {
+        totalPosts,
+        publishedPosts,
+        draftPosts,
+        categoriesData: categoriesWithPosts
+      };
+    } catch (error) {
+      console.error("Error fetching blog analytics:", error);
+      throw error;
+    }
+  }
+,
 
   async getAdminBlogPosts({ page, pageSize, status, categoryId, searchQuery, includeContent = false }: any) {
     try {
@@ -898,7 +965,8 @@ export const storage = {
         excerpt: decode(postData.excerpt || ''),
         featuredImage: postData.featuredImage,
         categoryId: categoryId,
-        authorId: 1, // Default to first user, would be replaced with actual user ID in real app
+        authorId: 1, // Default to first user, would be replaced with actual```tool_code
+ user ID in real app
         status: postData.status,
         publishedAt: finalPublishedAt,
         tags,

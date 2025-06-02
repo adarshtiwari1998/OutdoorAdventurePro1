@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Editor } from '@tinymce/tinymce-react';
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useForm } from "react-hook-form";
@@ -44,11 +44,12 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Pagination, PaginationContent, PaginationItem, PaginationLink, PaginationNext, PaginationPrevious } from "@/components/ui/pagination";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { Checkbox } from "@/components/ui/checkbox";
-import { FileText, Edit, Trash2, Plus, Filter, Search, ChevronDown, Tag, FolderPlus } from "lucide-react";
+import { FileText, Edit, Trash2, Plus, Filter, Search, ChevronDown, Tag, FolderPlus, BarChart3 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
 import { format } from "date-fns";
 import { CheckCircle2 } from "lucide-react";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 // Schemas
 const blogPostSchema = z.object({
@@ -107,6 +108,9 @@ const BlogManagement = () => {
   }>({ hasCredentials: false });
   const [isCategoryDialogOpen, setIsCategoryDialogOpen] = useState(false);
   const [categoryToDelete, setCategoryToDelete] = useState<{id: number, name: string} | null>(null);
+  const [analytics, setAnalytics] = useState<any>(null);
+  const [isAnalyticsLoading, setIsAnalyticsLoading] = useState(false);
+  const [selectedCategoryAnalytics, setSelectedCategoryAnalytics] = useState<any>(null);
 
   // Load saved credentials from localStorage on component mount
   useState(() => {
@@ -531,6 +535,40 @@ const BlogManagement = () => {
       .replace(/\s+/g, '-')
       .replace(/-+/g, '-')
       .trim();
+  };
+
+  useEffect(() => {
+    const fetchAnalytics = async () => {
+      setIsAnalyticsLoading(true);
+      try {
+        const response = await fetch('/api/admin/blog/analytics');
+        if (!response.ok) {
+          throw new Error('Failed to fetch analytics');
+        }
+        const data = await response.json();
+        setAnalytics(data);
+      } catch (error) {
+        console.error("Error fetching analytics:", error);
+        toast({
+          title: "Error",
+          description: `Failed to fetch blog analytics: ${error}`,
+          variant: "destructive",
+        });
+      } finally {
+        setIsAnalyticsLoading(false);
+      }
+    };
+
+    fetchAnalytics();
+  }, []);
+
+  const openCategoryAnalytics = (category: any) => {
+    setSelectedCategoryAnalytics(category);
+    // Implement a dialog or modal to show detailed analytics for the category
+    toast({
+      title: "Category Analytics",
+      description: `Analytics for category: ${category.name} - Total posts: ${category.postCount}`,
+    });
   };
 
   return (
@@ -963,8 +1001,8 @@ const BlogManagement = () => {
                       <Label htmlFor="wordpressUrl">WordPress URL</Label>
                       <Input 
                         id="wordpressUrl" 
-                        placeholder="https://yourblog.wordpress.com" 
-                        {...importForm.register("wordpressUrl")}
+                        placeholder="https://yourblog.wordpress.com" ```tool_code
+{...importForm.register("wordpressUrl")}
                       />
                     </div>
                     <div className="space-y-2">
@@ -1161,149 +1199,225 @@ const BlogManagement = () => {
         </CardContent>
       </Card>
 
-      <Card>
-        <CardContent className="p-0">
-          <div className="rounded-md border">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead className="w-12">
-                    <Checkbox 
-                      onCheckedChange={(checked) => {
-                        if (typeof checked === 'boolean') {
-                          if (checked) {
-                            setSelectedPosts(postsData?.posts.map(post => post.id) || []);
-                          } else {
-                            setSelectedPosts([]);
-                          }
-                        }
-                      }}
-                      checked={postsData?.posts.length === selectedPosts.length && postsData?.posts.length > 0}
-                    />
-                  </TableHead>
-                  <TableHead>Title</TableHead>
-                  <TableHead>Category</TableHead>
-                  <TableHead>Author</TableHead>
-                  <TableHead className="hidden md:table-cell">Status</TableHead>
-                  <TableHead className="hidden md:table-cell">Date</TableHead>
-                  <TableHead className="text-right">Actions</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {isLoading ? (
-                  Array(5).fill(0).map((_, i) => (
-                    <TableRow key={i}>
-                      <TableCell></TableCell>
-                      <TableCell><div className="h-5 w-48 bg-neutral-200 rounded animate-pulse"></div></TableCell>
-                      <TableCell><div className="h-5 w-24 bg-neutral-200 rounded animate-pulse"></div></TableCell>
-                      <TableCell><div className="h-5 w-24 bg-neutral-200 rounded animate-pulse"></div></TableCell>
-                      <TableCell className="hidden md:table-cell"><div className="h-5 w-16 bg-neutral-200 rounded animate-pulse"></div></TableCell>
-                      <TableCell className="hidden md:table-cell"><div className="h-5 w-24 bg-neutral-200 rounded animate-pulse"></div></TableCell>
-                      <TableCell className="text-right"><div className="h-5 w-16 bg-neutral-200 rounded animate-pulse ml-auto"></div></TableCell>
-                    </TableRow>
-                  ))
-                ) : postsData?.posts.length === 0 ? (
-                  <TableRow>
-                    <TableCell colSpan={7} className="text-center py-8">
-                      No blog posts found. Try adjusting your filters or create a new post.
-                    </TableCell>
-                  </TableRow>
-                ) : (
-                  postsData?.posts.map((post) => (
-                    <TableRow key={post.id}>
-                      <TableCell>
+      <Tabs defaultValue="posts" className="w-full">
+        <TabsList>
+          <TabsTrigger value="posts">Posts</TabsTrigger>
+          <TabsTrigger value="analytics">Analytics</TabsTrigger>
+        </TabsList>
+        <TabsContent value="posts" className="space-y-6">
+          <Card>
+            <CardContent className="p-0">
+              <div className="rounded-md border">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead className="w-12">
                         <Checkbox 
-                          checked={selectedPosts.includes(post.id)}
-                          onCheckedChange={() => handleSelectPost(post.id)}
+                          onCheckedChange={(checked) => {
+                            if (typeof checked === 'boolean') {
+                              if (checked) {
+                                setSelectedPosts(postsData?.posts.map(post => post.id) || []);
+                              } else {
+                                setSelectedPosts([]);
+                              }
+                            }
+                          }}
+                          checked={postsData?.posts.length === selectedPosts.length && postsData?.posts.length > 0}
                         />
-                      </TableCell>
-                      <TableCell>
-                        <div className="font-medium">{post.title}</div>
-                      </TableCell>
-                      <TableCell>{post.category.name}</TableCell>
-                      <TableCell>{post.author.name}</TableCell>
-                      <TableCell className="hidden md:table-cell">
-                        <Badge variant={
-                          post.status === 'published' ? 'default' : 
-                          post.status === 'draft' ? 'secondary' :post.status === 'outline'
-                        }>
-                          {post.status}
-                        </Badge>
-                      </TableCell>
-                      <TableCell className="hidden md:table-cell">
-                        {post.publishedAt ? format(new Date(post.publishedAt), 'MMM d, yyyy') : '—'}
-                      </TableCell>
-                      <TableCell className="text-right">
-                        <Button 
-                          variant="ghost" 
-                          size="icon"
-                          onClick={() => handleEditPost(post)}
-                        >
-                          <Edit size={16} />
-                        </Button>
-                        <AlertDialog>
-                          <AlertDialogTrigger asChild>
-                            <Button variant="ghost" size="icon">
-                              <Trash2 size={16} />
-                            </Button>
-                          </AlertDialogTrigger>
-                          <AlertDialogContent>
-                            <AlertDialogHeader>
-                              <AlertDialogTitle>Delete Post</AlertDialogTitle>
-                              <AlertDialogDescription>
-                                Are you sure you want to delete "{post.title}"? This action cannot be undone.
-                              </AlertDialogDescription>
-                            </AlertDialogHeader>
-                            <AlertDialogFooter>
-                              <AlertDialogCancel>Cancel</AlertDialogCancel>
-                              <AlertDialogAction onClick={() => deletePostsMutation.mutate([post.id])}>
-                                Delete
-                              </AlertDialogAction>
-                            </AlertDialogFooter>
-                          </AlertDialogContent>
-                        </AlertDialog>
-                      </TableCell>
+                      </TableHead>
+                      <TableHead>Title</TableHead>
+                      <TableHead>Category</TableHead>
+                      <TableHead>Author</TableHead>
+                      <TableHead className="hidden md:table-cell">Status</TableHead>
+                      <TableHead className="hidden md:table-cell">Date</TableHead>
+                      <TableHead className="text-right">Actions</TableHead>
                     </TableRow>
-                  ))
-                )}
-              </TableBody>
-            </Table>
-          </div>
+                  </TableHeader>
+                  <TableBody>
+                    {isLoading ? (
+                      Array(5).fill(0).map((_, i) => (
+                        <TableRow key={i}>
+                          <TableCell></TableCell>
+                          <TableCell><div className="h-5 w-48 bg-neutral-200 rounded animate-pulse"></div></TableCell>
+                          <TableCell><div className="h-5 w-24 bg-neutral-200 rounded animate-pulse"></div></TableCell>
+                          <TableCell><div className="h-5 w-24 bg-neutral-200 rounded animate-pulse"></div></TableCell>
+                          <TableCell className="hidden md:table-cell"><div className="h-5 w-16 bg-neutral-200 rounded animate-pulse"></div></TableCell>
+                          <TableCell className="hidden md:table-cell"><div className="h-5 w-24 bg-neutral-200 rounded animate-pulse"></div></TableCell>
+                          <TableCell className="text-right"><div className="h-5 w-16 bg-neutral-200 rounded animate-pulse ml-auto"></div></TableCell>
+                        </TableRow>
+                      ))
+                    ) : postsData?.posts.length === 0 ? (
+                      <TableRow>
+                        <TableCell colSpan={7} className="text-center py-8">
+                          No blog posts found. Try adjusting your filters or create a new post.
+                        </TableCell>
+                      </TableRow>
+                    ) : (
+                      postsData?.posts.map((post) => (
+                        <TableRow key={post.id}>
+                          <TableCell>
+                            <Checkbox 
+                              checked={selectedPosts.includes(post.id)}
+                              onCheckedChange={() => handleSelectPost(post.id)}
+                            />
+                          </TableCell>
+                          <TableCell>
+                            <div className="font-medium">{post.title}</div>
+                          </TableCell>
+                          <TableCell>{post.category.name}</TableCell>
+                          <TableCell>{post.author.name}</TableCell>
+                          <TableCell className="hidden md:table-cell">
+                            <Badge variant={
+                              post.status === 'published' ? 'default' : 
+                              post.status === 'draft' ? 'secondary' :post.status === 'outline'
+                            }>
+                              {post.status}
+                            </Badge>
+                          </TableCell>
+                          <TableCell className="hidden md:table-cell">
+                            {post.publishedAt ? format(new Date(post.publishedAt), 'MMM d, yyyy') : '—'}
+                          </TableCell>
+                          <TableCell className="text-right">
+                            <Button 
+                              variant="ghost" 
+                              size="icon"
+                              onClick={() => handleEditPost(post)}
+                            >
+                              <Edit size={16} />
+                            </Button>
+                            <AlertDialog>
+                              <AlertDialogTrigger asChild>
+                                <Button variant="ghost" size="icon">
+                                  <Trash2 size={16} />
+                                </Button>
+                              </AlertDialogTrigger>
+                              <AlertDialogContent>
+                                <AlertDialogHeader>
+                                  <AlertDialogTitle>Delete Post</AlertDialogTitle>
+                                  <AlertDialogDescription>
+                                    Are you sure you want to delete "{post.title}"? This action cannot be undone.
+                                  </AlertDialogDescription>
+                                </AlertDialogHeader>
+                                <AlertDialogFooter>
+                                  <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                  <AlertDialogAction onClick={() => deletePostsMutation.mutate([post.id])}>
+                                    Delete
+                                  </AlertDialogAction>
+                                </AlertDialogFooter>
+                              </AlertDialogContent>
+                            </AlertDialog>
+                          </TableCell>
+                        </TableRow>
+                      ))
+                    )}
+                  </TableBody>
+                </Table>
+              </div>
 
-          {postsData && postsData.totalPages > 1 && (
-            <div className="flex items-center justify-center py-4">
-              <Pagination>
-                <PaginationContent>
-                  <PaginationItem>
-                    <PaginationPrevious 
-                      onClick={() => setCurrentPage(p => Math.max(p - 1, 1))}
-                      className={currentPage === 1 ? "pointer-events-none opacity-50" : "cursor-pointer"}
-                    />
-                  </PaginationItem>
+              {postsData && postsData.totalPages > 1 && (
+                <div className="flex items-center justify-center py-4">
+                  <Pagination>
+                    <PaginationContent>
+                      <PaginationItem>
+                        <PaginationPrevious 
+                          onClick={() => setCurrentPage(p => Math.max(p - 1, 1))}
+                          className={currentPage === 1 ? "pointer-events-none opacity-50" : "cursor-pointer"}
+                        />
+                      </PaginationItem>
 
-                  {Array.from({ length: postsData.totalPages }, (_, i) => i + 1).map((page) => (
-                    <PaginationItem key={page}>
-                      <PaginationLink
-                        isActive={page === currentPage}
-                        onClick={() => setCurrentPage(page)}
-                      >
-                        {page}
-                      </PaginationLink>
-                    </PaginationItem>
-                  ))}
+                      {Array.from({ length: postsData.totalPages }, (_, i) => i + 1).map((page) => (
+                        <PaginationItem key={page}>
+                          <PaginationLink
+                            isActive={page === currentPage}
+                            onClick={() => setCurrentPage(page)}
+                          >
+                            {page}
+                          </PaginationLink>
+                        </PaginationItem>
+                      ))}
 
-                  <PaginationItem>
-                    <PaginationNext 
-                      onClick={() => setCurrentPage(p => Math.min(p + 1, postsData.totalPages))}
-                      className={currentPage === postsData.totalPages ? "pointer-events-none opacity-50" : "cursor-pointer"}
-                    />
-                  </PaginationItem>
-                </PaginationContent>
-              </Pagination>
-            </div>
-          )}
-        </CardContent>
-      </Card>
+                      <PaginationItem>
+                        <PaginationNext 
+                          onClick={() => setCurrentPage(p => Math.min(p + 1, postsData.totalPages))}
+                          className={currentPage === postsData.totalPages ? "pointer-events-none opacity-50" : "cursor-pointer"}
+                        />
+                      </PaginationItem>
+                    </PaginationContent>
+                  </Pagination>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="analytics" className="space-y-6">
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <BarChart3 className="h-5 w-5" />
+                Blog Analytics
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              {analytics ? (
+                <div className="space-y-6">
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <Card>
+                      <CardContent className="p-4">
+                        <div className="text-2xl font-bold">{analytics.totalPosts}</div>
+                        <p className="text-sm text-muted-foreground">Total Posts</p>
+                      </CardContent>
+                    </Card>
+                    <Card>
+                      <CardContent className="p-4">
+                        <div className="text-2xl font-bold">{analytics.publishedPosts}</div>
+                        <p className="text-sm text-muted-foreground">Published Posts</p>
+                      </CardContent>
+                    </Card>
+                    <Card>
+                      <CardContent className="p-4">
+                        <div className="text-2xl font-bold">{analytics.draftPosts}</div>
+                        <p className="text-sm text-muted-foreground">Draft Posts</p>
+                      </CardContent>
+                    </Card>
+                  </div>
+
+                  <div>
+                    <h3 className="text-lg font-semibold mb-4">Posts by Category</h3>
+                    <div className="space-y-3">
+                      {analytics.categoriesData?.map((category: any) => (
+                        <div key={category.id} className="flex items-center justify-between p-3 border rounded-lg">
+                          <div className="flex items-center gap-3">
+                            <div className="w-3 h-3 rounded-full bg-primary"></div>
+                            <span className="font-medium">{category.name}</span>
+                            {category.type === 'header' && (
+                              <span className="text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded">Category Page</span>
+                            )}
+                          </div>
+                          <div className="flex items-center gap-4">
+                            <span className="text-lg font-semibold">{category.postCount} posts</span>
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => openCategoryAnalytics(category)}
+                            >
+                              View Details
+                            </Button>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              ) : (
+                <div className="text-center py-8">
+                  <div className="text-muted-foreground">Loading analytics...</div>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        </TabsContent>
+      </Tabs>
 
       {/* Edit dialog */}
       <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
