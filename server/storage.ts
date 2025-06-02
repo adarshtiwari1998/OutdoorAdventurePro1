@@ -1261,5 +1261,31 @@ export const storage = {
       console.error('Error deleting WordPress credentials:', error);
       throw error;
     }
+  },
+
+  async getExistingWordPressPostIds() {
+    try {
+      const posts = await db.query.blogPosts.findMany({
+        where: not(isNull(blogPosts.wordpressId)),
+        columns: {
+          wordpressId: true
+        }
+      });
+      return posts.map(post => post.wordpressId).filter(id => id !== null);
+    } catch (error) {
+      console.error('Error getting existing WordPress post IDs:', error);
+      return [];
+    }
+  },
+
+  async getPostByWordPressId(wordpressId: number) {
+    try {
+      return await db.query.blogPosts.findFirst({
+        where: eq(blogPosts.wordpressId, wordpressId),
+      });
+    } catch (error) {
+      console.error(`Error getting post by WordPress ID ${wordpressId}:`, error);
+      return null;
+    }
   }
 };

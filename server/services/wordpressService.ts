@@ -3,6 +3,7 @@ interface WordPressPostImportOptions {
   username: string;
   applicationPassword?: string; // Use application password instead of regular password
   count?: number;
+  excludeIds?: number[]; // WordPress post IDs to exclude
 }
 
 interface WordPressPost {
@@ -22,12 +23,12 @@ interface WordPressPost {
 
 export class WordPressService {
 async importPosts(options: WordPressPostImportOptions): Promise<WordPressPost[]> {
-      let { url, username, applicationPassword, count = 10 } = options;
+      let { url, username, applicationPassword, count = 10, excludeIds = [] } = options;
       // Validate the WordPress URL
       const baseUrl = this.normalizeWordPressUrl(url);
       try {
           // Fetch posts using Basic Authentication
-          const posts = await this.fetchPosts(baseUrl, username, applicationPassword, count);
+          const posts = await this.fetchPosts(baseUrl, username, applicationPassword, count, excludeIds);
           return posts;
       } catch (error) {
           console.error('Error importing WordPress posts:', error);
@@ -49,6 +50,7 @@ async importPosts(options: WordPressPostImportOptions): Promise<WordPressPost[]>
         username: string,
         applicationPassword: string | undefined,
         count: number,
+        excludeIds: number[] = [],
     ): Promise<WordPressPost[]> {
         try {
             if (!username || !applicationPassword) {
@@ -57,14 +59,18 @@ async importPosts(options: WordPressPostImportOptions): Promise<WordPressPost[]>
                 );
             }
 
-            // First get list of posts
-            const postsListUrl = `${baseUrl}/wp-json/wp/v2/posts?_embed&per_page=${count}&status=publish`;
+            // Build exclude parameter if we have IDs to exclude
+            const excludeParam = excludeIds.length > 0 ? `&exclude=${excludeIds.join(',')}` : '';
+            
+            // First get list of posts, excluding already imported ones
+            const postsListUrl = `${baseUrl}/wp-json/wp/v2/posts?_embed&per_page=${count}&status=publish${excludeParam}&orderby=id&order=asc`;
             const posts = [];
 
             console.log(
                 "Fetching WordPress posts list from URL:",
                 postsListUrl,
             );
+            console.log(`Excluding ${excludeIds.length} already imported post IDs:`, excludeIds);
 
             const authHeader = "Basic " + Buffer.from(username + ":" + applicationPassword).toString("base64");
             

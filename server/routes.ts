@@ -749,22 +749,25 @@ app.post(`${apiPrefix}/admin/blog/import/wordpress`, async (req, res) => {
       }
     }
 
+    // Get all existing WordPress post IDs from our database
+    const existingWordPressPosts = await storage.getExistingWordPressPostIds();
+    console.log(`Found ${existingWordPressPosts.length} existing WordPress posts in database`);
+
     const posts = await wordpressService.importPosts({
       url: wordpressUrl,
       username,
       applicationPassword: password,
-      count: postsCount
+      count: postsCount,
+      excludeIds: existingWordPressPosts // Pass existing IDs to exclude them
     });
 
     let importedCount = 0;
     for (const post of posts) {
-      // First check if post with same slug exists
-      const existingPost = await db.query.blogPosts.findFirst({
-        where: eq(blogPosts.slug, post.slug),
-      });
+      // Check if this WordPress post ID already exists in our database
+      const existingPost = await storage.getPostByWordPressId(post.id);
 
       if (!existingPost) {
-        // Only import if slug doesn't exist
+        // Only import if WordPress post ID doesn't exist
         await storage.createBlogPost({
           title: post.title,
           content: post.content,
@@ -773,9 +776,13 @@ app.post(`${apiPrefix}/admin/blog/import/wordpress`, async (req, res) => {
           categoryId: categoryId || '1', // Use selected category or default
           status: 'published',
           tags: post.tags,
-          slug: post.slug // Use the post's slug directly
+          slug: post.slug, // Use the post's slug directly
+          wordpressId: post.id // Store WordPress post ID for future reference
         });
-        importedCount++; // Increment here to count the imported posts
+        importedCount++;
+        console.log(`Imported new WordPress post: ${post.title} (WP ID: ${post.id})`);
+      } else {
+        console.log(`Skipping existing WordPress post: ${post.title} (WP ID: ${post.id})`);
       }
     }
 
@@ -786,7 +793,7 @@ app.post(`${apiPrefix}/admin/blog/import/wordpress`, async (req, res) => {
       password
     });
 
-    res.json({ success: true, count: importedCount });
+    res.json({ success: true, count: importedCount, total: posts.length });
   } catch (error) {
     console.error("Error importing WordPress posts:", error);
     res.status(500).json({ message: "Failed to import WordPress posts" });
