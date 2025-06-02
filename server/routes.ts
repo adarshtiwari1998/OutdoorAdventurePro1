@@ -580,10 +580,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       // Get blog categories
       const blogCategories = await storage.getBlogCategories();
-
+      
       // Get header categories (these can also be used for blog posts)
       const headerConfigs = await db.query.headerConfigs.findMany();
-
+      
       // Convert header configs to category format
       const headerCategories = headerConfigs.map(config => ({
         id: `header_${config.id}`,
@@ -591,10 +591,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
         slug: config.category,
         type: 'header'
       }));
-
+      
       // Combine both types of categories
       const allCategories = [...blogCategories, ...headerCategories];
-
+      
       res.json(allCategories);
     } catch (error) {
       console.error("Error fetching blog categories:", error);
@@ -605,7 +605,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post(`${apiPrefix}/admin/blog/categories`, async (req, res) => {
     try {
       const { name, slug, description } = req.body;
-
+      
       if (!name || !slug) {
         return res.status(400).json({ message: "Name and slug are required" });
       }
@@ -616,7 +616,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         description: description || null,
         type: 'blog'
       });
-
+      
       res.status(201).json(newCategory);
     } catch (error) {
       console.error("Error creating blog category:", error);
@@ -628,7 +628,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const { id } = req.params;
       const categoryId = parseInt(id);
-
+      
       if (isNaN(categoryId)) {
         return res.status(400).json({ message: "Invalid category ID" });
       }
@@ -653,9 +653,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       // Get all header configs
       const headerConfigs = await db.query.headerConfigs.findMany();
-
+      
       let syncedCount = 0;
-
+      
       // Ensure each header category has a corresponding blog category
       for (const config of headerConfigs) {
         try {
@@ -665,7 +665,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           console.error(`Failed to sync header category ${config.category}:`, error);
         }
       }
-
+      
       res.json({ success: true, syncedCount });
     } catch (error) {
       console.error("Error syncing header categories:", error);
@@ -687,11 +687,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.patch(`${apiPrefix}/admin/blog/posts/bulk-category`, async (req, res) => {
     try {
       const { ids, categoryId } = req.body;
-
+      
       if (!ids || !Array.isArray(ids) || ids.length === 0) {
         return res.status(400).json({ message: "Post IDs are required" });
       }
-
+      
       if (!categoryId || isNaN(parseInt(categoryId))) {
         return res.status(400).json({ message: "Valid category ID is required" });
       }
@@ -709,11 +709,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const { id } = req.params;
       const postData = req.body;
       const postId = parseInt(id);
-
+      
       if (isNaN(postId)) {
         return res.status(400).json({ message: "Invalid post ID" });
       }
-
+      
       const updatedPost = await storage.updateBlogPost(postId, postData);
       res.json(updatedPost);
     } catch (error) {
@@ -749,25 +749,22 @@ app.post(`${apiPrefix}/admin/blog/import/wordpress`, async (req, res) => {
       }
     }
 
-    // Get all existing WordPress post IDs from our database
-    const existingWordPressPosts = await storage.getExistingWordPressPostIds();
-    console.log(`Found ${existingWordPressPosts.length} existing WordPress posts in database`);
-
     const posts = await wordpressService.importPosts({
       url: wordpressUrl,
       username,
       applicationPassword: password,
-      count: postsCount,
-      excludeIds: existingWordPressPosts // Pass existing IDs to exclude them
+      count: postsCount
     });
 
     let importedCount = 0;
     for (const post of posts) {
-      // Check if this WordPress post ID already exists in our database
-      const existingPost = await storage.getPostByWordPressId(post.id);
+      // First check if post with same slug exists
+      const existingPost = await db.query.blogPosts.findFirst({
+        where: eq(blogPosts.slug, post.slug),
+      });
 
       if (!existingPost) {
-        // Only import if WordPress post ID doesn't exist
+        // Only import if slug doesn't exist
         await storage.createBlogPost({
           title: post.title,
           content: post.content,
@@ -776,13 +773,9 @@ app.post(`${apiPrefix}/admin/blog/import/wordpress`, async (req, res) => {
           categoryId: categoryId || '1', // Use selected category or default
           status: 'published',
           tags: post.tags,
-          slug: post.slug, // Use the post's slug directly
-          wordpressId: post.id // Store WordPress post ID for future reference
+          slug: post.slug // Use the post's slug directly
         });
-        importedCount++;
-        console.log(`Imported new WordPress post: ${post.title} (WP ID: ${post.id})`);
-      } else {
-        console.log(`Skipping existing WordPress post: ${post.title} (WP ID: ${post.id})`);
+        importedCount++; // Increment here to count the imported posts
       }
     }
 
@@ -793,7 +786,7 @@ app.post(`${apiPrefix}/admin/blog/import/wordpress`, async (req, res) => {
       password
     });
 
-    res.json({ success: true, count: importedCount, total: posts.length });
+    res.json({ success: true, count: importedCount });
   } catch (error) {
     console.error("Error importing WordPress posts:", error);
     res.status(500).json({ message: "Failed to import WordPress posts" });

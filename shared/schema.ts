@@ -147,7 +147,6 @@ export const blogPosts = pgTable("blog_posts", {
   publishedAt: timestamp("published_at"),
   scheduledAt: timestamp("scheduled_at"),
   tags: jsonb("tags").default([]),
-  wordpressId: integer("wordpress_id"), // Store WordPress post ID to avoid duplicates
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
 });

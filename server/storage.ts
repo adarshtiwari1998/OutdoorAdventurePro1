@@ -16,8 +16,7 @@ import {
   adminStats,
   InsertBlogPost,
   sliders,
-  InsertSlider,
-  wordpressCredentials
+  InsertSlider
 } from '@shared/schema';
 import { eq, and, like, desc, sql, asc, not, isNull, inArray } from 'drizzle-orm';
 import { format, subDays } from 'date-fns';
@@ -893,7 +892,6 @@ export const storage = {
         status: postData.status,
         publishedAt: finalPublishedAt,
         tags,
-        wordpressId: postData.wordpressId || null, // Store WordPress ID to avoid duplicates
       };
 
       // Add scheduled date if provided
@@ -1261,32 +1259,6 @@ export const storage = {
     } catch (error) {
       console.error('Error deleting WordPress credentials:', error);
       throw error;
-    }
-  },
-
-  async getExistingWordPressPostIds() {
-    try {
-      const posts = await db.query.blogPosts.findMany({
-        where: not(isNull(blogPosts.wordpressId)),
-        columns: {
-          wordpressId: true
-        }
-      });
-      return posts.map(post => post.wordpressId).filter(id => id !== null);
-    } catch (error) {
-      console.error('Error getting existing WordPress post IDs:', error);
-      return [];
-    }
-  },
-
-  async getPostByWordPressId(wordpressId: number) {
-    try {
-      return await db.query.blogPosts.findFirst({
-        where: eq(blogPosts.wordpressId, wordpressId),
-      });
-    } catch (error) {
-      console.error(`Error getting post by WordPress ID ${wordpressId}:`, error);
-      return null;
     }
   }
 };
