@@ -160,7 +160,7 @@ const AdminLayout = ({ children, title }: AdminLayoutProps) => {
       )}>
         <div className="flex flex-col h-full">
           <div className="mb-6 relative">
-            <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
               {activeLogo ? (
                 <img 
                   src={activeLogo.url} 
@@ -183,7 +183,7 @@ const AdminLayout = ({ children, title }: AdminLayoutProps) => {
                   OA
                 </div>
               )}
-              <span className="text-sm text-slate-500 dark:text-slate-400 font-medium">
+              <span className="text-base text-slate-700 dark:text-slate-300 font-semibold">
                 admin
               </span>
             </div>
@@ -396,31 +396,29 @@ const AdminLayout = ({ children, title }: AdminLayoutProps) => {
       {/* Main content */}
       <div className="flex-1 flex flex-col">
         <header className="sticky top-0 z-30 bg-white dark:bg-slate-950 border-b border-slate-200 dark:border-slate-800 h-16 flex items-center justify-between px-6">
-          <div className="flex items-center">
-            <div className="mr-4">
-              {activeLogo ? (
-                <img 
-                  src={activeLogo.url} 
-                  alt={activeLogo.name || "Admin Logo"} 
-                  className="h-10 w-auto max-w-[120px]" 
-                  key={activeLogo.url} // Force re-render when URL changes
-                  onError={(e) => {
-                    console.warn(`Failed to load header logo: ${activeLogo.url}`);
-                    const parent = e.currentTarget.parentElement;
-                    if (parent) {
-                      const div = document.createElement('div');
-                      div.className = "h-10 w-10 bg-blue-600 rounded flex items-center justify-center text-white text-sm font-bold";
-                      div.textContent = "OA";
-                      parent.replaceChild(div, e.currentTarget);
-                    }
-                  }} 
-                />
-              ) : (
-                <div className="h-10 w-10 bg-blue-600 rounded flex items-center justify-center text-white text-sm font-bold">
-                  OA
-                </div>
-              )}
-            </div>
+          <div className="flex items-center gap-3">
+            {activeLogo ? (
+              <img 
+                src={activeLogo.url} 
+                alt={activeLogo.name || "Admin Logo"} 
+                className="h-10 w-auto max-w-[120px]" 
+                key={activeLogo.url} // Force re-render when URL changes
+                onError={(e) => {
+                  console.warn(`Failed to load header logo: ${activeLogo.url}`);
+                  const parent = e.currentTarget.parentElement;
+                  if (parent) {
+                    const div = document.createElement('div');
+                    div.className = "h-10 w-10 bg-blue-600 rounded flex items-center justify-center text-white text-sm font-bold";
+                    div.textContent = "OA";
+                    parent.replaceChild(div, e.currentTarget);
+                  }
+                }} 
+              />
+            ) : (
+              <div className="h-10 w-10 bg-blue-600 rounded flex items-center justify-center text-white text-sm font-bold">
+                OA
+              </div>
+            )}
             <h1 className="text-2xl font-bold text-slate-900 dark:text-white">{title}</h1>
           </div>
 
