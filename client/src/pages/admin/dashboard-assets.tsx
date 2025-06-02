@@ -365,11 +365,7 @@ const DashboardAssetsAdmin = () => {
                           <Button
                             size="sm"
                             variant="destructive"
-                            onClick={() => {
-                              if (window.confirm(`Are you sure you want to delete ${asset.name}?`)) {
-                                deleteAsset.mutate(asset.id);
-                              }
-                            }}
+                            onClick={() => deleteAsset.mutate(asset.id)}
                             disabled={deleteAsset.isPending}
                           >
                             <Trash2 className="w-4 h-4" />
