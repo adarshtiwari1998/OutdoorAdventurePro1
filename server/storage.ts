@@ -1,4 +1,3 @@
-typescript
 import { db } from '@db';
 import { 
   users, 

@@ -1798,7 +1798,7 @@ app.delete(`${apiPrefix}/admin/wordpress/credentials`, async (req, res) => {
       res.json(categoryStyles);
     } catch (error) {
       console.error("Error fetching category styles:", error);
-      res.status(500.json({ message: "Failed to fetch category styles" });
+      res.status(500).json({ message: "Failed to fetch category styles" });
     }
   });
 
