@@ -861,9 +861,18 @@ export const storage = {
         whereConditions.push(eq(blogPosts.status, status));
       }
 
-      // Apply category filter
+      // Apply category filter - need to handle this differently
+      let categoryFilter = null;
       if (categoryId && categoryId !== 'all') {
-        whereConditions.push(eq(categories.name, categoryId));
+        // First find the category by name to get the ID
+        const category = await db.query.categories.findFirst({
+          where: eq(categories.name, categoryId)
+        });
+        
+        if (category) {
+          categoryFilter = eq(blogPosts.categoryId, category.id);
+          whereConditions.push(categoryFilter);
+        }
       }
 
       // Apply search filter
@@ -878,7 +887,7 @@ export const storage = {
         ? and(...whereConditions) 
         : undefined;
 
-      // Count total results for pagination
+      // Count total results for pagination using the corrected query
       const countResult = await db.select({
         count: sql<number>`count(*)`,
       })
@@ -889,7 +898,7 @@ export const storage = {
       const count = countResult[0]?.count || 0;
       const totalPages = Math.ceil(count / pageSize);
 
-      // Execute query with joins directly with all conditions
+      // Execute query with joins using the relational query API
       const posts = await db.query.blogPosts.findMany({
         where: whereClause,
         limit: pageSize,
