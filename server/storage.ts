@@ -963,5 +963,189 @@ export const storage = {
       console.error('Error getting all sliders:', error);
       throw error;
     }
+  },
+
+  // Cart operations
+  async getCartItemCount(sessionId: string) {
+    try {
+      // First, get or create cart for this session
+      let cart = await db.query.carts.findFirst({
+        where: eq(carts.sessionId, sessionId),
+      });
+
+      if (!cart) {
+        return 0;
+      }
+
+      // Get count of items in cart
+      const result = await db.select({
+        count: sql<number>`sum(${cartItems.quantity})`,
+      })
+      .from(cartItems)
+      .where(eq(cartItems.cartId, cart.id));
+
+      return result[0]?.count || 0;
+    } catch (error) {
+      console.error('Error getting cart item count:', error);
+      throw error;
+    }
+  },
+
+  async addToCart(sessionId: string, productId: string, quantity: number) {
+    try {
+      // First, get or create cart for this session
+      let cart = await db.query.carts.findFirst({
+        where: eq(carts.sessionId, sessionId),
+      });
+
+      if (!cart) {
+        [cart] = await db.insert(carts).values({
+          sessionId,
+        }).returning();
+      }
+
+      // Check if item already exists in cart
+      const existingItem = await db.query.cartItems.findFirst({
+        where: and(
+          eq(cartItems.cartId, cart.id),
+          eq(cartItems.productId, parseInt(productId))
+        ),
+      });
+
+      if (existingItem) {
+        // Update quantity
+        await db.update(cartItems)
+          .set({ quantity: existingItem.quantity + quantity })
+          .where(eq(cartItems.id, existingItem.id));
+      } else {
+        // Add new item
+        await db.insert(cartItems).values({
+          cartId: cart.id,
+          productId: parseInt(productId),
+          quantity,
+        });
+      }
+    } catch (error) {
+      console.error('Error adding to cart:', error);
+      throw error;
+    }
+  },
+
+  async addNewsletterSubscriber(fullName: string, email: string, interests: string[]) {
+    try {
+      await db.insert(newsletterSubscribers).values({
+        fullName,
+        email,
+        interests,
+      });
+    } catch (error) {
+      console.error('Error adding newsletter subscriber:', error);
+      throw error;
+    }
+  },
+
+  async getAdminStats(period: string) {
+    try {
+      // Mock implementation - replace with actual database queries
+      return {
+        totalUsers: 1250,
+        totalPosts: 45,
+        totalProducts: 128,
+        totalOrders: 89,
+      };
+    } catch (error) {
+      console.error('Error getting admin stats:', error);
+      throw error;
+    }
+  },
+
+  async getAdminCharts(period: string) {
+    try {
+      // Mock implementation - replace with actual database queries
+      return {
+        userGrowth: [
+          { date: '2024-01', users: 100 },
+          { date: '2024-02', users: 150 },
+          { date: '2024-03', users: 200 },
+        ],
+        orderTrends: [
+          { date: '2024-01', orders: 20 },
+          { date: '2024-02', orders: 35 },
+          { date: '2024-03', orders: 45 },
+        ],
+      };
+    } catch (error) {
+      console.error('Error getting admin charts:', error);
+      throw error;
+    }
+  },
+
+  async getSliderById(id: number) {
+    try {
+      return await db.query.sliders.findFirst({
+        where: eq(sliders.id, id),
+      });
+    } catch (error) {
+      console.error(`Error getting slider by ID ${id}:`, error);
+      throw error;
+    }
+  },
+
+  async createSlider(sliderData: any) {
+    try {
+      const [slider] = await db.insert(sliders).values({
+        title: sliderData.title,
+        description: sliderData.description,
+        backgroundImage: sliderData.backgroundImage,
+        videoUrl: sliderData.videoUrl,
+        youtubeUrl: sliderData.youtubeUrl,
+        ctaText: sliderData.ctaText,
+        ctaLink: sliderData.ctaLink,
+        isActive: sliderData.isActive,
+        order: sliderData.order,
+      }).returning();
+
+      return slider;
+    } catch (error) {
+      console.error('Error creating slider:', error);
+      throw error;
+    }
+  },
+
+  async updateSlider(id: number, sliderData: any) {
+    try {
+      const [updatedSlider] = await db.update(sliders)
+        .set({
+          ...sliderData,
+          updatedAt: new Date()
+        })
+        .where(eq(sliders.id, id))
+        .returning();
+
+      return updatedSlider;
+    } catch (error) {
+      console.error(`Error updating slider ${id}:`, error);
+      throw error;
+    }
+  },
+
+  async deleteSlider(id: number) {
+    try {
+      await db.delete(sliders).where(eq(sliders.id, id));
+    } catch (error) {
+      console.error(`Error deleting slider ${id}:`, error);
+      throw error;
+    }
+  },
+
+  async updateSliderOrder(id: number, order: number) {
+    try {
+      await db.update(sliders)
+        .set({ order })
+        .where(eq(sliders.id, id));
+    } catch (error) {
+      console.error(`Error updating slider order ${id}:`, error);
+      throw error;
+    }
   }
 };

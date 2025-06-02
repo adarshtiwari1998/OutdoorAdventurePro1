@@ -628,8 +628,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: "Post IDs are required" });
       }
       
-      if (!categoryId) {
-        return res.status(400).json({ message: "Category ID is required" });
+      if (!categoryId || isNaN(parseInt(categoryId))) {
+        return res.status(400).json({ message: "Valid category ID is required" });
       }
 
       await storage.updateBlogPostsCategory(ids, parseInt(categoryId));
