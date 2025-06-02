@@ -1001,8 +1001,8 @@ const BlogManagement = () => {
                       <Label htmlFor="wordpressUrl">WordPress URL</Label>
                       <Input 
                         id="wordpressUrl" 
-                        placeholder="https://yourblog.wordpress.com" ```tool_code
-{...importForm.register("wordpressUrl")}
+                        placeholder="https://yourblog.wordpress.com" 
+                        {...importForm.register("wordpressUrl")}
                       />
                     </div>
                     <div className="space-y-2">
