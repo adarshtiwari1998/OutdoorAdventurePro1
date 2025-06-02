@@ -82,10 +82,12 @@ const AdminLayout = ({ children, title }: AdminLayoutProps) => {
   const { toast } = useToast();
   const [, navigate] = useLocation();
 
-  // Fetch active dashboard assets
+  // Fetch active dashboard assets with more frequent updates
   const { data: assets } = useQuery({
     queryKey: ['/api/admin/dashboard-assets'],
-    refetchInterval: 5000, // Refetch every 5 seconds for real-time updates
+    refetchInterval: 2000, // Refetch every 2 seconds for real-time updates
+    refetchOnWindowFocus: true, // Refetch when window gets focus
+    refetchOnMount: true, // Always refetch on mount
   });
 
   // Get active logo and favicon
@@ -164,7 +166,9 @@ const AdminLayout = ({ children, title }: AdminLayoutProps) => {
                   src={activeLogo.url} 
                   alt={activeLogo.name || "Admin Logo"} 
                   className="h-10 w-auto" 
+                  key={activeLogo.url} // Force re-render when URL changes
                   onError={(e) => {
+                    console.warn(`Failed to load logo: ${activeLogo.url}`);
                     const parent = e.currentTarget.parentElement;
                     if (parent) {
                       const div = document.createElement('div');
@@ -399,7 +403,9 @@ const AdminLayout = ({ children, title }: AdminLayoutProps) => {
                   src={activeLogo.url} 
                   alt={activeLogo.name || "Admin Logo"} 
                   className="h-8" 
+                  key={activeLogo.url} // Force re-render when URL changes
                   onError={(e) => {
+                    console.warn(`Failed to load header logo: ${activeLogo.url}`);
                     const parent = e.currentTarget.parentElement;
                     if (parent) {
                       const div = document.createElement('div');

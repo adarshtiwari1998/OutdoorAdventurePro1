@@ -19,7 +19,58 @@ import {
   AlertDialogTitle 
 } from "@/components/ui/alert-dialog";
 import { toast } from "@/hooks/use-toast";
-import { Upload, Link as LinkIcon, Save, Trash2, Eye } from "lucide-react";
+import { Upload, Link as LinkIcon, Save, Trash2, Eye, CheckCircle, XCircle, Clock } from "lucide-react";
+
+// URL validation component
+const URLStatus = ({ url }: { url: string }) => {
+  const [status, setStatus] = useState<'loading' | 'valid' | 'invalid'>('loading');
+
+  useEffect(() => {
+    const validateURL = async () => {
+      try {
+        const response = await fetch(url, { method: 'HEAD', mode: 'no-cors' });
+        setStatus('valid');
+      } catch {
+        // Try with a simple img element test for better CORS handling
+        const img = new Image();
+        img.onload = () => setStatus('valid');
+        img.onerror = () => setStatus('invalid');
+        img.src = url;
+      }
+    };
+
+    validateURL();
+  }, [url]);
+
+  const getStatusIcon = () => {
+    switch (status) {
+      case 'loading':
+        return <Clock className="w-3 h-3 text-yellow-500 animate-pulse" />;
+      case 'valid':
+        return <CheckCircle className="w-3 h-3 text-green-500" />;
+      case 'invalid':
+        return <XCircle className="w-3 h-3 text-red-500" />;
+    }
+  };
+
+  const getStatusText = () => {
+    switch (status) {
+      case 'loading':
+        return 'Checking...';
+      case 'valid':
+        return 'Valid';
+      case 'invalid':
+        return 'Invalid URL';
+    }
+  };
+
+  return (
+    <div className="flex items-center gap-1">
+      {getStatusIcon()}
+      <span className="text-xs">{getStatusText()}</span>
+    </div>
+  );
+};
 
 interface AdminAsset {
   id: string;
@@ -40,9 +91,10 @@ const DashboardAssetsAdmin = () => {
   const [assetToDelete, setAssetToDelete] = useState<AdminAsset | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  // Fetch admin assets from API
+  // Fetch admin assets from API with real-time updates
   const { data: assets, isLoading, error } = useQuery<AdminAsset[]>({
     queryKey: ['/api/admin/dashboard-assets'],
+    refetchInterval: 2000, // Refetch every 2 seconds for real-time updates
   });
 
   // Upload asset mutation
@@ -104,20 +156,44 @@ const DashboardAssetsAdmin = () => {
       const response = await apiRequest('DELETE', `/api/admin/dashboard-assets/${id}`);
       return await response.json();
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['/api/admin/dashboard-assets'] });
-      toast({
-        title: "Asset deleted",
-        description: "The asset has been removed successfully.",
+    onMutate: async (id: string) => {
+      // Cancel any outgoing refetches
+      await queryClient.cancelQueries({ queryKey: ['/api/admin/dashboard-assets'] });
+
+      // Snapshot the previous value
+      const previousAssets = queryClient.getQueryData(['/api/admin/dashboard-assets']);
+
+      // Optimistically update to remove the deleted asset
+      queryClient.setQueryData(['/api/admin/dashboard-assets'], (old: AdminAsset[] | undefined) => {
+        return old?.filter(asset => asset.id !== id) || [];
       });
+
+      // Return context with the previous data
+      return { previousAssets };
     },
-    onError: (error) => {
+    onError: (error, id, context) => {
+      // Rollback on error
+      if (context?.previousAssets) {
+        queryClient.setQueryData(['/api/admin/dashboard-assets'], context.previousAssets);
+      }
       toast({
         title: "Delete failed",
         description: "There was a problem deleting the asset.",
         variant: "destructive",
       });
       console.error("Delete error:", error);
+    },
+    onSuccess: () => {
+      // Refetch to ensure we have the latest data
+      queryClient.invalidateQueries({ queryKey: ['/api/admin/dashboard-assets'] });
+      toast({
+        title: "Asset deleted",
+        description: "The asset has been removed from both database and Cloudinary.",
+      });
+    },
+    onSettled: () => {
+      // Always refetch after mutation settles
+      queryClient.invalidateQueries({ queryKey: ['/api/admin/dashboard-assets'] });
     }
   });
 
@@ -254,6 +330,25 @@ const DashboardAssetsAdmin = () => {
           <TabsTrigger value="favicon">Favicons</TabsTrigger>
         </TabsList>
 
+        <div className="mb-4 flex justify-between items-center">
+          <div className="text-sm text-muted-foreground">
+            Real-time preview updates every 2 seconds
+          </div>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => {
+              queryClient.invalidateQueries({ queryKey: ['/api/admin/dashboard-assets'] });
+              toast({
+                title: "Refreshed",
+                description: "Asset list has been refreshed.",
+              });
+            }}
+          >
+            Refresh Now
+          </Button>
+        </div>
+
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           {/* Upload Form */}
           <Card>
@@ -355,16 +450,39 @@ const DashboardAssetsAdmin = () => {
                     >
                       <div className="flex items-center justify-between mb-3">
                         <div className="flex items-center space-x-3">
-                          <img 
-                            src={asset.url} 
-                            alt={asset.name}
-                            className="w-12 h-12 object-cover rounded border"
-                          />
+                          <div className="relative w-12 h-12">
+                            <img 
+                              src={asset.url} 
+                              alt={asset.name}
+                              className="w-12 h-12 object-cover rounded border"
+                              onError={(e) => {
+                                const target = e.target as HTMLImageElement;
+                                target.style.display = 'none';
+                                const parent = target.parentElement;
+                                if (parent && !parent.querySelector('.error-placeholder')) {
+                                  const errorDiv = document.createElement('div');
+                                  errorDiv.className = 'error-placeholder w-12 h-12 bg-red-100 border border-red-300 rounded flex items-center justify-center text-red-500 text-xs';
+                                  errorDiv.textContent = 'Error';
+                                  parent.appendChild(errorDiv);
+                                }
+                              }}
+                              onLoad={(e) => {
+                                const target = e.target as HTMLImageElement;
+                                const parent = target.parentElement;
+                                const errorDiv = parent?.querySelector('.error-placeholder');
+                                if (errorDiv) {
+                                  errorDiv.remove();
+                                }
+                                target.style.display = 'block';
+                              }}
+                            />
+                          </div>
                           <div>
                             <h4 className="font-medium">{asset.name}</h4>
                             {asset.isActive && (
                               <span className="text-xs text-primary font-medium">Active</span>
                             )}
+                            <URLStatus url={asset.url} />
                           </div>
                         </div>
                         <div className="flex space-x-2">
