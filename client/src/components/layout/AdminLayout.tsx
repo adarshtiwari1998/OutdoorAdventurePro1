@@ -136,62 +136,284 @@ const AdminLayout = ({ children, title }: AdminLayoutProps) => {
             </nav>
           </div>
 
-          <nav className="space-y-1 flex-1">
-            {menuItems.map((item) => (
-              <AdminMenuItem
-                key={item.href}
-                icon={item.icon}
-                label={item.label}
-                href={item.href}
-                isActive={location.startsWith(item.href)}
-              />
-            ))}
+          <nav className="space-y-1">
+            <Link href="/admin/dashboard">
+              <a className={`group flex items-center px-2 py-2 text-sm font-medium rounded-md ${
+                location.pathname === '/admin/dashboard'
+                  ? 'bg-gray-100 text-gray-900'
+                  : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
+              }`}>
+                <Home size={18} />
+                Dashboard
+              </a>
+            </Link>
 
-            {/* Home Blocks Section */}
-            <div>
-              <button
-                className="flex items-center justify-between w-full gap-3 px-4 py-3 text-sm font-medium rounded-md hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors text-slate-700 dark:text-slate-300"
-                onClick={() => setIsHomeBlocksOpen(!isHomeBlocksOpen)}
-              >
-                <div className="flex items-center gap-3">
-                  <Home size={18} />
-                  <span>Home Blocks</span>
-                </div>
-                {isHomeBlocksOpen ? <ChevronDown size={18} /> : <ChevronRight size={18} />}
-              </button>
+            {/* Content Management Section */}
+            <div className="mt-8">
+              <h3 className="px-3 text-xs font-semibold uppercase text-slate-500 dark:text-slate-400">
+                Content Management
+              </h3>
+              <div className="mt-2 space-y-1">
+                <Link href="/admin/blog-management">
+                  <a className={`group flex items-center px-2 py-2 text-sm font-medium rounded-md ${
+                    location.pathname === '/admin/blog-management'
+                      ? 'bg-gray-100 text-gray-900'
+                      : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
+                  }`}>
+                    <FileText size={18} />
+                    Blog Management
+                  </a>
+                </Link>
 
-              {isHomeBlocksOpen && (
-                <div className="space-y-1 pl-4">
-                  <AdminMenuItem
-                    key="/admin/home-blocks/travelers-choice"
-                    icon={Star}
-                    label="Travelers Choice"
-                    href="/admin/home-blocks/travelers-choice"
-                    isActive={location.startsWith("/admin/home-blocks/travelers-choice")}
-                  />
-                  <AdminMenuItem
-                    key="/admin/home-blocks/tips-management"
-                    icon={Compass}
-                    label="Tips & Ideas"
-                    href="/admin/home-blocks/tips-management"
-                    isActive={location.startsWith("/admin/home-blocks/tips-management")}
-                  />
-                  <AdminMenuItem
-                    key="/admin/home-blocks/favorite-destinations"
-                    icon={Image}
-                    label="Favorite Destinations"
-                    href="/admin/home-blocks/favorite-destinations"
-                    isActive={location.startsWith("/admin/home-blocks/favorite-destinations")}
-                  />
-                   <AdminMenuItem
-                    key="/admin/sliders"
-                    icon={SlidersHorizontal}
-                    label="Sliders"
-                    href="/admin/sliders"
-                    isActive={location.startsWith("/admin/sliders")}
-                  />
-                </div>
-              )}
+                <Link href="/admin/youtube-import">
+                  <a className={`group flex items-center px-2 py-2 text-sm font-medium rounded-md ${
+                    location.pathname === '/admin/youtube-import'
+                      ? 'bg-gray-100 text-gray-900'
+                      : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
+                  }`}>
+                    <Video size={18} />
+                    YouTube Import
+                  </a>
+                </Link>
+
+                <Link href="/admin/sliders">
+                  <a className={`group flex items-center px-2 py-2 text-sm font-medium rounded-md ${
+                    location.pathname === '/admin/sliders'
+                      ? 'bg-gray-100 text-gray-900'
+                      : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
+                  }`}>
+                    <SlidersHorizontal size={18} />
+                    Sliders
+                  </a>
+                </Link>
+              </div>
+            </div>
+
+            {/* Navigation Section */}
+            <div className="mt-8">
+              <h3 className="px-3 text-xs font-semibold uppercase text-slate-500 dark:text-slate-400">
+                Navigation
+              </h3>
+              <div className="mt-2 space-y-1">
+                <Link href="/admin/category-headers">
+                  <a className={`group flex items-center px-2 py-2 text-sm font-medium rounded-md ${
+                    location.pathname === '/admin/category-headers'
+                      ? 'bg-gray-100 text-gray-900'
+                      : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
+                  }`}>
+                    <Settings size={18} />
+                    Category Headers
+                  </a>
+                </Link>
+
+                <Link href="/admin/header-menus">
+                  <a className={`group flex items-center px-2 py-2 text-sm font-medium rounded-md ${
+                    location.pathname === '/admin/header-menus'
+                      ? 'bg-gray-100 text-gray-900'
+                      : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
+                  }`}>
+                    <Menu size={18} />
+                    Header Menus
+                  </a>
+                </Link>
+
+                <Link href="/admin/sidebar-configs">
+                  <a className={`group flex items-center px-2 py-2 text-sm font-medium rounded-md ${
+                    location.pathname === '/admin/sidebar-configs'
+                      ? 'bg-gray-100 text-gray-900'
+                      : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
+                  }`}>
+                    <Settings size={18} />
+                    Sidebar Configs
+                  </a>
+                </Link>
+              </div>
+            </div>
+
+            {/* Global Design Section */}
+            <div className="mt-8">
+              <h3 className="px-3 text-xs font-semibold uppercase text-slate-500 dark:text-slate-400">
+                Global Design
+              </h3>
+              <div className="mt-2 space-y-1">
+                <Link href="/admin/font-families">
+                  <a className={`group flex items-center px-2 py-2 text-sm font-medium rounded-md ${
+                    location.pathname === '/admin/font-families'
+                      ? 'bg-gray-100 text-gray-900'
+                      : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
+                  }`}>
+                    <Type size={18} />
+                    Font Families
+                  </a>
+                </Link>
+
+                <Link href="/admin/category-colors">
+                  <a className={`group flex items-center px-2 py-2 text-sm font-medium rounded-md ${
+                    location.pathname === '/admin/category-colors'
+                      ? 'bg-gray-100 text-gray-900'
+                      : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
+                  }`}>
+                    <Palette size={18} />
+                    Category Colors
+                  </a>
+                </Link>
+              </div>
+            </div>
+
+            {/* Home Page Blocks Section */}
+            <div className="mt-8">
+              <h3 className="px-3 text-xs font-semibold uppercase text-slate-500 dark:text-slate-400">
+                Home Page Blocks
+              </h3>
+              <div className="mt-2 space-y-1">
+                <Link href="/admin/home-blocks/favorite-destinations">
+                  <a className={`group flex items-center px-2 py-2 text-sm font-medium rounded-md ${
+                    location.pathname === '/admin/home-blocks/favorite-destinations'
+                      ? 'bg-gray-100 text-gray-900'
+                      : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
+                  }`}>
+                    <Compass size={18} />
+                    Favorite Destinations
+                  </a>
+                </Link>
+
+                <Link href="/admin/home-blocks/travelers-choice">
+                  <a className={`group flex items-center px-2 py-2 text-sm font-medium rounded-md ${
+                    location.pathname === '/admin/home-blocks/travelers-choice'
+                      ? 'bg-gray-100 text-gray-900'
+                      : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
+                  }`}>
+                    <Star size={18} />
+                    Travelers Choice
+                  </a>
+                </Link>
+
+                <Link href="/admin/home-blocks/tips-management">
+                  <a className={`group flex items-center px-2 py-2 text-sm font-medium rounded-md ${
+                    location.pathname === '/admin/home-blocks/tips-management'
+                      ? 'bg-gray-100 text-gray-900'
+                      : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
+                  }`}>
+                    <Compass size={18} />
+                    Tips Management
+                  </a>
+                </Link>
+              </div>
+            </div>
+
+            {/* Page Styling Section */}
+            <div className="mt-8">
+              <h3 className="px-3 text-xs font-semibold uppercase text-slate-500 dark:text-slate-400">
+                Page Styling
+              </h3>
+              <div className="mt-2 space-y-1">
+                <Link href="/admin/styles/home">
+                  <a className={`group flex items-center px-2 py-2 text-sm font-medium rounded-md ${
+                    location.pathname === '/admin/styles/home'
+                      ? 'bg-gray-100 text-gray-900'
+                      : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
+                  }`}>
+                    <Home size={18} />
+                    Home Style
+                  </a>
+                </Link>
+
+                <Link href="/admin/styles/outdoors">
+                  <a className={`group flex items-center px-2 py-2 text-sm font-medium rounded-md ${
+                    location.pathname === '/admin/styles/outdoors'
+                      ? 'bg-gray-100 text-gray-900'
+                      : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
+                  }`}>
+                    <Compass size={18} />
+                    Outdoors Style
+                  </a>
+                </Link>
+
+                <Link href="/admin/styles/cruising">
+                  <a className={`group flex items-center px-2 py-2 text-sm font-medium rounded-md ${
+                    location.pathname === '/admin/styles/cruising'
+                      ? 'bg-gray-100 text-gray-900'
+                      : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
+                  }`}>
+                    <Compass size={18} />
+                    Cruising Style
+                  </a>
+                </Link>
+
+                <Link href="/admin/styles/fishing">
+                  <a className={`group flex items-center px-2 py-2 text-sm font-medium rounded-md ${
+                    location.pathname === '/admin/styles/fishing'
+                      ? 'bg-gray-100 text-gray-900'
+                      : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
+                  }`}>
+                    <Compass size={18} />
+                    Fishing Style
+                  </a>
+                </Link>
+
+                <Link href="/admin/styles/hiking">
+                  <a className={`group flex items-center px-2 py-2 text-sm font-medium rounded-md ${
+                    location.pathname === '/admin/styles/hiking'
+                      ? 'bg-gray-100 text-gray-900'
+                      : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
+                  }`}>
+                    <Compass size={18} />
+                    Hiking Style
+                  </a>
+                </Link>
+
+                <Link href="/admin/styles/camping">
+                  <a className={`group flex items-center px-2 py-2 text-sm font-medium rounded-md ${
+                    location.pathname === '/admin/styles/camping'
+                      ? 'bg-gray-100 text-gray-900'
+                      : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
+                  }`}>
+                    <Compass size={18} />
+                    Camping Style
+                  </a>
+                </Link>
+
+                <Link href="/admin/styles/four-x-four">
+                  <a className={`group flex items-center px-2 py-2 text-sm font-medium rounded-md ${
+                    location.pathname === '/admin/styles/four-x-four'
+                      ? 'bg-gray-100 text-gray-900'
+                      : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
+                  }`}>
+                    <Compass size={18} />
+                    4x4 Style
+                  </a>
+                </Link>
+              </div>
+            </div>
+
+            {/* Account Section */}
+            <div className="mt-8">
+              <h3 className="px-3 text-xs font-semibold uppercase text-slate-500 dark:text-slate-400">
+                Account
+              </h3>
+              <div className="mt-2 space-y-1">
+                <Link href="/admin/profile">
+                  <a className={`group flex items-center px-2 py-2 text-sm font-medium rounded-md ${
+                    location.pathname === '/admin/profile'
+                      ? 'bg-gray-100 text-gray-900'
+                      : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
+                  }`}>
+                    <User size={18} />
+                    Profile
+                  </a>
+                </Link>
+
+                <Link href="/admin/settings">
+                  <a className={`group flex items-center px-2 py-2 text-sm font-medium rounded-md ${
+                    location.pathname === '/admin/settings'
+                      ? 'bg-gray-100 text-gray-900'
+                      : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
+                  }`}>
+                    <Settings size={18} />
+                    Settings
+                  </a>
+                </Link>
+              </div>
             </div>
           </nav>
 
