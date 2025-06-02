@@ -578,8 +578,24 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.get(`${apiPrefix}/admin/blog/categories`, async (req, res) => {
     try {
-      const categories = await storage.getBlogCategories();
-      res.json(categories);
+      // Get blog categories
+      const blogCategories = await storage.getBlogCategories();
+      
+      // Get header categories (these can also be used for blog posts)
+      const headerConfigs = await db.query.headerConfigs.findMany();
+      
+      // Convert header configs to category format
+      const headerCategories = headerConfigs.map(config => ({
+        id: `header_${config.id}`,
+        name: config.category.charAt(0).toUpperCase() + config.category.slice(1),
+        slug: config.category,
+        type: 'header'
+      }));
+      
+      // Combine both types of categories
+      const allCategories = [...blogCategories, ...headerCategories];
+      
+      res.json(allCategories);
     } catch (error) {
       console.error("Error fetching blog categories:", error);
       res.status(500).json({ message: "Failed to fetch blog categories" });
@@ -630,6 +646,30 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error deleting blog category:", error);
       res.status(500).json({ message: "Failed to delete blog category" });
+    }
+  });
+
+  app.post(`${apiPrefix}/admin/blog/sync-header-categories`, async (req, res) => {
+    try {
+      // Get all header configs
+      const headerConfigs = await db.query.headerConfigs.findMany();
+      
+      let syncedCount = 0;
+      
+      // Ensure each header category has a corresponding blog category
+      for (const config of headerConfigs) {
+        try {
+          await storage.ensureBlogCategoryFromHeader(config.category);
+          syncedCount++;
+        } catch (error) {
+          console.error(`Failed to sync header category ${config.category}:`, error);
+        }
+      }
+      
+      res.json({ success: true, syncedCount });
+    } catch (error) {
+      console.error("Error syncing header categories:", error);
+      res.status(500).json({ message: "Failed to sync header categories" });
     }
   });
 
@@ -1054,6 +1094,14 @@ app.delete(`${apiPrefix}/admin/wordpress/credentials`, async (req, res) => {
         }));
 
         await db.insert(schema.headerMenuItems).values(menuItems);
+      }
+
+      // Automatically create a corresponding blog category for this header category
+      try {
+        await storage.ensureBlogCategoryFromHeader(validatedData.category);
+      } catch (error) {
+        console.error(`Failed to create blog category for header ${validatedData.category}:`, error);
+        // Don't fail the header creation if blog category creation fails
       }
 
       const createdConfig = await db.query.headerConfigs.findFirst({

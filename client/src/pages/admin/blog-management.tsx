@@ -499,7 +499,7 @@ const BlogManagement = () => {
                   Create new categories and manage existing ones.
                 </DialogDescription>
               </DialogHeader>
-              
+
               <div className="space-y-6">
                 {/* Create New Category Form */}
                 <div className="border-b pb-4">
@@ -751,8 +751,8 @@ const BlogManagement = () => {
                             </FormControl>
                             <SelectContent>
                               {categories?.map(category => (
-                                <SelectItem key={category.id} value={category.id}>
-                                  {category.name}
+                                <SelectItem key={category.id} value={category.id.toString()}>
+                                  {category.name} {category.type === 'header' ? '(Category Page)' : ''}
                                 </SelectItem>
                               ))}
                             </SelectContent>
@@ -994,7 +994,7 @@ const BlogManagement = () => {
                         <SelectContent>
                           {categories?.map(category => (
                             <SelectItem key={category.id} value={category.id.toString()}>
-                              {category.name}
+                              {category.name} {category.type === 'header' ? '(Category Page)' : ''}
                             </SelectItem>
                           ))}
                         </SelectContent>
@@ -1401,7 +1401,7 @@ const BlogManagement = () => {
                         <SelectContent>
                           {categories?.map(category => (
                             <SelectItem key={category.id} value={category.id.toString()}>
-                              {category.name}
+                              {category.name} {category.type === 'header' ? '(Category Page)' : ''}
                             </SelectItem>
                           ))}
                         </SelectContent>

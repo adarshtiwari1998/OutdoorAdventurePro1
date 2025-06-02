@@ -742,6 +742,26 @@ export const storage = {
     }
   },
 
+  async ensureBlogCategoryFromHeader(headerCategory: string) {
+    // Check if blog category already exists for this header category
+    const existingCategory = await db.query.categories.findFirst({
+      where: eq(categories.slug, headerCategory)
+    });
+
+    if (!existingCategory) {
+      // Create blog category for this header category
+      const categoryName = headerCategory.charAt(0).toUpperCase() + headerCategory.slice(1);
+      return await this.createBlogCategory({
+        name: categoryName,
+        slug: headerCategory,
+        description: `Blog posts for ${categoryName} category`,
+        type: 'blog'
+      });
+    }
+
+    return existingCategory;
+  },
+
   async deleteBlogCategory(categoryId: number) {
     try {
       await db.delete(categories)
