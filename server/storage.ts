@@ -1147,5 +1147,54 @@ export const storage = {
       console.error(`Error updating slider order ${id}:`, error);
       throw error;
     }
+  },
+
+  // WordPress credentials management
+  async saveWordPressCredentials(credentials: { url: string; username: string; password: string }) {
+    try {
+      const existingCredentials = await db.query.wordpressCredentials.findFirst();
+      
+      if (existingCredentials) {
+        await db.update(wordpressCredentials)
+          .set({
+            url: credentials.url,
+            username: credentials.username,
+            password: credentials.password,
+            updatedAt: new Date()
+          })
+          .where(eq(wordpressCredentials.id, existingCredentials.id));
+      } else {
+        await db.insert(wordpressCredentials).values({
+          url: credentials.url,
+          username: credentials.username,
+          password: credentials.password
+        });
+      }
+    } catch (error) {
+      console.error('Error saving WordPress credentials:', error);
+      throw error;
+    }
+  },
+
+  async getWordPressCredentials() {
+    try {
+      const credentials = await db.query.wordpressCredentials.findFirst();
+      return credentials || null;
+    } catch (error) {
+      console.error('Error getting WordPress credentials:', error);
+      throw error;
+    }
+  },
+
+  async deleteWordPressCredentials() {
+    try {
+      const existingCredentials = await db.query.wordpressCredentials.findFirst();
+      if (existingCredentials) {
+        await db.delete(wordpressCredentials).where(eq(wordpressCredentials.id, existingCredentials.id));
+      }
+    } catch (error) {
+      console.error('Error deleting WordPress credentials:', error);
+      throw error;
+    }
   }
 };

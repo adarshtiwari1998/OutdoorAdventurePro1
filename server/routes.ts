@@ -648,7 +648,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
 app.post(`${apiPrefix}/admin/blog/import/wordpress`, async (req, res) => {
   try {
-    const { wordpressUrl, username, password, postsCount, categoryId } = req.body;
+    let { wordpressUrl, username, password, postsCount, categoryId } = req.body;
+
+    // If password is masked (***), get the real password from saved credentials
+    if (password === "***") {
+      const savedCredentials = await storage.getWordPressCredentials();
+      if (savedCredentials) {
+        password = savedCredentials.password;
+        wordpressUrl = savedCredentials.url;
+        username = savedCredentials.username;
+      } else {
+        return res.status(400).json({ message: "No saved credentials found" });
+      }
+    }
 
     const posts = await wordpressService.importPosts({
       url: wordpressUrl,
@@ -680,10 +692,47 @@ app.post(`${apiPrefix}/admin/blog/import/wordpress`, async (req, res) => {
       }
     }
 
+    // Save credentials for future use
+    await storage.saveWordPressCredentials({
+      url: wordpressUrl,
+      username,
+      password
+    });
+
     res.json({ success: true, count: importedCount });
   } catch (error) {
     console.error("Error importing WordPress posts:", error);
     res.status(500).json({ message: "Failed to import WordPress posts" });
+  }
+});
+
+// WordPress credentials endpoints
+app.get(`${apiPrefix}/admin/wordpress/credentials`, async (req, res) => {
+  try {
+    const credentials = await storage.getWordPressCredentials();
+    if (credentials) {
+      // Don't send the password in the response for security
+      res.json({
+        url: credentials.url,
+        username: credentials.username,
+        hasCredentials: true
+      });
+    } else {
+      res.json({ hasCredentials: false });
+    }
+  } catch (error) {
+    console.error("Error fetching WordPress credentials:", error);
+    res.status(500).json({ message: "Failed to fetch WordPress credentials" });
+  }
+});
+
+app.delete(`${apiPrefix}/admin/wordpress/credentials`, async (req, res) => {
+  try {
+    await storage.deleteWordPressCredentials();
+    res.json({ success: true });
+  } catch (error) {
+    console.error("Error deleting WordPress credentials:", error);
+    res.status(500).json({ message: "Failed to delete WordPress credentials" });
   }
 });
 

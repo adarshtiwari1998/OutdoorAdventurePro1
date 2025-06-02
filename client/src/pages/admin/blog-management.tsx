@@ -92,6 +92,26 @@ const BlogManagement = () => {
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [isImportDialogOpen, setIsImportDialogOpen] = useState(false);
   const [bulkCategoryId, setBulkCategoryId] = useState<string>("");
+  const [isEditingCredentials, setIsEditingCredentials] = useState(false); // State for editing credentials
+  const [savedCredentials, setSavedCredentials] = useState<{
+    hasCredentials: boolean;
+    url?: string;
+    username?: string;
+  }>({ hasCredentials: false });
+
+  // Load saved credentials from localStorage on component mount
+  useState(() => {
+    const storedUrl = localStorage.getItem("wordpressUrl");
+    const storedUsername = localStorage.getItem("wordpressUsername");
+
+    if (storedUrl && storedUsername) {
+      setSavedCredentials({
+        hasCredentials: true,
+        url: storedUrl,
+        username: storedUsername,
+      });
+    }
+  }, []);
 
   // Queries
   const { data: postsData, isLoading } = useQuery<{
@@ -221,14 +241,24 @@ const BlogManagement = () => {
     mutationFn: async (values: any) => {
       return apiRequest('POST', '/api/admin/blog/import/wordpress', values);
     },
-    onSuccess: () => {
+    onSuccess: (data, variables) => {
       toast({
         title: "Success",
         description: "Blog posts imported successfully from WordPress",
       });
       queryClient.invalidateQueries({ queryKey: ['/api/admin/blog/posts'] });
+
+      // Save credentials to localStorage
+      localStorage.setItem("wordpressUrl", variables.wordpressUrl);
+      localStorage.setItem("wordpressUsername", variables.username);
+      setSavedCredentials({
+        hasCredentials: true,
+        url: variables.wordpressUrl,
+        username: variables.username,
+      });
       importForm.reset();
       setIsImportDialogOpen(false);
+      setIsEditingCredentials(false);
     },
     onError: (error) => {
       toast({
@@ -237,6 +267,32 @@ const BlogManagement = () => {
         variant: "destructive",
       });
     }
+  });
+
+  const deleteCredentialsMutation = useMutation({
+    mutationFn: async () => {
+      return new Promise((resolve) => {
+        localStorage.removeItem("wordpressUrl");
+        localStorage.removeItem("wordpressUsername");
+        resolve(true);
+      });
+    },
+    onSuccess: () => {
+      toast({
+        title: "Success",
+        description: "Saved WordPress credentials deleted",
+      });
+      setSavedCredentials({ hasCredentials: false });
+      setIsEditingCredentials(false);
+      importForm.reset();
+    },
+    onError: (error) => {
+      toast({
+        title: "Error",
+        description: `Failed to delete credentials: ${error}`,
+        variant: "destructive",
+      });
+    },
   });
 
   const bulkCategoryChangeMutation = useMutation({
@@ -582,7 +638,17 @@ const BlogManagement = () => {
             </DialogContent>
           </Dialog>
 
-          <Dialog open={isImportDialogOpen} onOpenChange={setIsImportDialogOpen}>
+          <Dialog open={isImportDialogOpen} onOpenChange={(open) => {
+            setIsImportDialogOpen(open);
+            if (open && savedCredentials?.hasCredentials && !isEditingCredentials) {
+              // Auto-fill saved credentials
+              importForm.setValue("wordpressUrl", savedCredentials.url || "");
+              importForm.setValue("username", savedCredentials.username || "");
+            } else if (open && (!savedCredentials?.hasCredentials || isEditingCredentials)) {
+              // Reset form if no saved credentials or editing
+              importForm.reset();
+            }
+          }}>
             <DialogTrigger asChild>
               <Button variant="outline">
                 <FileText className="mr-1" size={16} /> Import from WordPress
@@ -595,35 +661,79 @@ const BlogManagement = () => {
                   Connect to your WordPress site to import blog posts.
                 </DialogDescription>
               </DialogHeader>
-              <form onSubmit={importForm.handleSubmit(onImportSubmit)} className="space-y-4">
-                <div className="space-y-2">
-                  <Label htmlFor="wordpressUrl">WordPress URL</Label>
-                  <Input 
-                    id="wordpressUrl" 
-                    placeholder="https://yourblog.wordpress.com" 
-                    {...importForm.register("wordpressUrl")}
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="username">Username</Label>
-                  <Input 
-                    id="username" 
-                    placeholder="WordPress username" 
-                    {...importForm.register("username")}
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="password">Application Password</Label>
-                  <Input 
-                    id="password" 
-                    type="password" 
-                    placeholder="WordPress application password" 
-                    {...importForm.register("password")}
-                  />
-                  <div className="text-xs text-muted-foreground mt-1">
-                    Generate this in WordPress under Users profile Application Passwords
+
+              {savedCredentials?.hasCredentials && !isEditingCredentials && (
+                <div className="bg-green-50 border border-green-200 rounded-lg p-4 mb-4">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <h4 className="font-medium text-green-800">Saved Credentials</h4>
+                      <p className="text-sm text-green-600">
+                        URL: {savedCredentials.url}
+                      </p>
+                      <p className="text-sm text-green-600">
+                        Username: {savedCredentials.username}
+                      </p>
+                    </div>
+                    <div className="flex gap-2">
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        onClick={() => setIsEditingCredentials(true)}
+                      >
+                        Edit
+                      </Button>
+                      <Button
+                        type="button"
+                        variant="destructive"
+                        size="sm"
+                        onClick={() => deleteCredentialsMutation.mutate()}
+                        disabled={deleteCredentialsMutation.isPending}
+                      >
+                        Delete
+                      </Button>
+                    </div>
                   </div>
                 </div>
+              )}
+
+              <form onSubmit={importForm.handleSubmit(onImportSubmit)} className="space-y-4">
+                {(!savedCredentials?.hasCredentials || isEditingCredentials) && (
+                  <>
+                    <div className="space-y-2">
+                      <Label htmlFor="wordpressUrl">WordPress URL</Label>
+                      <Input 
+                        id="wordpressUrl" 
+                        placeholder="https://yourblog.wordpress.com" 
+                        {...importForm.register("wordpressUrl")}
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="username">Username</Label>
+                      <Input 
+                        id="username" 
+                        placeholder="WordPress username" 
+                        {...importForm.register("username")}
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="password">Application Password</Label>
+                      <Input 
+                        id="password"
+                        type="password" 
+                        placeholder="WordPress application password" 
+                        {...importForm.register("password")}
+                      />
+                      <div className="text-xs text-muted-foreground mt-1">
+                        Generate this in WordPress under Users profile Application Passwords
+                      </div>
+                    </div>
+                  </>
+                )}
+
+                {savedCredentials?.hasCredentials && !isEditingCredentials && (
+                  <input type="hidden" {...importForm.register("password")} />
+                )}
                 <div className="space-y-2">
                   <Label htmlFor="postsCount">Number of Posts</Label>
                   <Input 
@@ -851,8 +961,7 @@ const BlogManagement = () => {
                       <TableCell className="hidden md:table-cell">
                         <Badge variant={
                           post.status === 'published' ? 'default' : 
-                          post.status === 'draft' ? 'secondary' : 
-                          'outline'
+                          post.status === 'draft' ? 'secondary' :post.status === 'outline'
                         }>
                           {post.status}
                         </Badge>
@@ -1062,7 +1171,7 @@ const BlogManagement = () => {
                                 }}
                                 value={field.value}
                                 onEditorChange={(content) => field.onChange(content)}
-                            
+
                               />
                             ) : (
                               <div className="p-4 border rounded-lg bg-white prose dark:prose-invert max-w-none">

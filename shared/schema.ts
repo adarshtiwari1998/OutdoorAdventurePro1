@@ -601,3 +601,12 @@ export const insertCategoryStyleSchema = createInsertSchema(categoryStyles, {
 
 export type InsertCategoryStyle = z.infer<typeof insertCategoryStyleSchema>;
 export type CategoryStyle = typeof categoryStyles.$inferSelect;
+
+export const wordpressCredentials = pgTable("wordpress_credentials", {
+  id: serial("id").primaryKey(),
+  url: text("url").notNull(),
+  username: text("username").notNull(),
+  password: text("password").notNull(),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow()
+});
