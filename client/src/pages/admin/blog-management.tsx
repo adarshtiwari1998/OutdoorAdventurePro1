@@ -713,8 +713,8 @@ const BlogManagement = () => {
     setCategoryDetailsOpen(true);
     
     try {
-      // Use the category name as the filter parameter
-      const response = await fetch(`/api/admin/blog/posts?category=${encodeURIComponent(category.name)}&page=1&pageSize=100`);
+      // Use the category name as the filter parameter and fetch all posts
+      const response = await fetch(`/api/admin/blog/posts?category=${encodeURIComponent(category.name)}&page=1&pageSize=1000`);
       if (!response.ok) {
         throw new Error(`Failed to fetch category posts: ${response.statusText}`);
       }
@@ -1922,21 +1922,12 @@ const BlogManagement = () => {
 
       {/* Category Details Dialog */}
       <Dialog open={categoryDetailsOpen} onOpenChange={setCategoryDetailsOpen}>
-        <DialogContent className="max-w-4xl max-h-[80vh]">
+        <DialogContent className="max-w-5xl max-h-[80vh]">
           <DialogHeader>
-            <div className="flex items-center justify-between">
-              <DialogTitle className="flex items-center gap-2">
-                <Tag className="h-5 w-5" />
-                {selectedCategoryForDetails?.name} - Posts Details
-              </DialogTitle>
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => setCategoryDetailsOpen(false)}
-              >
-                <X className="h-4 w-4" />
-              </Button>
-            </div>
+            <DialogTitle className="flex items-center gap-2">
+              <Tag className="h-5 w-5" />
+              {selectedCategoryForDetails?.name} - Posts Details
+            </DialogTitle>
             <DialogDescription>
               All blog posts in the "{selectedCategoryForDetails?.name}" category ({categoryPosts.length} posts)
             </DialogDescription>
@@ -1953,6 +1944,7 @@ const BlogManagement = () => {
                 <TableHeader>
                   <TableRow>
                     <TableHead>Title</TableHead>
+                    <TableHead>Category</TableHead>
                     <TableHead>Status</TableHead>
                     <TableHead>Author</TableHead>
                     <TableHead>Date</TableHead>
@@ -1966,6 +1958,9 @@ const BlogManagement = () => {
                         <div className="text-sm text-muted-foreground truncate max-w-md">
                           {post.excerpt?.replace(/<[^>]*>/g, '').substring(0, 100)}...
                         </div>
+                      </TableCell>
+                      <TableCell>
+                        <span className="text-sm">{post.category?.name || 'Uncategorized'}</span>
                       </TableCell>
                       <TableCell>
                         <Badge variant={
