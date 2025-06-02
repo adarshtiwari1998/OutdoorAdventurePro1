@@ -21,7 +21,7 @@ import { toast } from "@/hooks/use-toast";
 import { Upload, Link as LinkIcon, Save, Trash2, Eye, CheckCircle, XCircle, Clock } from "lucide-react";
 
 // URL validation component
-const URLStatus = ({ url }: { url: string }) => {
+const URLStatus = ({ url, onBrokenAsset }: { url: string, onBrokenAsset?: () => void }) => {
   const [status, setStatus] = useState<'loading' | 'valid' | 'invalid'>('loading');
 
   useEffect(() => {
@@ -30,11 +30,12 @@ const URLStatus = ({ url }: { url: string }) => {
       if (url.includes('cloudinary.com')) {
         // Use a more reliable method for Cloudinary URLs
         const img = new Image();
-        
+
         const timeout = setTimeout(() => {
           setStatus('invalid');
+          onBrokenAsset?.();
         }, 10000); // 10 second timeout
-        
+
         img.onload = () => {
           clearTimeout(timeout);
           // Double check that the image actually loaded with valid dimensions
@@ -42,14 +43,16 @@ const URLStatus = ({ url }: { url: string }) => {
             setStatus('valid');
           } else {
             setStatus('invalid');
+            onBrokenAsset?.();
           }
         };
-        
+
         img.onerror = () => {
           clearTimeout(timeout);
           setStatus('invalid');
+          onBrokenAsset?.();
         };
-        
+
         // Set crossOrigin to handle CORS properly
         img.crossOrigin = 'anonymous';
         img.src = url;
@@ -58,20 +61,23 @@ const URLStatus = ({ url }: { url: string }) => {
         try {
           const controller = new AbortController();
           const timeoutId = setTimeout(() => controller.abort(), 8000);
-          
+
           const response = await fetch(url, { 
             method: 'HEAD', 
             mode: 'no-cors',
             signal: controller.signal
           });
-          
+
           clearTimeout(timeoutId);
           setStatus('valid');
         } catch (error) {
           // Fallback to image element test
           const img = new Image();
           img.onload = () => setStatus('valid');
-          img.onerror = () => setStatus('invalid');
+          img.onerror = () => {
+            setStatus('invalid');
+            onBrokenAsset?.();
+          };
           img.src = url;
         }
       }
@@ -80,7 +86,7 @@ const URLStatus = ({ url }: { url: string }) => {
     // Reset status when URL changes
     setStatus('loading');
     validateURL();
-  }, [url]);
+  }, [url, onBrokenAsset]);
 
   const getStatusIcon = () => {
     switch (status) {
@@ -541,7 +547,16 @@ const DashboardAssetsAdmin = () => {
                               {asset.isActive && (
                                 <span className="text-xs text-primary font-medium">Active</span>
                               )}
-                              <URLStatus url={asset.url} />
+                              <URLStatus 
+                                url={asset.url} 
+                                onBrokenAsset={() => {
+                                  toast({
+                                    title: "Broken asset detected",
+                                    description: `Asset "${asset.name}" appears to be broken. Consider deleting it.`,
+                                    variant: "destructive",
+                                  });
+                                }}
+                              />
                             </div>
                           </div>
                         </div>

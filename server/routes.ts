@@ -384,16 +384,55 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Cleanup broken dashboard assets
+  app.post(`${apiPrefix}/admin/dashboard-assets/cleanup`, async (req, res) => {
+    try {
+      const assets = await storage.getDashboardAssets();
+      const brokenAssets = [];
+
+      for (const asset of assets) {
+        try {
+          // Check if the Cloudinary URL is accessible
+          const response = await fetch(asset.url, { method: 'HEAD' });
+          if (!response.ok) {
+            brokenAssets.push({
+              id: asset.id,
+              name: asset.name,
+              url: asset.url,
+              reason: `HTTP ${response.status}`
+            });
+          }
+        } catch (error) {
+          brokenAssets.push({
+            id: asset.id,
+            name: asset.name,
+            url: asset.url,
+            reason: 'Network error or not found'
+          });
+        }
+      }
+
+      res.json({
+        totalAssets: assets.length,
+        brokenAssets: brokenAssets.length,
+        brokenAssetsList: brokenAssets
+      });
+    } catch (error) {
+      console.error('Error cleaning up dashboard assets:', error);
+      res.status(500).json({ message: 'Failed to cleanup dashboard assets' });
+    }
+  });
+
   app.post(`${apiPrefix}/admin/dashboard-assets`, async (req, res) => {
     try {
       const contentType = req.headers['content-type'] || '';
-      
+
       // Handle multipart form data for file uploads
       if (contentType.includes('multipart/form-data')) {
         // Use multer or similar to handle file uploads
         const { default: multer } = await import('multer');
         const { default: cloudinaryService } = await import('./services/cloudinaryService.js');
-        
+
         const upload = multer({ 
           storage: multer.memoryStorage(),
           limits: { fileSize: 10 * 1024 * 1024 } // 10MB limit
@@ -406,7 +445,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           }
 
           const { type, name, uploadMethod } = req.body;
-          
+
           if (!type || !name) {
             return res.status(400).json({ 
               message: "Type and name are required" 
@@ -519,7 +558,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const { id } = req.params;
       const { type } = req.body;
-      
+
       // First deactivate all assets of this type
       const existingAssets = await storage.getDashboardAssets();
       for (const asset of existingAssets) {
@@ -527,7 +566,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           await storage.updateDashboardAsset(asset.id, { isActive: false });
         }
       }
-      
+
       // Then activate the selected asset
       const asset = await storage.updateDashboardAsset(parseInt(id), { isActive: true });
       res.json(asset);
@@ -838,7 +877,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: "Name and slug are required" });
       }
 
-      const newCategory = await storage.createBlogCategory({
+      const newCategory = await```tool_code
+ storage.createBlogCategory({
         name,
         slug,
         description: description || null,
