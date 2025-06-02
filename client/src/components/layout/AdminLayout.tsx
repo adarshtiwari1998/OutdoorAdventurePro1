@@ -99,8 +99,6 @@ const AdminLayout = ({ children, title }: AdminLayoutProps) => {
     { icon: Home, label: "Dashboard", href: "/admin/dashboard" },
     { icon: FileText, label: "Blog Management", href: "/admin/blog-management" },
     { icon: Video, label: "YouTube Import", href: "/admin/youtube-import" },
-    { icon: SlidersHorizontal, label: "Sliders", href: "/admin/sliders" },
-    { icon: Image, label: "Home Blocks", href: "/admin/home-blocks/favorite-destinations" },
     { icon: Settings, label: "Category Headers", href: "/admin/category-headers" },
     { icon: Settings, label: "Header Menus", href: "/admin/header-menus" },
     { icon: Settings, label: "Sidebar Configs", href: "/admin/sidebar-configs" },
@@ -184,6 +182,13 @@ const AdminLayout = ({ children, title }: AdminLayoutProps) => {
                     label="Favorite Destinations"
                     href="/admin/home-blocks/favorite-destinations"
                     isActive={location.startsWith("/admin/home-blocks/favorite-destinations")}
+                  />
+                   <AdminMenuItem
+                    key="/admin/sliders"
+                    icon={SlidersHorizontal}
+                    label="Sliders"
+                    href="/admin/sliders"
+                    isActive={location.startsWith("/admin/sliders")}
                   />
                 </div>
               )}
