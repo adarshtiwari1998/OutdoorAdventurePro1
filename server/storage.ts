@@ -953,7 +953,12 @@ export const storage = {
           name: 'Admin User', // Default author since we don't have detailed author info
           avatar: 'https://ui-avatars.com/api/?name=Admin%20User&background=random'
         },
-        tags: post.tags ? post.tags.split(',').map(tag => tag.trim()) : [],
+        tags: (() => {
+          if (!post.tags) return [];
+          if (Array.isArray(post.tags)) return post.tags;
+          if (typeof post.tags === 'string') return post.tags.split(',').map(tag => tag.trim());
+          return [];
+        })(),
         slug: post.slug,
         createdAt: post.createdAt,
         updatedAt: post.updatedAt
