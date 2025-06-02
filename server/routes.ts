@@ -737,8 +737,8 @@ app.post(`${apiPrefix}/admin/blog/import/wordpress`, async (req, res) => {
   try {
     let { wordpressUrl, username, password, postsCount, categoryId } = req.body;
 
-    // If password is masked (***), get the real password from saved credentials
-    if (password === "***") {
+    // If password is masked (***) or empty, get the real password from saved credentials
+    if (password === "***" || !password) {
       const savedCredentials = await storage.getWordPressCredentials();
       if (savedCredentials) {
         password = savedCredentials.password;
@@ -747,6 +747,11 @@ app.post(`${apiPrefix}/admin/blog/import/wordpress`, async (req, res) => {
       } else {
         return res.status(400).json({ message: "No saved credentials found" });
       }
+    }
+
+    // Validate that we have all required credentials
+    if (!wordpressUrl || !username || !password) {
+      return res.status(400).json({ message: "WordPress URL, username, and password are required" });
     }
 
     // Get all existing blog posts to check against

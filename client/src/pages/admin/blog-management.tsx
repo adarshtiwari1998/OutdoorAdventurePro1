@@ -48,6 +48,7 @@ import { FileText, Edit, Trash2, Plus, Filter, Search, ChevronDown, Tag, FolderP
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
 import { format } from "date-fns";
+import { CheckCircle2 } from "lucide-react";
 
 // Schemas
 const blogPostSchema = z.object({
@@ -437,7 +438,19 @@ const BlogManagement = () => {
   };
 
   const onImportSubmit = (values: any) => {
-    importFromWordPressMutation.mutate(values);
+    // If using saved credentials and password is masked, send the masked password
+    // The backend will handle getting the real password from the database
+    const submitData = {
+      ...values,
+      postsCount: parseInt(values.postsCount) || 10,
+    };
+
+    // If we have saved credentials and password is masked, ensure backend knows to use saved password
+    if (savedCredentials?.hasCredentials && values.password === "***") {
+      submitData.password = "***";
+    }
+
+    importFromWordPressMutation.mutate(submitData);
   };
 
   const handleBulkCategoryChange = () => {
@@ -864,35 +877,33 @@ const BlogManagement = () => {
 
               {savedCredentials?.hasCredentials && !isEditingCredentials && (
                 <div className="bg-green-50 border border-green-200 rounded-lg p-4 mb-4">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <h4 className="font-medium text-green-800">Saved Credentials</h4>
-                      <p className="text-sm text-green-600">
-                        URL: {savedCredentials.url}
-                      </p>
-                      <p className="text-sm text-green-600">
-                        Username: {savedCredentials.username}
-                      </p>
-                    </div>
-                    <div className="flex gap-2">
-                      <Button
-                        type="button"
-                        variant="outline"
-                        size="sm"
-                        onClick={() => setIsEditingCredentials(true)}
-                      >
-                        Edit
-                      </Button>
-                      <Button
-                        type="button"
-                        variant="destructive"
-                        size="sm"
-                        onClick={() => deleteCredentialsMutation.mutate()}
-                        disabled={deleteCredentialsMutation.isPending}
-                      >
-                        Delete
-                      </Button>
-                    </div>
+                  <h4 className="font-medium text-green-800 mb-2 flex items-center gap-2">
+                    <CheckCircle2 className="w-4 h-4" />
+                    Saved Credentials
+                  </h4>
+                  <div className="text-sm text-green-700 space-y-1">
+                    <div><strong>URL:</strong> {savedCredentials.url}</div>
+                    <div><strong>Username:</strong> {savedCredentials.username}</div>
+                    <div><strong>Password:</strong> ••••••••••••••••• (saved)</div>
+                  </div>
+                  <div className="mt-3 flex gap-2">
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setIsEditingCredentials(true)}
+                    >
+                      Edit
+                    </Button>
+                    <Button
+                      type="button"
+                      variant="destructive"
+                      size="sm"
+                      onClick={() => deleteCredentialsMutation.mutate()}
+                      disabled={deleteCredentialsMutation.isPending}
+                    >
+                      Delete
+                    </Button>
                   </div>
                 </div>
               )}
