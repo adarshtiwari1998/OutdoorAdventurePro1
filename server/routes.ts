@@ -877,8 +877,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: "Name and slug are required" });
       }
 
-      const newCategory = await```tool_code
- storage.createBlogCategory({
+      const newCategory = await storage.createBlogCategory({
         name,
         slug,
         description: description || null,
