@@ -622,7 +622,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
 app.post(`${apiPrefix}/admin/blog/import/wordpress`, async (req, res) => {
   try {
-    const { wordpressUrl, username, password, postsCount } = req.body;
+    const { wordpressUrl, username, password, postsCount, categoryId } = req.body;
 
     const posts = await wordpressService.importPosts({
       url: wordpressUrl,
@@ -645,7 +645,7 @@ app.post(`${apiPrefix}/admin/blog/import/wordpress`, async (req, res) => {
           content: post.content,
           excerpt: post.excerpt,
           featuredImage: post.featuredImage,
-          categoryId: post.categoryId || '1', // Default category
+          categoryId: categoryId || '1', // Use selected category or default
           status: 'published',
           tags: post.tags,
           slug: post.slug // Use the post's slug directly

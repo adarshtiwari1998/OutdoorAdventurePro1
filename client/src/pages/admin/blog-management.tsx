@@ -130,7 +130,8 @@ const BlogManagement = () => {
       wordpressUrl: "",
       username: "",
       password: "",
-      postsCount: 10
+      postsCount: 10,
+      categoryId: ""
     },
     validate: {
       wordpressUrl: (value) => {
@@ -144,6 +145,7 @@ const BlogManagement = () => {
       },
       username: (value) => value ? true : "WordPress username is required",
       password: (value) => value ? true : "WordPress application password is required",
+      categoryId: (value) => value ? true : "Please select a category",
     }
   });
 
@@ -598,6 +600,24 @@ const BlogManagement = () => {
                     defaultValue={10} 
                     {...importForm.register("postsCount", { valueAsNumber: true })}
                   />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="categoryId">Category</Label>
+                  <select 
+                    id="categoryId"
+                    className="w-full px-3 py-2 border border-input rounded-md focus:outline-none focus:ring-2 focus:ring-primary"
+                    {...importForm.register("categoryId", { required: true })}
+                  >
+                    <option value="">Select a category</option>
+                    {categories?.map(category => (
+                      <option key={category.id} value={category.id}>
+                        {category.name}
+                      </option>
+                    ))}
+                  </select>
+                  {importForm.formState.errors.categoryId && (
+                    <p className="text-sm text-destructive">Category is required</p>
+                  )}
                 </div>
                 <DialogFooter>
                   <Button type="submit" disabled={importFromWordPressMutation.isPending}>
