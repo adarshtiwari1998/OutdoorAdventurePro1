@@ -1,0 +1,88 @@
+Error getting admin blog posts: TypeError: post.tags.split is not a function
+    at <anonymous> (/home/runner/workspace/server/storage.ts:956:37)
+    at Array.map (<anonymous>)
+    at Object.getAdminBlogPosts (/home/runner/workspace/server/storage.ts:940:36)
+    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)
+    at async <anonymous> (/home/runner/workspace/server/routes.ts:615:22)
+Error fetching admin blog posts: TypeError: post.tags.split is not a function
+    at <anonymous> (/home/runner/workspace/server/storage.ts:956:37)
+    at Array.map (<anonymous>)
+    at Object.getAdminBlogPosts (/home/runner/workspace/server/storage.ts:940:36)
+    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)
+    at async <anonymous> (/home/runner/workspace/server/routes.ts:615:22)
+4:32:44 PM [express] GET /api/admin/blog/posts 500 in 1332ms :: {"message":"Failed to fetch admin bl…
+Fetching blog posts - Page: 1, Status: undefined, Category: undefined, Search: undefined, PageSize: 10
+4:32:46 PM [express] GET /api/admin/blog/analytics 304 in 3429ms :: {"totalPosts":"42","publishedPos…
+Error getting admin blog posts: TypeError: post.tags.split is not a function
+    at <anonymous> (/home/runner/workspace/server/storage.ts:956:37)
+    at Array.map (<anonymous>)
+    at Object.getAdminBlogPosts (/home/runner/workspace/server/storage.ts:940:36)
+    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)
+    at async <anonymous> (/home/runner/workspace/server/routes.ts:615:22)
+Error fetching admin blog posts: TypeError: post.tags.split is not a function
+    at <anonymous> (/home/runner/workspace/server/storage.ts:956:37)
+    at Array.map (<anonymous>)
+    at Object.getAdminBlogPosts (/home/runner/workspace/server/storage.ts:940:36)
+    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)
+    at async <anonymous> (/home/runner/workspace/server/routes.ts:615:22)
+4:32:47 PM [express] GET /api/admin/blog/posts 500 in 1347ms :: {"message":"Failed to fetch admin bl…
+Fetching blog posts - Page: 1, Status: undefined, Category: undefined, Search: undefined, PageSize: 10
+Error getting admin blog posts: TypeError: post.tags.split is not a function
+    at <anonymous> (/home/runner/workspace/server/storage.ts:956:37)
+    at Array.map (<anonymous>)
+    at Object.getAdminBlogPosts (/home/runner/workspace/server/storage.ts:940:36)
+    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)
+    at async <anonymous> (/home/runner/workspace/server/routes.ts:615:22)
+Error fetching admin blog posts: TypeError: post.tags.split is not a function
+    at <anonymous> (/home/runner/workspace/server/storage.ts:956:37)
+    at Array.map (<anonymous>)
+    at Object.getAdminBlogPosts (/home/runner/workspace/server/storage.ts:940:36)
+    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)
+    at async <anonymous> (/home/runner/workspace/server/routes.ts:615:22)
+4:32:50 PM [express] GET /api/admin/blog/posts 500 in 1350ms :: {"message":"Failed to fetch admin bl…
+4:33:09 PM [express] GET /api/admin/youtube/channels 304 in 676ms :: [{"id":1,"channelId":"UCfUABeKV…
+4:33:10 PM [express] GET /api/admin/blog/categories 200 in 909ms :: [{"id":9,"name":"Adventure Stori…
+Fetching blog posts - Page: 1, Status: undefined, Category: undefined, Search: undefined, PageSize: 10
+4:33:10 PM [express] GET /api/cart/count 304 in 664ms
+4:33:10 PM [express] GET /api/favorite-destinations 304 in 661ms :: [{"id":1,"title":"New York","ima…
+4:33:10 PM [express] GET /api/header-configs/category/home 304 in 675ms :: {"id":1,"category":"home"…
+4:33:10 PM [express] GET /api/travelers-choice 304 in 680ms :: [{"id":1,"title":"World's Best Hotels…
+4:33:10 PM [express] GET /api/admin/tips 304 in 736ms :: [{"id":4,"title":"Advanced Camping Setup","…
+4:33:10 PM [express] GET /api/admin/header-configs 304 in 896ms :: [{"id":2,"category":"hiking","log…
+Error getting admin blog posts: TypeError: post.tags.split is not a function
+    at <anonymous> (/home/runner/workspace/server/storage.ts:956:37)
+    at Array.map (<anonymous>)
+    at Object.getAdminBlogPosts (/home/runner/workspace/server/storage.ts:940:36)
+    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)
+    at async <anonymous> (/home/runner/workspace/server/routes.ts:615:22)
+Error fetching admin blog posts: TypeError: post.tags.split is not a function
+    at <anonymous> (/home/runner/workspace/server/storage.ts:956:37)
+    at Array.map (<anonymous>)
+    at Object.getAdminBlogPosts (/home/runner/workspace/server/storage.ts:940:36)
+    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)
+    at async <anonymous> (/home/runner/workspace/server/routes.ts:615:22)
+4:33:11 PM [express] GET /api/admin/blog/posts 500 in 1305ms :: {"message":"Failed to fetch admin bl…
+4:33:11 PM [express] GET /api/activities/featured 304 in 678ms :: [{"id":1,"title":"Appalachian Trai…
+4:33:11 PM [express] GET /api/youtube/channels 304 in 677ms :: [{"id":"1","title":"How To Have Fun O…
+4:33:11 PM [express] GET /api/products/featured 304 in 701ms :: [{"id":"1","title":"Wilderness Explo…
+4:33:11 PM [express] GET /api/sliders 304 in 667ms :: [{"id":1,"title":"Acropolis of Athens in Greec…
+4:33:11 PM [express] GET /api/testimonials 304 in 814ms :: [{"id":"3","content":"The camping trip wa…
+4:33:11 PM [express] GET /api/blog/featured 304 in 1121ms :: {"featured":{"id":"81","title":"Swim wi…
+4:33:12 PM [express] GET /api/user 304 in 437ms :: {"id":1,"username":"admin","password":"dad0c4a582…
+4:33:12 PM [express] GET /api/category-styles 304 in 642ms :: [{"id":1,"category":"home","primaryCol…
+Fetching blog posts - Page: 1, Status: undefined, Category: undefined, Search: undefined, PageSize: 10
+4:33:12 PM [express] GET /api/admin/blog/analytics 304 in 2885ms :: {"totalPosts":"42","publishedPos…
+4:33:13 PM [express] GET /api/category-styles 304 in 642ms :: [{"id":1,"category":"home","primaryCol…
+Error getting admin blog posts: TypeError: post.tags.split is not a function
+    at <anonymous> (/home/runner/workspace/server/storage.ts:956:37)
+    at Array.map (<anonymous>)
+    at Object.getAdminBlogPosts (/home/runner/workspace/server/storage.ts:940:36)
+    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)
+    at async <anonymous> (/home/runner/workspace/server/routes.ts:615:22)
+Error fetching admin blog posts: TypeError: post.tags.split is not a function
+    at <anonymous> (/home/runner/workspace/server/storage.ts:956:37)
+    at Array.map (<anonymous>)
+    at Object.getAdminBlogPosts (/home/runner/workspace/server/storage.ts:940:36)
+    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)
+    at async <anonymous> (/home/runner/workspace/server/routes.ts:615:22)
+4:33:13 PM [express] GET /api/admin/blog/posts 500 in 1301ms :: {"message":"Failed to fetch admin bl…
