@@ -152,7 +152,20 @@ const BlogManagement = () => {
     posts: BlogPost[];
     totalPages: number;
   }>({
-    queryKey: ['/api/admin/blog/posts', { page: currentPage, status: statusFilter, category: categoryFilter, search: searchQuery }],
+    queryKey: ['/api/admin/blog/posts', currentPage, statusFilter, categoryFilter, searchQuery],
+    queryFn: async () => {
+      const params = new URLSearchParams();
+      params.append('page', currentPage.toString());
+      if (statusFilter && statusFilter !== 'all') params.append('status', statusFilter);
+      if (categoryFilter && categoryFilter !== 'all') params.append('category', categoryFilter);
+      if (searchQuery) params.append('search', searchQuery);
+      
+      const response = await fetch(`/api/admin/blog/posts?${params.toString()}`);
+      if (!response.ok) {
+        throw new Error('Failed to fetch blog posts');
+      }
+      return response.json();
+    },
     refetchOnWindowFocus: false,
     staleTime: 0
   });
@@ -281,57 +294,76 @@ const BlogManagement = () => {
         skippedCount: 0
       });
 
-      // Simulate progress updates
-      const updateProgress = (step: string, progress: number, log: string) => {
+      try {
+        // Update progress: Connecting
         setImportProgress(prev => ({
           ...prev,
-          currentStep: step,
-          progress,
-          logs: [...prev.logs, log]
+          currentStep: 'Connecting to WordPress...',
+          progress: 20,
+          logs: [...prev.logs, '🔗 Connecting to WordPress API...']
         }));
-      };
-
-      try {
-        updateProgress('Connecting to WordPress...', 20, '🔗 Connecting to WordPress API...');
         
         const result = await apiRequest('POST', '/api/admin/blog/import/wordpress', values);
         
-        updateProgress('Processing posts...', 50, '📦 Processing fetched posts...');
+        // Update progress: Processing
+        setImportProgress(prev => ({
+          ...prev,
+          currentStep: 'Processing posts...',
+          progress: 50,
+          logs: [...prev.logs, '📦 Processing fetched posts...']
+        }));
         
-        // Simulate individual post imports
-        if (result.importedPosts) {
+        // Simulate individual post imports if we have imported posts
+        if (result.importedPosts && result.importedPosts.length > 0) {
           for (let i = 0; i < result.importedPosts.length; i++) {
             const post = result.importedPosts[i];
             const progressPercent = 50 + ((i + 1) / result.importedPosts.length) * 40;
-            updateProgress(
-              `Importing post ${i + 1}/${result.importedPosts.length}`,
-              progressPercent,
-              `✅ Imported: "${post.title}"`
-            );
+            
             setImportProgress(prev => ({
               ...prev,
+              currentStep: `Importing post ${i + 1}/${result.importedPosts.length}`,
+              progress: progressPercent,
+              logs: [...prev.logs, `✅ Imported: "${post.title}"`],
               importedCount: i + 1
             }));
+            
             // Small delay to show progress
-            await new Promise(resolve => setTimeout(resolve, 100));
+            await new Promise(resolve => setTimeout(resolve, 200));
           }
+        } else {
+          // If no specific posts returned, show general progress
+          setImportProgress(prev => ({
+            ...prev,
+            currentStep: 'Import processing...',
+            progress: 90,
+            logs: [...prev.logs, `📦 Processing ${result.count || 0} posts...`],
+            importedCount: result.count || 0,
+            skippedCount: result.skipped || 0
+          }));
         }
         
-        updateProgress('Import completed!', 100, `📊 Import Summary: ${result.count} imported, ${result.skipped} skipped`);
+        // Final completion
+        setImportProgress(prev => ({
+          ...prev,
+          currentStep: 'Import completed!',
+          progress: 100,
+          logs: [...prev.logs, `📊 Import Summary: ${result.count || 0} imported, ${result.skipped || 0} skipped`]
+        }));
         
         return result;
       } catch (error) {
         setImportProgress(prev => ({
           ...prev,
           currentStep: 'Import failed',
-          logs: [...prev.logs, `❌ Error: ${error}`]
+          logs: [...prev.logs, `❌ Error: ${error instanceof Error ? error.message : String(error)}`]
         }));
         throw error;
       }
     },
-    onSuccess: (data, variables) => {
-      const { count, skipped, fetched, message } = data;
+    onSuccess: (data) => {
+      const { count = 0, skipped = 0, message } = data || {};
       
+      // Keep progress visible for 3 seconds before closing
       setTimeout(() => {
         setImportProgress({
           isImporting: false,
@@ -342,27 +374,33 @@ const BlogManagement = () => {
           importedCount: 0,
           skippedCount: 0
         });
+        setIsImportDialogOpen(false);
+        setIsEditingCredentials(false);
       }, 3000);
 
+      // Show success toast
       toast({
         title: "Import Complete",
-        description: message || `Imported ${count} new posts, skipped ${skipped} existing posts`,
+        description: message || `Successfully imported ${count} new posts, skipped ${skipped} existing posts`,
       });
       
+      // Refresh data
       queryClient.invalidateQueries({ queryKey: ['/api/admin/blog/posts'] });
       refetchAnalytics();
 
-      // Save credentials to localStorage
-      localStorage.setItem("wordpressUrl", variables.wordpressUrl);
-      localStorage.setItem("wordpressUsername", variables.username);
-      setSavedCredentials({
-        hasCredentials: true,
-        url: variables.wordpressUrl,
-        username: variables.username,
-      });
+      // Save credentials to localStorage if provided
+      const formData = importForm.getValues();
+      if (formData.wordpressUrl && formData.username) {
+        localStorage.setItem("wordpressUrl", formData.wordpressUrl);
+        localStorage.setItem("wordpressUsername", formData.username);
+        setSavedCredentials({
+          hasCredentials: true,
+          url: formData.wordpressUrl,
+          username: formData.username,
+        });
+      }
+      
       importForm.reset();
-      setIsImportDialogOpen(false);
-      setIsEditingCredentials(false);
     },
     onError: (error) => {
       setImportProgress({
@@ -375,9 +413,10 @@ const BlogManagement = () => {
         skippedCount: 0
       });
       
+      const errorMessage = error instanceof Error ? error.message : String(error);
       toast({
-        title: "Error",
-        description: `Failed to import from WordPress: ${error}`,
+        title: "Import Failed",
+        description: `Failed to import from WordPress: ${errorMessage}`,
         variant: "destructive",
       });
     }
@@ -666,10 +705,7 @@ const BlogManagement = () => {
     refetchAnalytics();
   }, []);
 
-  // Force refetch posts when page changes
-  useEffect(() => {
-    refetchPosts();
-  }, [currentPage, statusFilter, categoryFilter, searchQuery]);
+  // The query will automatically refetch when dependencies change due to the queryKey
 
   const openCategoryDetails = async (category: any) => {
     setSelectedCategoryForDetails(category);
@@ -677,17 +713,19 @@ const BlogManagement = () => {
     setCategoryDetailsOpen(true);
     
     try {
+      // Use the category name as the filter parameter
       const response = await fetch(`/api/admin/blog/posts?category=${encodeURIComponent(category.name)}&page=1&pageSize=100`);
       if (!response.ok) {
-        throw new Error('Failed to fetch category posts');
+        throw new Error(`Failed to fetch category posts: ${response.statusText}`);
       }
       const data = await response.json();
       setCategoryPosts(data.posts || []);
     } catch (error) {
       console.error("Error fetching category posts:", error);
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
       toast({
         title: "Error",
-        description: "Failed to fetch posts for this category",
+        description: `Failed to fetch posts for this category: ${errorMessage}`,
         variant: "destructive",
       });
       setCategoryPosts([]);
@@ -697,7 +735,9 @@ const BlogManagement = () => {
   };
 
   const handlePageChange = (newPage: number) => {
-    setCurrentPage(newPage);
+    if (newPage !== currentPage && newPage >= 1 && postsData && newPage <= postsData.totalPages) {
+      setCurrentPage(newPage);
+    }
   };
 
   return (

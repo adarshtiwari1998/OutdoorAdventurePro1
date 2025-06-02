@@ -606,6 +606,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const { page = 1, status, category, search } = req.query;
       const pageSize = 10;
 
+      console.log(`Fetching blog posts - Page: ${page}, Status: ${status}, Category: ${category}, Search: ${search}`);
+
       const result = await storage.getAdminBlogPosts({
         page: Number(page),
         pageSize,
@@ -615,6 +617,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         includeContent: true
       });
 
+      console.log(`Returned ${result.posts.length} posts, Total pages: ${result.totalPages}`);
       res.json(result);
     } catch (error) {
       console.error("Error fetching admin blog posts:", error);
