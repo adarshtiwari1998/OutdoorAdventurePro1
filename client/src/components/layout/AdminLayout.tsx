@@ -191,6 +191,12 @@ const AdminLayout = ({ children, title }: AdminLayoutProps) => {
               </h3>
               <div className="space-y-1">
                 <AdminMenuItem
+                  icon={Upload}
+                  label="Dashboard Assets"
+                  href="/admin/dashboard-assets"
+                  isActive={location === '/admin/dashboard-assets'}
+                />
+                <AdminMenuItem
                   icon={Settings}
                   label="Category Headers"
                   href="/admin/category-headers"
