@@ -872,8 +872,7 @@ app.delete(`${apiPrefix}/admin/wordpress/credentials`, async (req, res) => {
       const newChannel = await storage.createYoutubeChannel({
         channelId,
         name: channelName,
-        description:```python
-channelDetails.description,
+        description: channelDetails.description,
         image: channelDetails.thumbnailUrl,
         subscribers: channelDetails.subscriberCount,
         videoCount: channelDetails.videoCount
