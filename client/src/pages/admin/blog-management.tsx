@@ -131,9 +131,9 @@ const BlogManagement = () => {
   });
 
   const { data: categories } = useQuery<{id: number, name: string, slug: string, type: string}[]>({
-    queryKey: ['/api/admin/blog/categories'],
+    queryKey: ['/api/admin/categories'],
     queryFn: async () => {
-      const response = await fetch('/api/admin/blog/categories');
+      const response = await fetch('/api/admin/categories');
       if (!response.ok) throw new Error('Failed to fetch categories');
       const data = await response.json();
       return data;
@@ -332,7 +332,7 @@ const BlogManagement = () => {
         title: "Success",
         description: "Category created successfully",
       });
-      queryClient.invalidateQueries({ queryKey: ['/api/admin/blog/categories'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/admin/categories'] });
       categoryForm.reset();
       setIsCategoryDialogOpen(false);
     },
@@ -354,7 +354,7 @@ const BlogManagement = () => {
         title: "Success",
         description: "Category deleted successfully",
       });
-      queryClient.invalidateQueries({ queryKey: ['/api/admin/blog/categories'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/admin/categories'] });
       queryClient.invalidateQueries({ queryKey: ['/api/admin/blog/posts'] });
       setCategoryToDelete(null);
     },
