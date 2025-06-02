@@ -1,49 +1,38 @@
 import { ReactNode, useState } from "react";
-import { Link, useLocation } from "wouter";
-import { 
-  LucideIcon, 
-  Home, 
-  BarChart, 
-  FileText, 
-  Video, 
-  Settings, 
-  Menu, 
-  Palette,
-  LogOut,
-  User,
-  ChevronDown,
-  AlertCircle,
-  Loader2,
-  Image,
-  SlidersHorizontal,
-  Type,
-  Compass
-} from "lucide-react";
-import { cn } from "@/lib/utils";
+import { useLocation } from "wouter";
 import { useMobile } from "@/hooks/use-mobile";
-import { ThemeButton } from "@/components/ui/theme-button";
-import { 
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { useAuth } from "@/hooks/use-auth";
 import { useToast } from "@/hooks/use-toast";
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
+import { cn } from "@/lib/utils";
+import { ThemeButton } from "@/components/ui/theme-button";
+import { 
+  Home, 
+  FileText, 
+  Video, 
+  SlidersHorizontal, 
+  Image, 
+  Settings, 
+  Type, 
+  Menu, 
+  User, 
+  LogOut,
+  Star,
+  Compass,
+  ChevronDown,
+  ChevronRight
+} from "lucide-react";
+import { 
+  AlertDialog, 
+  AlertDialogAction, 
+  AlertDialogCancel, 
+  AlertDialogContent, 
+  AlertDialogDescription, 
+  AlertDialogFooter, 
+  AlertDialogHeader, 
+  AlertDialogTitle 
 } from "@/components/ui/alert-dialog";
-import { MapPin, Star } from "lucide-react";
+import { Link } from "wouter";
+import type { LucideIcon } from "lucide-react";
 
 interface AdminMenuItemProps {
   icon: LucideIcon;
@@ -108,6 +97,8 @@ const AdminLayout = ({ children, title }: AdminLayoutProps) => {
     { icon: Type, label: "Font Families", href: "/admin/font-families" },
   ];
 
+  const [isHomeBlocksOpen, setIsHomeBlocksOpen] = useState(false);
+
   return (
     <div className="flex min-h-screen bg-slate-50 dark:bg-slate-900">
       {/* Mobile sidebar toggle */}
@@ -146,20 +137,46 @@ const AdminLayout = ({ children, title }: AdminLayoutProps) => {
                 isActive={location.startsWith(item.href)}
               />
             ))}
-              <AdminMenuItem
-                key="/admin/home-blocks/travelers-choice"
-                icon={Star} 
-                label="Travelers Choice"
-                href="/admin/home-blocks/travelers-choice"
-                isActive={location.startsWith("/admin/home-blocks/travelers-choice")}
-              />
-              <AdminMenuItem
-                key="/admin/home-blocks/tips-management"
-                icon={Compass}
-                label="Tips & Ideas"
-                href="/admin/home-blocks/tips-management"
-                isActive={location.startsWith("/admin/home-blocks/tips-management")}
-              />
+
+            {/* Home Blocks Section */}
+            <div>
+              <button
+                className="flex items-center justify-between w-full gap-3 px-4 py-3 text-sm font-medium rounded-md hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors text-slate-700 dark:text-slate-300"
+                onClick={() => setIsHomeBlocksOpen(!isHomeBlocksOpen)}
+              >
+                <div className="flex items-center gap-3">
+                  <Home size={18} />
+                  <span>Home Blocks</span>
+                </div>
+                {isHomeBlocksOpen ? <ChevronDown size={18} /> : <ChevronRight size={18} />}
+              </button>
+
+              {isHomeBlocksOpen && (
+                <div className="space-y-1 pl-4">
+                  <AdminMenuItem
+                    key="/admin/home-blocks/travelers-choice"
+                    icon={Star}
+                    label="Travelers Choice"
+                    href="/admin/home-blocks/travelers-choice"
+                    isActive={location.startsWith("/admin/home-blocks/travelers-choice")}
+                  />
+                  <AdminMenuItem
+                    key="/admin/home-blocks/tips-management"
+                    icon={Compass}
+                    label="Tips & Ideas"
+                    href="/admin/home-blocks/tips-management"
+                    isActive={location.startsWith("/admin/home-blocks/tips-management")}
+                  />
+                  <AdminMenuItem
+                    key="/admin/home-blocks/favorite-destinations"
+                    icon={Image}
+                    label="Favorite Destinations"
+                    href="/admin/home-blocks/favorite-destinations"
+                    isActive={location.startsWith("/admin/home-blocks/favorite-destinations")}
+                  />
+                </div>
+              )}
+            </div>
           </nav>
 
           {/* Quick Links Section */}
