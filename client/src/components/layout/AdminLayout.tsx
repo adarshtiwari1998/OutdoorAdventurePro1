@@ -160,33 +160,33 @@ const AdminLayout = ({ children, title }: AdminLayoutProps) => {
       )}>
         <div className="flex flex-col h-full">
           <div className="mb-6 relative">
-            <div className="flex items-center">
+            <div className="flex items-center justify-between">
               {activeLogo ? (
                 <img 
                   src={activeLogo.url} 
                   alt={activeLogo.name || "Admin Logo"} 
-                  className="h-10 w-auto" 
+                  className="h-16 w-auto max-w-[180px]" 
                   key={activeLogo.url} // Force re-render when URL changes
                   onError={(e) => {
                     console.warn(`Failed to load logo: ${activeLogo.url}`);
                     const parent = e.currentTarget.parentElement;
                     if (parent) {
                       const div = document.createElement('div');
-                      div.className = "h-10 w-10 bg-blue-600 rounded flex items-center justify-center text-white text-sm font-bold";
+                      div.className = "h-16 w-16 bg-blue-600 rounded flex items-center justify-center text-white text-lg font-bold";
                       div.textContent = "OA";
                       parent.replaceChild(div, e.currentTarget);
                     }
                   }} 
                 />
               ) : (
-                <div className="h-10 w-10 bg-blue-600 rounded flex items-center justify-center text-white text-sm font-bold">
+                <div className="h-16 w-16 bg-blue-600 rounded flex items-center justify-center text-white text-lg font-bold">
                   OA
                 </div>
               )}
+              <span className="text-sm text-slate-500 dark:text-slate-400 font-medium">
+                admin
+              </span>
             </div>
-            <span className="absolute bottom-0 right-0 text-xs text-slate-500 dark:text-slate-400 font-medium">
-              admin
-            </span>
           </div>
 
           <nav className="space-y-6 flex-1">
@@ -402,21 +402,21 @@ const AdminLayout = ({ children, title }: AdminLayoutProps) => {
                 <img 
                   src={activeLogo.url} 
                   alt={activeLogo.name || "Admin Logo"} 
-                  className="h-8" 
+                  className="h-10 w-auto max-w-[120px]" 
                   key={activeLogo.url} // Force re-render when URL changes
                   onError={(e) => {
                     console.warn(`Failed to load header logo: ${activeLogo.url}`);
                     const parent = e.currentTarget.parentElement;
                     if (parent) {
                       const div = document.createElement('div');
-                      div.className = "h-8 w-8 bg-blue-600 rounded flex items-center justify-center text-white text-xs font-bold";
+                      div.className = "h-10 w-10 bg-blue-600 rounded flex items-center justify-center text-white text-sm font-bold";
                       div.textContent = "OA";
                       parent.replaceChild(div, e.currentTarget);
                     }
                   }} 
                 />
               ) : (
-                <div className="h-8 w-8 bg-blue-600 rounded flex items-center justify-center text-white text-xs font-bold">
+                <div className="h-10 w-10 bg-blue-600 rounded flex items-center justify-center text-white text-sm font-bold">
                   OA
                 </div>
               )}
