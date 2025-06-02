@@ -400,9 +400,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const { type } = req.body;
       
       // First deactivate all assets of this type
-      const allAssets = await storage.getDashboardAssets();
-      for (const asset of allAssets) {
-        if (asset.type === type && asset.isActive) {
+      const existingAssets = await storage.getDashboardAssets();
+      for (const asset of existingAssets) {
+        if (asset.type === type && asset.id !== parseInt(id)) {
           await storage.updateDashboardAsset(asset.id, { isActive: false });
         }
       }
