@@ -20,6 +20,7 @@ import {
   wordpressCredentials,
   dashboardAssets
 } from '@shared/schema';
+import * as schema from '@shared/schema';
 import { eq, and, like, desc, sql, asc, not, isNull, inArray } from 'drizzle-orm';
 import { format, subDays } from 'date-fns';
 import { createSlug } from './utils/slugify';

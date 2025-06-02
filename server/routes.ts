@@ -376,7 +376,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Dashboard Assets routes
   app.get(`${apiPrefix}/admin/dashboard-assets`, async (req, res) => {
     try {
-      const assets = await storage.getAdminDashboardAssets();
+      const assets = await storage.getDashboardAssets();
       res.json(assets);
     } catch (error) {
       console.error("Error fetching dashboard assets:", error);
@@ -386,7 +386,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.post(`${apiPrefix}/admin/dashboard-assets`, async (req, res) => {
     try {
-      const asset = await storage.createAdminDashboardAsset(req);
+      const asset = await storage.createDashboardAsset(req.body);
       res.status(201).json(asset);
     } catch (error) {
       console.error("Error creating dashboard asset:", error);
@@ -398,7 +398,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const { id } = req.params;
       const { type } = req.body;
-      const asset = await storage.activateAdminDashboardAsset(id, type);
+      
+      // First deactivate all assets of this type
+      const allAssets = await storage.getDashboardAssets();
+      for (const asset of allAssets) {
+        if (asset.type === type && asset.isActive) {
+          await storage.updateDashboardAsset(asset.id, { isActive: false });
+        }
+      }
+      
+      // Then activate the selected asset
+      const asset = await storage.updateDashboardAsset(parseInt(id), { isActive: true });
       res.json(asset);
     } catch (error) {
       console.error("Error activating dashboard asset:", error);
@@ -409,7 +419,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.delete(`${apiPrefix}/admin/dashboard-assets/:id`, async (req, res) => {
     try {
       const { id } = req.params;
-      await storage.deleteAdminDashboardAsset(id);
+      await storage.deleteDashboardAsset(parseInt(id));
       res.json({ message: "Asset deleted successfully" });
     } catch (error) {
       console.error("Error deleting dashboard asset:", error);
