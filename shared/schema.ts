@@ -621,3 +621,24 @@ export const wordpressCredentials = pgTable("wordpress_credentials", {
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow()
 });
+
+// Dashboard Assets
+export const dashboardAssets = pgTable("dashboard_assets", {
+  id: serial("id").primaryKey(),
+  type: text("type").notNull(), // 'logo', 'favicon'
+  name: text("name").notNull(),
+  url: text("url").notNull(),
+  cloudinaryPublicId: text("cloudinary_public_id"),
+  isActive: boolean("is_active").default(true),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+
+export const insertDashboardAssetSchema = createInsertSchema(dashboardAssets, {
+  type: (schema) => schema.min(1, "Type is required"),
+  name: (schema) => schema.min(1, "Name is required"),
+  url: (schema) => schema.url("Must be a valid URL"),
+});
+
+export type InsertDashboardAsset = z.infer<typeof insertDashboardAssetSchema>;
+export type DashboardAsset = typeof dashboardAssets.$inferSelect;

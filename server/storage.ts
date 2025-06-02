@@ -18,7 +18,8 @@ import {
   InsertBlogPost,
   sliders,
   InsertSlider,
-  wordpressCredentials
+  wordpressCredentials,
+  dashboardAssets
 } from '@shared/schema';
 import { eq, and, like, desc, sql, asc, not, isNull, inArray } from 'drizzle-orm';
 import { format, subDays } from 'date-fns';
@@ -956,7 +957,7 @@ export const storage = {
         },
         tags: (() => {
           if (!post.tags) return [];
-          if (Array.isArray(post.tags), return post.tags;
+          if (Array.isArray(post.tags)) return post.tags;
           if (typeof post.tags === 'string') return post.tags.split(',').map(tag => tag.trim());
           return [];
         })(),
@@ -1380,6 +1381,87 @@ export const storage = {
       }
     } catch (error) {
       console.error('Error deleting WordPress credentials:', error);
+      throw error;
+    }
+  },
+
+  // Dashboard Assets
+  async getDashboardAssets() {
+    try {
+      return await db.query.dashboardAssets.findMany({
+        orderBy: [asc(schema.dashboardAssets.type), desc(schema.dashboardAssets.createdAt)],
+      });
+    } catch (error) {
+      console.error('Error getting dashboard assets:', error);
+      throw error;
+    }
+  },
+
+  async getDashboardAssetById(id: number) {
+    try {
+      return await db.query.dashboardAssets.findFirst({
+        where: eq(schema.dashboardAssets.id, id),
+      });
+    } catch (error) {
+      console.error(`Error getting dashboard asset by ID ${id}:`, error);
+      throw error;
+    }
+  },
+
+  async createDashboardAsset(assetData: any) {
+    try {
+      const [asset] = await db.insert(schema.dashboardAssets).values({
+        type: assetData.type,
+        name: assetData.name,
+        url: assetData.url,
+        cloudinaryPublicId: assetData.cloudinaryPublicId,
+        isActive: assetData.isActive,
+      }).returning();
+
+      return asset;
+    } catch (error) {
+      console.error('Error creating dashboard asset:', error);
+      throw error;
+    }
+  },
+
+  async updateDashboardAsset(id: number, assetData: any) {
+    try {
+      const [updatedAsset] = await db.update(schema.dashboardAssets)
+        .set({
+          ...assetData,
+          updatedAt: new Date()
+        })
+        .where(eq(schema.dashboardAssets.id, id))
+        .returning();
+
+      return updatedAsset;
+    } catch (error) {
+      console.error(`Error updating dashboard asset ${id}:`, error);
+      throw error;
+    }
+  },
+
+  async deleteDashboardAsset(id: number) {
+    try {
+      await db.delete(schema.dashboardAssets).where(eq(schema.dashboardAssets.id, id));
+    } catch (error) {
+      console.error(`Error deleting dashboard asset ${id}:`, error);
+      throw error;
+    }
+  },
+
+  async getActiveDashboardAssetsByType(type: string) {
+    try {
+      return await db.query.dashboardAssets.findMany({
+        where: and(
+          eq(schema.dashboardAssets.type, type),
+          eq(schema.dashboardAssets.isActive, true)
+        ),
+        orderBy: desc(schema.dashboardAssets.createdAt),
+      });
+    } catch (error) {
+      console.error(`Error getting active dashboard assets by type ${type}:`, error);
       throw error;
     }
   }

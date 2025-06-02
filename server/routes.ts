@@ -1798,7 +1798,7 @@ app.delete(`${apiPrefix}/admin/wordpress/credentials`, async (req, res) => {
       res.json(categoryStyles);
     } catch (error) {
       console.error("Error fetching category styles:", error);
-      res.status(500).json({ message: "Failed to fetch category styles" });
+      res.status(500.json({ message: "Failed to fetch category styles" });
     }
   });
 
@@ -2021,6 +2021,112 @@ app.get(`${apiPrefix}/admin/tips/:id`, async (req, res) => {
     res.status(500).json({ message: "Failed to fetch tip" });
   }
 });
+
+  // WordPress credentials routes
+  app.post(`${apiPrefix}/admin/wordpress-credentials`, async (req, res) => {
+    try {
+      const { url, username, password } = req.body;
+      await storage.saveWordPressCredentials({ url, username, password });
+      res.json({ message: "WordPress credentials saved successfully" });
+    } catch (error) {
+      console.error("Error saving WordPress credentials:", error);
+      res.status(500).json({ error: "Failed to save WordPress credentials" });
+    }
+  });
+
+  app.get(`${apiPrefix}/admin/wordpress/credentials`, async (req, res) => {
+    try {
+      const credentials = await storage.getWordPressCredentials();
+      res.json({
+        url: credentials.url,
+        username: credentials.username,
+        hasCredentials: true
+      });
+    } catch (error) {
+      console.error("Error fetching WordPress credentials:", error);
+      res.status(500).json({ message: "Failed to fetch WordPress credentials" });
+    }
+  });
+
+  app.delete(`${apiPrefix}/admin/wordpress/credentials`, async (req, res) => {
+    try {
+      await storage.deleteWordPressCredentials();
+      res.json({ success: true });
+    } catch (error) {
+      console.error("Error deleting WordPress credentials:", error);
+      res.status(500).json({ message: "Failed to delete WordPress credentials" });
+    }
+  });
+
+  // Dashboard Assets routes
+  app.get(`${apiPrefix}/admin/dashboard-assets`, async (req, res) => {
+    try {
+      const assets = await storage.getDashboardAssets();
+      res.json(assets);
+    } catch (error) {
+      console.error("Error getting dashboard assets:", error);
+      res.status(500).json({ error: "Failed to get dashboard assets" });
+    }
+  });
+
+  app.get(`${apiPrefix}/admin/dashboard-assets/:id`, async (req, res) => {
+    try {
+      const { id } = req.params;
+      const asset = await storage.getDashboardAssetById(parseInt(id));
+      if (!asset) {
+        return res.status(404).json({ error: "Dashboard asset not found" });
+      }
+      res.json(asset);
+    } catch (error) {
+      console.error("Error getting dashboard asset:", error);
+      res.status(500).json({ error: "Failed to get dashboard asset" });
+    }
+  });
+
+  app.post(`${apiPrefix}/admin/dashboard-assets`, async (req, res) => {
+    try {
+      const assetData = req.body;
+      const asset = await storage.createDashboardAsset(assetData);
+      res.json(asset);
+    } catch (error) {
+      console.error("Error creating dashboard asset:", error);
+      res.status(500).json({ error: "Failed to create dashboard asset" });
+    }
+  });
+
+  app.put(`${apiPrefix}/admin/dashboard-assets/:id`, async (req, res) => {
+    try {
+      const { id } = req.params;
+      const assetData = req.body;
+      const asset = await storage.updateDashboardAsset(parseInt(id), assetData);
+      res.json(asset);
+    } catch (error) {
+      console.error("Error updating dashboard asset:", error);
+      res.status(500).json({ error: "Failed to update dashboard asset" });
+    }
+  });
+
+  app.delete(`${apiPrefix}/admin/dashboard-assets/:id`, async (req, res) => {
+    try {
+      const { id } = req.params;
+      await storage.deleteDashboardAsset(parseInt(id));
+      res.json({ message: "Dashboard asset deleted successfully" });
+    } catch (error) {
+      console.error("Error deleting dashboard asset:", error);
+      res.status(500).json({ error: "Failed to delete dashboard asset" });
+    }
+  });
+
+  app.get(`${apiPrefix}/dashboard-assets/:type`, async (req, res) => {
+    try {
+      const { type } = req.params;
+      const assets = await storage.getActiveDashboardAssetsByType(type);
+      res.json(assets);
+    } catch (error) {
+      console.error("Error getting dashboard assets by type:", error);
+      res.status(500).json({ error: "Failed to get dashboard assets" });
+    }
+  });
 
   return httpServer;
 }

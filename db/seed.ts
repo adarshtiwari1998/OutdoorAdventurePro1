@@ -1,5 +1,5 @@
 import { db, pool } from "./index";
-import * * as schema from "@shared/schema";
+import * as schema from "@shared/schema";
 import { createSlug } from "../server/utils/slugify";
 import { eq, sql } from "drizzle-orm";
 import { scrypt, randomBytes } from "crypto";
@@ -343,6 +343,24 @@ async function seed() {
     icontype TEXT NOT NULL,
     created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
+  CREATE TABLE IF NOT EXISTS wordpress_credentials (
+      id SERIAL PRIMARY KEY,
+      url TEXT NOT NULL,
+      username TEXT NOT NULL,
+      password TEXT NOT NULL,
+      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+      updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+  );
+  CREATE TABLE IF NOT EXISTS dashboard_assets (
+      id SERIAL PRIMARY KEY,
+      type TEXT NOT NULL,
+      name TEXT NOT NULL,
+      url TEXT NOT NULL,
+      cloudinary_public_id TEXT,
+      is_active BOOLEAN DEFAULT TRUE,
+      created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+      updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+  );
   `);
     console.log("Seeding database...");
 
