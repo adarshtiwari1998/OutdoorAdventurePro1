@@ -783,7 +783,7 @@ export const storage = {
       console.error(`Error counting blog posts for category ${categoryId}:`, error);
       throw error;
     }
-  }
+  },
 
   async getBlogAnalytics() {
     try {
