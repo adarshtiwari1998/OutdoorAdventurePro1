@@ -386,7 +386,37 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.post(`${apiPrefix}/admin/dashboard-assets`, async (req, res) => {
     try {
-      const asset = await storage.createDashboardAsset(req.body);
+      // Handle multipart form data for file uploads
+      if (req.headers['content-type']?.includes('multipart/form-data')) {
+        // For now, return an error as we need to implement file upload handling
+        return res.status(400).json({ 
+          message: "File upload not yet implemented. Please use URL upload method." 
+        });
+      }
+
+      // Handle regular JSON data for URL uploads
+      const { type, name, url, uploadMethod } = req.body;
+
+      if (!type || !name) {
+        return res.status(400).json({ 
+          message: "Type and name are required" 
+        });
+      }
+
+      if (uploadMethod === 'url' && !url) {
+        return res.status(400).json({ 
+          message: "URL is required for URL upload method" 
+        });
+      }
+
+      const assetData = {
+        type,
+        name,
+        url: url || '',
+        isActive: false // Default to inactive
+      };
+
+      const asset = await storage.createDashboardAsset(assetData);
       res.status(201).json(asset);
     } catch (error) {
       console.error("Error creating dashboard asset:", error);
