@@ -1444,7 +1444,30 @@ export const storage = {
 
   async deleteDashboardAsset(id: number) {
     try {
+      // First get the asset to retrieve Cloudinary public ID
+      const asset = await db.query.dashboardAssets.findFirst({
+        where: eq(schema.dashboardAssets.id, id),
+      });
+
+      if (!asset) {
+        throw new Error(`Dashboard asset with ID ${id} not found`);
+      }
+
+      // Delete from Cloudinary if we have a public ID
+      if (asset.cloudinaryPublicId) {
+        try {
+          const { default: cloudinaryService } = await import('./services/cloudinaryService.js');
+          await cloudinaryService.deleteAsset(asset.cloudinaryPublicId);
+        } catch (cloudinaryError) {
+          console.error(`Failed to delete asset from Cloudinary (${asset.cloudinaryPublicId}):`, cloudinaryError);
+          // Continue with database deletion even if Cloudinary deletion fails
+        }
+      }
+
+      // Delete from database
       await db.delete(schema.dashboardAssets).where(eq(schema.dashboardAssets.id, id));
+      
+      console.log(`Successfully deleted dashboard asset ${id} from database and Cloudinary`);
     } catch (error) {
       console.error(`Error deleting dashboard asset ${id}:`, error);
       throw error;

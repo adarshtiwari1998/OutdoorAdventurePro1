@@ -323,6 +323,32 @@ export class CloudinaryService {
       throw new Error('Failed to upload image to Cloudinary');
     }
   }
+
+  /**
+   * Delete an asset from Cloudinary by public ID
+   */
+  async deleteAsset(publicId: string): Promise<boolean> {
+    if (!isCloudinaryConfigured()) {
+      console.warn('Cloudinary is not configured. Cannot delete asset.');
+      return false;
+    }
+
+    try {
+      console.log(`Attempting to delete asset from Cloudinary: ${publicId}`);
+      const result = await cloudinary.uploader.destroy(publicId);
+      
+      if (result.result === 'ok') {
+        console.log(`Successfully deleted asset from Cloudinary: ${publicId}`);
+        return true;
+      } else {
+        console.warn(`Cloudinary deletion warning for ${publicId}:`, result);
+        return false;
+      }
+    } catch (error) {
+      console.error(`Error deleting asset from Cloudinary (${publicId}):`, error);
+      return false;
+    }
+  }
 }
 
 export default new CloudinaryService();
