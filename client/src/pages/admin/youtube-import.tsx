@@ -52,6 +52,7 @@ type YoutubeChannel = {
   name: string;
   subscribers: number;
   videoCount: number;
+  importedVideoCount: number;
   lastImport: string | null;
 };
 
@@ -64,8 +65,11 @@ type YoutubeVideo = {
   publishedAt: string;
   channelId: string;
   channelName: string;
+  categoryId?: string;
   importStatus: "pending" | "imported" | "failed";
   blogPostId?: string;
+  hasBlogPostMatch: boolean;
+  matchingBlogPostTitle?: string;
   errorMessage?: string;
 };
 
@@ -77,6 +81,9 @@ const YoutubeImport = () => {
   const [showImportDialog, setShowImportDialog] = useState(false);
   const [importChannelId, setImportChannelId] = useState<string | null>(null);
   const [importLimit, setImportLimit] = useState(10);
+  const [selectedCategoryForImport, setSelectedCategoryForImport] = useState<string>("");
+  const [selectedVideos, setSelectedVideos] = useState<string[]>([]);
+  const [bulkCategoryId, setBulkCategoryId] = useState<string>("");
   const [importProgress, setImportProgress] = useState({
     isImporting: false,
     currentStep: '',
@@ -187,7 +194,7 @@ const YoutubeImport = () => {
   });
 
   const importChannelVideosMutation = useMutation({
-    mutationFn: async ({ channelId, limit }: { channelId: string, limit: number }) => {
+    mutationFn: async ({ channelId, limit, categoryId }: { channelId: string, limit: number, categoryId?: string }) => {
       console.log(`🎬 Importing ${limit} videos for channel: ${channelId}`);
 
       // Reset progress
@@ -216,7 +223,7 @@ const YoutubeImport = () => {
           headers: {
             'Content-Type': 'application/json',
           },
-          body: JSON.stringify({ limit })
+          body: JSON.stringify({ limit, categoryId })
         });
 
         if (!response.ok) {
@@ -385,6 +392,28 @@ const YoutubeImport = () => {
     }
   });
 
+  const bulkUpdateCategoryMutation = useMutation({
+    mutationFn: async ({ videoIds, categoryId }: { videoIds: string[], categoryId: string }) => {
+      return apiRequest('PATCH', '/api/admin/youtube/videos/bulk-category', { videoIds, categoryId });
+    },
+    onSuccess: () => {
+      toast({
+        title: "Success",
+        description: "Videos category updated successfully",
+      });
+      queryClient.invalidateQueries({ queryKey: ['/api/admin/youtube/videos'] });
+      setSelectedVideos([]);
+      setBulkCategoryId("");
+    },
+    onError: (error) => {
+      toast({
+        title: "Error",
+        description: `Failed to update videos category: ${error}`,
+        variant: "destructive",
+      });
+    }
+  });
+
   // Event handlers
   const onAddChannelSubmit = (values: z.infer<typeof youtubeChannelSchema>) => {
     addChannelMutation.mutate(values);
@@ -423,8 +452,36 @@ const YoutubeImport = () => {
     if (importChannelId) {
       importChannelVideosMutation.mutate({ 
         channelId: importChannelId, 
-        limit: importLimit 
+        limit: importLimit,
+        categoryId: selectedCategoryForImport || null
       });
+    }
+  };
+
+  const handleBulkCategoryUpdate = () => {
+    if (selectedVideos.length > 0 && bulkCategoryId) {
+      bulkUpdateCategoryMutation.mutate({
+        videoIds: selectedVideos,
+        categoryId: bulkCategoryId
+      });
+    }
+  };
+
+  const toggleVideoSelection = (videoId: string) => {
+    setSelectedVideos(prev => 
+      prev.includes(videoId) 
+        ? prev.filter(id => id !== videoId)
+        : [...prev, videoId]
+    );
+  };
+
+  const toggleAllVideos = () => {
+    if (videos && videos.length > 0) {
+      if (selectedVideos.length === videos.length) {
+        setSelectedVideos([]);
+      } else {
+        setSelectedVideos(videos.map(video => video.id));
+      }
     }
   };
 
@@ -510,7 +567,8 @@ const YoutubeImport = () => {
                     <TableRow>
                       <TableHead>Channel Name</TableHead>
                       <TableHead>Subscribers</TableHead>
-                      <TableHead>Videos</TableHead>
+                      <TableHead>Total Videos</TableHead>
+                      <TableHead>Imported Videos</TableHead>
                       <TableHead>Last Import</TableHead>
                       <TableHead className="text-right">Actions</TableHead>
                     </TableRow>
@@ -520,7 +578,7 @@ const YoutubeImport = () => {
                       renderChannelSkeleton()
                     ) : channels?.length === 0 ? (
                       <TableRow>
-                        <TableCell colSpan={5} className="text-center py-8">
+                        <TableCell colSpan={6} className="text-center py-8">
                           No Youtube channels found. Add a new channel to get started.
                         </TableCell>
                       </TableRow>
@@ -537,6 +595,11 @@ const YoutubeImport = () => {
                           </TableCell>
                           <TableCell>{channel.subscribers.toLocaleString()}</TableCell>
                           <TableCell>{channel.videoCount}</TableCell>
+                          <TableCell>
+                            <Badge variant="secondary">
+                              {channel.importedVideoCount || 0}
+                            </Badge>
+                          </TableCell>
                           <TableCell>
                             {channel.lastImport 
                               ? format(new Date(channel.lastImport), 'MMM d, yyyy') 
@@ -604,14 +667,58 @@ const YoutubeImport = () => {
               </CardDescription>
             </CardHeader>
             <CardContent>
+              {selectedVideos.length > 0 && (
+                <div className="mb-4 p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
+                  <div className="flex items-center gap-4">
+                    <span className="text-sm font-medium">
+                      {selectedVideos.length} videos selected
+                    </span>
+                    <Select value={bulkCategoryId} onValueChange={setBulkCategoryId}>
+                      <SelectTrigger className="w-48">
+                        <SelectValue placeholder="Select category" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {blogCategories?.map(category => (
+                          <SelectItem key={category.id} value={category.id}>
+                            {category.name}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <Button 
+                      onClick={handleBulkCategoryUpdate}
+                      disabled={!bulkCategoryId || bulkUpdateCategoryMutation.isPending}
+                      size="sm"
+                    >
+                      {bulkUpdateCategoryMutation.isPending ? "Updating..." : "Update Category"}
+                    </Button>
+                    <Button 
+                      variant="outline" 
+                      onClick={() => setSelectedVideos([])}
+                      size="sm"
+                    >
+                      Clear Selection
+                    </Button>
+                  </div>
+                </div>
+              )}
               <div className="rounded-md border">
                 <Table>
                   <TableHeader>
                     <TableRow>
+                      <TableHead className="w-[50px]">
+                        <input
+                          type="checkbox"
+                          checked={videos?.length > 0 && selectedVideos.length === videos.length}
+                          onChange={toggleAllVideos}
+                          className="rounded"
+                        />
+                      </TableHead>
                       <TableHead className="w-[100px]">Thumbnail</TableHead>
                       <TableHead>Title</TableHead>
                       <TableHead>Published</TableHead>
                       <TableHead>Status</TableHead>
+                      <TableHead>Blog Post Match</TableHead>
                       <TableHead className="text-right">Actions</TableHead>
                     </TableRow>
                   </TableHeader>
@@ -620,13 +727,21 @@ const YoutubeImport = () => {
                       renderVideoSkeleton()
                     ) : videos?.length === 0 ? (
                       <TableRow>
-                        <TableCell colSpan={5} className="text-center py-8">
+                        <TableCell colSpan={7} className="text-center py-8">
                           No videos found for this channel. Import videos or add them manually.
                         </TableCell>
                       </TableRow>
                     ) : (
                       videos?.map((video) => (
                         <TableRow key={video.id}>
+                          <TableCell>
+                            <input
+                              type="checkbox"
+                              checked={selectedVideos.includes(video.id)}
+                              onChange={() => toggleVideoSelection(video.id)}
+                              className="rounded"
+                            />
+                          </TableCell>
                           <TableCell>
                             <div className="relative w-20 h-12 overflow-hidden rounded">
                               <img 
@@ -666,6 +781,23 @@ const YoutubeImport = () => {
                             ) : (
                               <div className="flex items-center">
                                 <span>Pending</span>
+                              </div>
+                            )}
+                          </TableCell>
+                          <TableCell>
+                            {video.hasBlogPostMatch ? (
+                              <div className="flex items-center">
+                                <CheckCircle className="h-4 w-4 text-yellow-500 mr-1" />
+                                <div>
+                                  <div className="text-xs text-yellow-600">Match Found</div>
+                                  <div className="text-xs text-muted-foreground truncate max-w-32" title={video.matchingBlogPostTitle}>
+                                    {video.matchingBlogPostTitle}
+                                  </div>
+                                </div>
+                              </div>
+                            ) : (
+                              <div className="flex items-center">
+                                <span className="text-xs text-muted-foreground">No Match</span>
                               </div>
                             )}
                           </TableCell>
@@ -965,6 +1097,28 @@ const YoutubeImport = () => {
                 </Select>
                 <p className="text-xs text-muted-foreground mt-1">
                   Videos already in your database will be skipped automatically.
+                </p>
+              </div>
+              
+              <div>
+                <label htmlFor="import-category" className="text-sm font-medium mb-2 block">
+                  Assign Category (Optional):
+                </label>
+                <Select value={selectedCategoryForImport} onValueChange={setSelectedCategoryForImport}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select a category (optional)" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="">No Category</SelectItem>
+                    {blogCategories?.map(category => (
+                      <SelectItem key={category.id} value={category.id}>
+                        {category.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <p className="text-xs text-muted-foreground mt-1">
+                  You can assign categories later using bulk operations.
                 </p>
               </div>
             </div>

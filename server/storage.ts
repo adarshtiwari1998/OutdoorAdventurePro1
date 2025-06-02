@@ -260,6 +260,30 @@ export const storage = {
 
   async createYoutubeVideo(videoData: any) {
     try {
+      // Check for existing blog posts with similar titles
+      const existingBlogPosts = await db.query.blogPosts.findMany({
+        columns: {
+          id: true,
+          title: true,
+        },
+      });
+
+      let hasBlogPostMatch = false;
+      let matchingBlogPostTitle = null;
+
+      // Simple title matching - check if video title contains blog post title or vice versa
+      for (const blogPost of existingBlogPosts) {
+        const videoTitle = videoData.title.toLowerCase().trim();
+        const blogTitle = blogPost.title.toLowerCase().trim();
+
+        if (videoTitle.includes(blogTitle) || blogTitle.includes(videoTitle) || 
+            this.calculateSimilarity(videoTitle, blogTitle) > 0.7) {
+          hasBlogPostMatch = true;
+          matchingBlogPostTitle = blogPost.title;
+          break;
+        }
+      }
+
       const [video] = await db.insert(youtubeVideos).values({
         videoId: videoData.videoId,
         title: videoData.title,
@@ -267,12 +291,57 @@ export const storage = {
         thumbnail: videoData.thumbnail,
         publishedAt: videoData.publishedAt,
         channelId: videoData.channelId,
-        importStatus: 'pending',
+        categoryId: videoData.categoryId || null,
+        hasBlogPostMatch,
+        matchingBlogPostTitle,
       }).returning();
 
       return video;
     } catch (error) {
       console.error('Error creating YouTube video:', error);
+      throw error;
+    }
+  },
+
+  // Helper function to calculate string similarity
+  calculateSimilarity(str1: string, str2: string): number {
+    const longer = str1.length > str2.length ? str1 : str2;
+    const shorter = str1.length > str2.length ? str2 : str1;
+    const editDistance = this.levenshteinDistance(longer, shorter);
+    return (longer.length - editDistance) / longer.length;
+  },
+
+  levenshteinDistance(str1: string, str2: string): number {
+    const matrix = [];
+    for (let i = 0; i <= str2.length; i++) {
+      matrix[i] = [i];
+    }
+    for (let j = 0; j <= str1.length; j++) {
+      matrix[0][j] = j;
+    }
+    for (let i = 1; i <= str2.length; i++) {
+      for (let j = 1; j <= str1.length; j++) {
+        if (str2.charAt(i - 1) === str1.charAt(j - 1)) {
+          matrix[i][j] = matrix[i - 1][j - 1];
+        } else {
+          matrix[i][j] = Math.min(
+            matrix[i - 1][j - 1] + 1,
+            matrix[i][j - 1] + 1,
+            matrix[i - 1][j] + 1
+          );
+        }
+      }
+    }
+    return matrix[str2.length][str1.length];
+  },
+
+  async updateYoutubeVideosCategory(videoIds: number[], categoryId: number) {
+    try {
+      await db.update(youtubeVideos)
+        .set({ categoryId })
+        .where(inArray(youtubeVideos.id, videoIds));
+    } catch (error) {
+      console.error('Error updating YouTube videos category:', error);
       throw error;
     }
   },
@@ -881,7 +950,7 @@ export const storage = {
           // It's a category name, find the category ID
           const category = await db.query.categories.findFirst({
             where: eq(categories.name, categoryId)
-          });
+                    });
           if (category) {
             whereConditions.push(eq(blogPosts.categoryId, category.id));
           }
@@ -1470,13 +1539,13 @@ export const storage = {
           // Import cloudinary service properly
           const cloudinaryService = await import('./services/cloudinaryService');
           const service = cloudinaryService.default;
-          
+
           // Construct the full public ID path for Cloudinary deletion
           const fullPublicId = `HTHFO_Assets/AdminDashboard_Assets/${asset.type}s/${asset.cloudinaryPublicId}`;
           console.log(`Attempting to delete from Cloudinary with public ID: ${fullPublicId}`);
-          
+
           const deleteResult = await service.deleteAsset(fullPublicId);
-          
+
           if (deleteResult) {
             console.log(`Successfully deleted asset from Cloudinary: ${fullPublicId}`);
           } else {
@@ -1492,7 +1561,7 @@ export const storage = {
 
       // Delete from database
       await db.delete(schema.dashboardAssets).where(eq(schema.dashboardAssets.id, id));
-      
+
       console.log(`Successfully deleted dashboard asset ${id} from database`);
     } catch (error) {
       console.error(`Error deleting dashboard asset ${id}:`, error);

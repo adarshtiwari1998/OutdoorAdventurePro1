@@ -75,6 +75,7 @@ export const youtubeChannels = pgTable("youtube_channels", {
   image: text("image"),
   subscribers: integer("subscribers").default(0).notNull(),
   videoCount: integer("video_count").default(0).notNull(),
+  importedVideoCount: integer("imported_video_count").default(0).notNull(),
   lastImport: timestamp("last_import"),
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
@@ -114,9 +115,12 @@ export const youtubeVideos = pgTable("youtube_videos", {
   thumbnail: text("thumbnail"),
   publishedAt: timestamp("published_at").notNull(),
   channelId: integer("channel_id").references(() => youtubeChannels.id),
+  categoryId: integer("category_id").references(() => categories.id),
   transcript: text("transcript"),
   importStatus: text("import_status").default("pending").notNull(),
   blogPostId: integer("blog_post_id").references(() => blogPosts.id),
+  hasBlogPostMatch: boolean("has_blog_post_match").default(false).notNull(),
+  matchingBlogPostTitle: text("matching_blog_post_title"),
   errorMessage: text("error_message"),
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
@@ -126,6 +130,10 @@ export const youtubeVideosRelations = relations(youtubeVideos, ({ one }) => ({
   channel: one(youtubeChannels, {
     fields: [youtubeVideos.channelId],
     references: [youtubeChannels.id],
+  }),
+  category: one(categories, {
+    fields: [youtubeVideos.categoryId],
+    references: [categories.id],
   }),
   blogPost: one(blogPosts, {
     fields: [youtubeVideos.blogPostId],

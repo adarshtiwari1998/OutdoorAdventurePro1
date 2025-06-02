@@ -1281,7 +1281,7 @@ app.delete(`${apiPrefix}/admin/wordpress/credentials`, async (req, res) => {
   app.post(`${apiPrefix}/admin/youtube/channels/:id/import`, async (req, res) => {
     try {
       const { id } = req.params;
-      const { limit = 10 } = req.body;
+      const { limit = 10, categoryId } = req.body;
       console.log(`🎬 Starting video import for channel ID: ${id} (limit: ${limit})`);
       
       const channel = await storage.getYoutubeChannelById(parseInt(id));
@@ -1344,7 +1344,8 @@ app.delete(`${apiPrefix}/admin/wordpress/credentials`, async (req, res) => {
             description: video.description,
             thumbnail: video.thumbnailUrl,
             publishedAt: video.publishedAt,
-            channelId: channel.id
+            channelId: channel.id,
+            categoryId: categoryId ? parseInt(categoryId) : null
           });
           
           console.log(`✅ Imported video ${importedCount + 1}/${maxResults}: ${video.title}`);
@@ -1403,6 +1404,26 @@ app.delete(`${apiPrefix}/admin/wordpress/credentials`, async (req, res) => {
     } catch (error) {
       console.error(`Error deleting YouTube video ${req.params.id}:`, error);
       res.status(500).json({ message: "Failed to delete YouTube video" });
+    }
+  });
+
+  app.patch(`${apiPrefix}/admin/youtube/videos/bulk-category`, async (req, res) => {
+    try {
+      const { videoIds, categoryId } = req.body;
+
+      if (!videoIds || !Array.isArray(videoIds) || videoIds.length === 0) {
+        return res.status(400).json({ message: "Video IDs are required" });
+      }
+
+      if (!categoryId || isNaN(parseInt(categoryId))) {
+        return res.status(400).json({ message: "Valid category ID is required" });
+      }
+
+      await storage.updateYoutubeVideosCategory(videoIds, parseInt(categoryId));
+      res.json({ success: true });
+    } catch (error) {
+      console.error("Error updating YouTube videos category:", error);
+      res.status(500).json({ message: "Failed to update YouTube videos category" });
     }
   });
 
