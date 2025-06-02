@@ -1,5 +1,4 @@
-
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 import { Button } from "@/components/ui/button";
@@ -108,7 +107,7 @@ const DashboardAssetsAdmin = () => {
       const formData = new FormData();
       formData.append('type', type);
       formData.append('name', name);
-      
+
       if (file) {
         formData.append('file', file);
         formData.append('uploadMethod', 'file');
@@ -233,7 +232,7 @@ const DashboardAssetsAdmin = () => {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (uploadMethod === 'url') {
       if (!assetUrl || !assetName) {
         toast({
@@ -243,7 +242,7 @@ const DashboardAssetsAdmin = () => {
         });
         return;
       }
-      
+
       // For URL uploads, use FormData to match server expectations
       const formData = new FormData();
       formData.append('type', activeTab);
