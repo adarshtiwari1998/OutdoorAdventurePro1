@@ -962,5 +962,6 @@ export const storage = {
     } catch (error) {
       console.error('Error getting all sliders:', error);
       throw error;
-    }Added the updateBlogPostsCategory method to enable bulk category updates for blog posts.
-```
+    }
+  }
+};
