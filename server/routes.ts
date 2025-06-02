@@ -600,8 +600,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.patch(`${apiPrefix}/admin/blog/posts/:id`, async (req, res) => {
     try {
       const { id } = req.params;
+      
+      // Check if this is a bulk category update
+      if (id === 'bulk-category') {
+        return res.status(400).json({ message: "Use /bulk-category endpoint for bulk updates" });
+      }
+      
       const postData = req.body;
-      const updatedPost = await storage.updateBlogPost(parseInt(id), postData);
+      const postId = parseInt(id);
+      
+      if (isNaN(postId)) {
+        return res.status(400).json({ message: "Invalid post ID" });
+      }
+      
+      const updatedPost = await storage.updateBlogPost(postId, postData);
       res.json(updatedPost);
     } catch (error) {
       console.error(`Error updating blog post ${req.params.id}:`, error);
