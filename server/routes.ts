@@ -749,34 +749,94 @@ app.post(`${apiPrefix}/admin/blog/import/wordpress`, async (req, res) => {
       }
     }
 
-    const posts = await wordpressService.importPosts({
-      url: wordpressUrl,
-      username,
-      applicationPassword: password,
-      count: postsCount
+    // Get all existing blog posts to check against
+    const existingPosts = await db.query.blogPosts.findMany({
+      columns: {
+        slug: true,
+        title: true
+      }
     });
 
+    const existingSlugs = new Set(existingPosts.map(post => post.slug.toLowerCase()));
+    const existingTitles = new Set(existingPosts.map(post => post.title.toLowerCase().trim()));
+
+    console.log(`📚 Found ${existingPosts.length} existing blog posts in database`);
+    console.log(`🔍 Starting WordPress import - requesting ${postsCount} posts...`);
+
     let importedCount = 0;
-    for (const post of posts) {
-      // First check if post with same slug exists
-      const existingPost = await db.query.blogPosts.findFirst({
-        where: eq(blogPosts.slug, post.slug),
+    let skippedCount = 0;
+    let fetchedCount = 0;
+    let currentPage = 1;
+    const maxPages = 10; // Safety limit to prevent infinite loops
+
+    while (importedCount < postsCount && currentPage <= maxPages) {
+      console.log(`📄 Fetching page ${currentPage} from WordPress...`);
+      
+      // Fetch posts with pagination
+      const posts = await wordpressService.importPosts({
+        url: wordpressUrl,
+        username,
+        applicationPassword: password,
+        count: Math.min(20, postsCount * 2), // Fetch more posts to account for duplicates
+        page: currentPage
       });
 
-      if (!existingPost) {
-        // Only import if slug doesn't exist
-        await storage.createBlogPost({
-          title: post.title,
-          content: post.content,
-          excerpt: post.excerpt,
-          featuredImage: post.featuredImage,
-          categoryId: categoryId || '1', // Use selected category or default
-          status: 'published',
-          tags: post.tags,
-          slug: post.slug // Use the post's slug directly
-        });
-        importedCount++; // Increment here to count the imported posts
+      if (!posts || posts.length === 0) {
+        console.log(`📄 No more posts found on page ${currentPage}. Ending import.`);
+        break;
       }
+
+      fetchedCount += posts.length;
+      console.log(`📦 Fetched ${posts.length} posts from page ${currentPage}`);
+
+      for (const post of posts) {
+        // Check if we already have enough imported posts
+        if (importedCount >= postsCount) {
+          break;
+        }
+
+        const postSlug = post.slug.toLowerCase();
+        const postTitle = post.title.toLowerCase().trim();
+
+        // Check if post already exists by slug or title
+        if (existingSlugs.has(postSlug)) {
+          console.log(`⏭️  Same post found (slug: "${post.slug}") - skipping import, checking another`);
+          skippedCount++;
+          continue;
+        }
+
+        if (existingTitles.has(postTitle)) {
+          console.log(`⏭️  Same post found (title: "${post.title}") - skipping import, checking another`);
+          skippedCount++;
+          continue;
+        }
+
+        try {
+          // Import the new post
+          await storage.createBlogPost({
+            title: post.title,
+            content: post.content,
+            excerpt: post.excerpt,
+            featuredImage: post.featuredImage,
+            categoryId: categoryId || '1',
+            status: 'published',
+            tags: post.tags,
+            slug: post.slug
+          });
+
+          // Add to our tracking sets to avoid duplicates in the same import
+          existingSlugs.add(postSlug);
+          existingTitles.add(postTitle);
+          
+          importedCount++;
+          console.log(`✅ Imported post ${importedCount}/${postsCount}: "${post.title}"`);
+        } catch (error) {
+          console.error(`❌ Failed to import post "${post.title}":`, error);
+          skippedCount++;
+        }
+      }
+
+      currentPage++;
     }
 
     // Save credentials for future use
@@ -786,7 +846,19 @@ app.post(`${apiPrefix}/admin/blog/import/wordpress`, async (req, res) => {
       password
     });
 
-    res.json({ success: true, count: importedCount });
+    console.log(`📊 Import Summary:`);
+    console.log(`   - Total fetched: ${fetchedCount} posts`);
+    console.log(`   - Successfully imported: ${importedCount} posts`);
+    console.log(`   - Skipped (duplicates/errors): ${skippedCount} posts`);
+    console.log(`   - Pages checked: ${currentPage - 1}`);
+
+    res.json({ 
+      success: true, 
+      count: importedCount,
+      skipped: skippedCount,
+      fetched: fetchedCount,
+      message: `Successfully imported ${importedCount} new posts. Skipped ${skippedCount} existing posts.`
+    });
   } catch (error) {
     console.error("Error importing WordPress posts:", error);
     res.status(500).json({ message: "Failed to import WordPress posts" });

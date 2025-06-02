@@ -260,9 +260,10 @@ const BlogManagement = () => {
       return apiRequest('POST', '/api/admin/blog/import/wordpress', values);
     },
     onSuccess: (data, variables) => {
+      const { count, skipped, fetched, message } = data;
       toast({
-        title: "Success",
-        description: "Blog posts imported successfully from WordPress",
+        title: "Import Complete",
+        description: message || `Imported ${count} new posts, skipped ${skipped} existing posts`,
       });
       queryClient.invalidateQueries({ queryKey: ['/api/admin/blog/posts'] });
 
