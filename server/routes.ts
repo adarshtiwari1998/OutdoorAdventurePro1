@@ -1281,7 +1281,8 @@ app.delete(`${apiPrefix}/admin/wordpress/credentials`, async (req, res) => {
   app.post(`${apiPrefix}/admin/youtube/channels/:id/import`, async (req, res) => {
     try {
       const { id } = req.params;
-      console.log(`🎬 Starting video import for channel ID: ${id}`);
+      const { limit = 10 } = req.body;
+      console.log(`🎬 Starting video import for channel ID: ${id} (limit: ${limit})`);
       
       const channel = await storage.getYoutubeChannelById(parseInt(id));
 
@@ -1300,9 +1301,13 @@ app.delete(`${apiPrefix}/admin/wordpress/credentials`, async (req, res) => {
         });
       }
 
+      // Validate limit
+      const maxResults = Math.min(Math.max(1, parseInt(limit) || 10), 50);
+      console.log(`📊 Import limit set to: ${maxResults} videos`);
+
       // Get latest videos from YouTube API
-      console.log(`🔍 Fetching videos from YouTube API for channel: ${channel.channelId}`);
-      const videos = await youtubeService.getChannelVideos(channel.channelId, 10);
+      console.log(`🔍 Fetching ${maxResults} videos from YouTube API for channel: ${channel.channelId}`);
+      const videos = await youtubeService.getChannelVideos(channel.channelId, maxResults);
       console.log(`📋 Found ${videos.length} videos from YouTube API`);
 
       if (videos.length === 0) {

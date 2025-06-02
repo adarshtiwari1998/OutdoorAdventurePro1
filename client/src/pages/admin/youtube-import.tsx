@@ -27,6 +27,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
+import { Progress } from "@/components/ui/progress";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
 import { Play, Youtube, FileText, Upload, RefreshCw, CheckCircle, AlertTriangle, Trash2, ExternalLink } from "lucide-react";
@@ -73,6 +74,19 @@ const YoutubeImport = () => {
   const queryClient = useQueryClient();
   const [activeTab, setActiveTab] = useState("channels");
   const [selectedChannelId, setSelectedChannelId] = useState<string | null>(null);
+  const [showImportDialog, setShowImportDialog] = useState(false);
+  const [importChannelId, setImportChannelId] = useState<string | null>(null);
+  const [importLimit, setImportLimit] = useState(10);
+  const [importProgress, setImportProgress] = useState({
+    isImporting: false,
+    currentStep: '',
+    progress: 0,
+    processedCount: 0,
+    totalCount: 0,
+    importedCount: 0,
+    skippedCount: 0,
+    logs: [] as string[]
+  });
   
   // Queries
   const { data: channels, isLoading: channelsLoading } = useQuery<YoutubeChannel[]>({
@@ -160,18 +174,105 @@ const YoutubeImport = () => {
   });
 
   const importChannelVideosMutation = useMutation({
-    mutationFn: async (channelId: string) => {
-      console.log(`🎬 Importing videos for channel: ${channelId}`);
-      const response = await apiRequest('POST', `/api/admin/youtube/channels/${channelId}/import`, {});
-      return response;
+    mutationFn: async ({ channelId, limit }: { channelId: string, limit: number }) => {
+      console.log(`🎬 Importing ${limit} videos for channel: ${channelId}`);
+      
+      // Reset progress
+      setImportProgress({
+        isImporting: true,
+        currentStep: 'Fetching videos from YouTube...',
+        progress: 0,
+        processedCount: 0,
+        totalCount: 0,
+        importedCount: 0,
+        skippedCount: 0,
+        logs: [`🚀 Starting import of ${limit} videos...`]
+      });
+
+      try {
+        // Step 1: Fetch videos
+        setImportProgress(prev => ({
+          ...prev,
+          currentStep: 'Fetching videos from YouTube API...',
+          progress: 10,
+          logs: [...prev.logs, '📡 Connecting to YouTube API...']
+        }));
+
+        const response = await fetch(`/api/admin/youtube/channels/${channelId}/import`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ limit })
+        });
+
+        if (!response.ok) {
+          const errorData = await response.json().catch(() => ({ message: 'Unknown error' }));
+          throw new Error(errorData.message || `HTTP ${response.status}`);
+        }
+
+        // Step 2: Process response
+        setImportProgress(prev => ({
+          ...prev,
+          currentStep: 'Processing videos...',
+          progress: 50,
+          logs: [...prev.logs, '⚙️ Processing video data...']
+        }));
+
+        const data = await response.json();
+        
+        // Step 3: Complete
+        setImportProgress(prev => ({
+          ...prev,
+          currentStep: 'Import completed!',
+          progress: 100,
+          processedCount: data.total || 0,
+          totalCount: data.total || 0,
+          importedCount: data.count || 0,
+          skippedCount: data.skipped || 0,
+          logs: [
+            ...prev.logs,
+            `✅ Import completed!`,
+            `📊 Summary: ${data.count || 0} imported, ${data.skipped || 0} skipped`
+          ]
+        }));
+
+        return data;
+      } catch (error) {
+        setImportProgress(prev => ({
+          ...prev,
+          currentStep: 'Import failed',
+          logs: [...prev.logs, `❌ Error: ${error instanceof Error ? error.message : String(error)}`]
+        }));
+        throw error;
+      }
     },
     onSuccess: (data) => {
-      console.log('Import success:', data);
-      const message = data.message || `Successfully imported ${data.count || 0} videos${data.skipped ? `, ${data.skipped} skipped` : ''}`;
-      toast({
-        title: "Import Complete",
-        description: message,
-      });
+      const { count = 0, skipped = 0, message } = data || {};
+      
+      // Show success message after a brief delay
+      setTimeout(() => {
+        toast({
+          title: "Import Complete",
+          description: message || `Successfully imported ${count} videos${skipped ? `, ${skipped} skipped` : ''}`,
+        });
+        
+        // Close dialog after showing success
+        setTimeout(() => {
+          setShowImportDialog(false);
+          setImportProgress({
+            isImporting: false,
+            currentStep: '',
+            progress: 0,
+            processedCount: 0,
+            totalCount: 0,
+            importedCount: 0,
+            skippedCount: 0,
+            logs: []
+          });
+        }, 2000);
+      }, 1000);
+
       queryClient.invalidateQueries({ queryKey: ['/api/admin/youtube/videos'] });
       queryClient.invalidateQueries({ queryKey: ['/api/admin/youtube/channels'] });
     },
@@ -190,6 +291,20 @@ const YoutubeImport = () => {
         description: errorMessage,
         variant: "destructive",
       });
+
+      // Reset progress state on error
+      setTimeout(() => {
+        setImportProgress({
+          isImporting: false,
+          currentStep: '',
+          progress: 0,
+          processedCount: 0,
+          totalCount: 0,
+          importedCount: 0,
+          skippedCount: 0,
+          logs: []
+        });
+      }, 3000);
     }
   });
 
@@ -272,8 +387,17 @@ const YoutubeImport = () => {
   };
 
   const handleImportFromChannel = (channelId: string) => {
-    console.log(`Starting import for channel: ${channelId}`);
-    importChannelVideosMutation.mutate(channelId);
+    setImportChannelId(channelId);
+    setShowImportDialog(true);
+  };
+
+  const handleStartImport = () => {
+    if (importChannelId) {
+      importChannelVideosMutation.mutate({ 
+        channelId: importChannelId, 
+        limit: importLimit 
+      });
+    }
   };
 
   const handleDeleteChannel = (channelId: string) => {
@@ -397,9 +521,13 @@ const YoutubeImport = () => {
                               size="sm" 
                               className="mr-2"
                               onClick={() => handleImportFromChannel(channel.id)}
-                              disabled={importChannelVideosMutation.isPending}
+                              disabled={importChannelVideosMutation.isPending || importProgress.isImporting}
                             >
-                              <RefreshCw className="h-4 w-4 mr-1" />
+                              {importProgress.isImporting && importChannelId === channel.id ? (
+                                <RefreshCw className="h-4 w-4 mr-1 animate-spin" />
+                              ) : (
+                                <RefreshCw className="h-4 w-4 mr-1" />
+                              )}
                               Import
                             </Button>
                             <AlertDialog>
@@ -778,6 +906,115 @@ const YoutubeImport = () => {
           </div>
         </TabsContent>
       </Tabs>
+
+      {/* Import Configuration Dialog */}
+      <AlertDialog open={showImportDialog} onOpenChange={setShowImportDialog}>
+        <AlertDialogContent className="max-w-md">
+          <AlertDialogHeader>
+            <AlertDialogTitle>Import Videos</AlertDialogTitle>
+            <AlertDialogDescription>
+              Configure how many videos to import from this channel.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          
+          {!importProgress.isImporting ? (
+            <div className="space-y-4">
+              <div>
+                <label htmlFor="import-limit" className="text-sm font-medium mb-2 block">
+                  Number of videos to import:
+                </label>
+                <Select value={importLimit.toString()} onValueChange={(value) => setImportLimit(parseInt(value))}>
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="10">10 videos</SelectItem>
+                    <SelectItem value="20">20 videos</SelectItem>
+                    <SelectItem value="30">30 videos</SelectItem>
+                    <SelectItem value="40">40 videos</SelectItem>
+                    <SelectItem value="50">50 videos</SelectItem>
+                  </SelectContent>
+                </Select>
+                <p className="text-xs text-muted-foreground mt-1">
+                  Videos already in your database will be skipped automatically.
+                </p>
+              </div>
+            </div>
+          ) : (
+            <div className="space-y-4">
+              <div className="space-y-2">
+                <div className="flex items-center justify-between">
+                  <span className="text-sm font-medium">{importProgress.currentStep}</span>
+                  <span className="text-sm text-muted-foreground">
+                    {Math.round(importProgress.progress)}%
+                  </span>
+                </div>
+                <Progress value={importProgress.progress} className="h-2" />
+              </div>
+
+              {importProgress.processedCount > 0 && (
+                <div className="grid grid-cols-3 gap-4 text-center">
+                  <div>
+                    <div className="text-lg font-semibold text-green-600">
+                      {importProgress.importedCount}
+                    </div>
+                    <div className="text-xs text-muted-foreground">Imported</div>
+                  </div>
+                  <div>
+                    <div className="text-lg font-semibold text-orange-600">
+                      {importProgress.skippedCount}
+                    </div>
+                    <div className="text-xs text-muted-foreground">Skipped</div>
+                  </div>
+                  <div>
+                    <div className="text-lg font-semibold text-blue-600">
+                      {importProgress.processedCount}
+                    </div>
+                    <div className="text-xs text-muted-foreground">Total</div>
+                  </div>
+                </div>
+              )}
+
+              <div className="max-h-32 overflow-y-auto space-y-1 bg-slate-50 dark:bg-slate-900 rounded p-2">
+                {importProgress.logs.slice(-5).map((log, index) => (
+                  <div key={index} className="text-xs font-mono text-slate-600 dark:text-slate-400">
+                    {log}
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          <AlertDialogFooter>
+            {!importProgress.isImporting ? (
+              <>
+                <AlertDialogCancel>Cancel</AlertDialogCancel>
+                <AlertDialogAction 
+                  onClick={handleStartImport}
+                  disabled={!importChannelId}
+                >
+                  Start Import
+                </AlertDialogAction>
+              </>
+            ) : (
+              <div className="flex justify-between w-full">
+                <span className="text-sm text-muted-foreground">
+                  Import in progress...
+                </span>
+                {importProgress.progress === 100 && (
+                  <Button 
+                    variant="outline" 
+                    size="sm"
+                    onClick={() => setShowImportDialog(false)}
+                  >
+                    Close
+                  </Button>
+                )}
+              </div>
+            )}
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 };
