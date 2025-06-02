@@ -1003,7 +1003,8 @@ const BlogManagement = () => {
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="categoryId">Category</Label                  <Select 
+                  <Label htmlFor="categoryId">Category</Label>
+                  <Select 
                     value={importForm.watch("categoryId")} 
                     onValueChange={(value) => importForm.setValue("categoryId", value)}
                   >
@@ -1011,9 +1012,9 @@ const BlogManagement = () => {
                       <SelectValue placeholder="Select a category" />
                     </SelectTrigger>
                     <SelectContent>
-                      {categories?.map(category => (
+                      {categories?.filter(category => category.type !== 'header').map(category => (
                         <SelectItem key={category.id} value={category.id.toString()}>
-                          {category.name}{category.type === 'header' ? ' (Category Page)' : ''}
+                          {category.name}
                         </SelectItem>
                       ))}
                     </SelectContent>
