@@ -172,20 +172,6 @@ const BlogManagement = () => {
       password: "",
       postsCount: 10,
       categoryId: ""
-    },
-    validate: {
-      wordpressUrl: (value) => {
-        if (!value) return "WordPress URL is required";
-        try {
-          new URL(value);
-          return true;
-        } catch {
-          return "Please enter a valid URL";
-        }
-      },
-      username: (value) => value ? true : "WordPress username is required",
-      password: (value) => value ? true : "WordPress application password is required",
-      categoryId: (value) => value ? true : "Please select a category",
     }
   });
 
@@ -438,6 +424,43 @@ const BlogManagement = () => {
   };
 
   const onImportSubmit = (values: any) => {
+    // Validate required fields
+    if (!values.wordpressUrl) {
+      toast({
+        title: "Error",
+        description: "WordPress URL is required",
+        variant: "destructive",
+      });
+      return;
+    }
+    
+    if (!values.username) {
+      toast({
+        title: "Error", 
+        description: "WordPress username is required",
+        variant: "destructive",
+      });
+      return;
+    }
+    
+    if (!values.password) {
+      toast({
+        title: "Error",
+        description: "WordPress application password is required", 
+        variant: "destructive",
+      });
+      return;
+    }
+    
+    if (!values.categoryId) {
+      toast({
+        title: "Error",
+        description: "Please select a category",
+        variant: "destructive",
+      });
+      return;
+    }
+
     // If using saved credentials and password is masked, send the masked password
     // The backend will handle getting the real password from the database
     const submitData = {
@@ -956,25 +979,21 @@ const BlogManagement = () => {
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="categoryId">Category</Label>
-                  <select 
-                    id="categoryId"
-                    className="w-full px-3 py-2 border border-input rounded-md focus:outline-none focus:ring-2 focus:ring-primary"
-                    {...importForm.register("categoryId", { 
-                      required: "Please select a category",
-                      validate: (value) => {
-                        if (!value || value === "") return "Please select a category";
-                        const num = parseInt(value);
-                        return !isNaN(num) && num > 0 ? true : "Please select a valid category";
-                      }
-                    })}
+                  <Select 
+                    value={importForm.watch("categoryId")} 
+                    onValueChange={(value) => importForm.setValue("categoryId", value)}
                   >
-                    <option value="">Select a category</option>
-                    {categories?.map(category => (
-                      <option key={category.id} value={category.id}>
-                        {category.name}
-                      </option>
-                    ))}
-                  </select>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select a category" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {categories?.map(category => (
+                        <SelectItem key={category.id} value={category.id.toString()}>
+                          {category.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
                   {importForm.formState.errors.categoryId && (
                     <p className="text-sm text-destructive">
                       {importForm.formState.errors.categoryId.message || "Category is required"}
