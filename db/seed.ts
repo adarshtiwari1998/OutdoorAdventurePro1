@@ -95,6 +95,7 @@ async function seed() {
       image TEXT,
       subscribers INTEGER NOT NULL DEFAULT 0,
       video_count INTEGER NOT NULL DEFAULT 0,
+      imported_video_count INTEGER NOT NULL DEFAULT 0,
       last_import TIMESTAMP,
       created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
       updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
@@ -144,9 +145,12 @@ async function seed() {
       thumbnail TEXT,
       published_at TIMESTAMP NOT NULL,
       channel_id INTEGER REFERENCES youtube_channels(id),
+      category_id INTEGER REFERENCES categories(id),
       transcript TEXT,
       import_status TEXT NOT NULL DEFAULT 'pending',
       blog_post_id INTEGER REFERENCES blog_posts(id),
+      has_blog_post_match BOOLEAN NOT NULL DEFAULT FALSE,
+      matching_blog_post_title TEXT,
       error_message TEXT,
       created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
       updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
