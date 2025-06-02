@@ -801,9 +801,9 @@ const BlogManagement = () => {
                               </SelectTrigger>
                             </FormControl>
                             <SelectContent>
-                              {categories?.filter(category => category.type !== 'header').map(category => (
+                              {categories?.map(category => (
                                 <SelectItem key={category.id} value={category.id.toString()}>
-                                  {category.name}
+                                  {category.name}{category.type === 'header' ? ' (Category Page)' : ''}
                                 </SelectItem>
                               ))}
                             </SelectContent>
@@ -1000,11 +1000,11 @@ const BlogManagement = () => {
                   >
                     <SelectTrigger>
                       <SelectValue placeholder="Select a category" />
-                    </SelectTrigger>
+                    </Select                    </SelectTrigger>
                     <SelectContent>
-                      {categories?.filter(category => !category.id.toString().startsWith('header_')).map(category => (
+                      {categories?.map(category => (
                         <SelectItem key={category.id} value={category.id.toString()}>
-                          {category.name}
+                          {category.name}{category.type === 'header' ? ' (Category Page)' : ''}
                         </SelectItem>
                       ))}
                     </SelectContent>
@@ -1047,9 +1047,9 @@ const BlogManagement = () => {
                           <SelectValue placeholder="Select a category" />
                         </SelectTrigger>
                         <SelectContent>
-                          {categories?.filter(category => category.type !== 'header').map(category => (
+                          {categories?.map(category => (
                             <SelectItem key={category.id} value={category.id.toString()}>
-                              {category.name}
+                              {category.name}{category.type === 'header' ? ' (Category Page)' : ''}
                             </SelectItem>
                           ))}
                         </SelectContent>
@@ -1454,9 +1454,9 @@ const BlogManagement = () => {
                           </SelectTrigger>
                         </FormControl>
                         <SelectContent>
-                          {categories?.filter(category => category.type !== 'header').map(category => (
+                          {categories?.map(category => (
                             <SelectItem key={category.id} value={category.id.toString()}>
-                              {category.name}
+                              {category.name}{category.type === 'header' ? ' (Category Page)' : ''}
                             </SelectItem>
                           ))}
                         </SelectContent>
