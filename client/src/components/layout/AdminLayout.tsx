@@ -114,10 +114,26 @@ const AdminLayout = ({ children, title }: AdminLayoutProps) => {
         isMobile && !showSidebar ? "-translate-x-full" : "translate-x-0"
       )}>
         <div className="flex flex-col h-full">
-          <div className="mb-6">
-            <h2 className="text-xl font-bold text-blue-600 dark:text-blue-400">
-              Admin Dashboard
-            </h2>
+          <div className="mb-6 relative">
+            <div className="flex items-center">
+              <img 
+                src="/logo.png" 
+                alt="Logo" 
+                className="h-10 w-auto" 
+                onError={(e) => {
+                  const parent = e.currentTarget.parentElement;
+                  if (parent) {
+                    const div = document.createElement('div');
+                    div.className = "h-10 w-10 bg-blue-600 rounded flex items-center justify-center text-white text-sm font-bold";
+                    div.textContent = "OA";
+                    parent.replaceChild(div, e.currentTarget);
+                  }
+                }} 
+              />
+            </div>
+            <span className="absolute bottom-0 right-0 text-xs text-slate-500 dark:text-slate-400 font-medium">
+              admin
+            </span>
           </div>
 
           <nav className="space-y-6 flex-1">
