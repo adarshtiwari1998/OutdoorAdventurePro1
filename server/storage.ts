@@ -210,16 +210,25 @@ export const storage = {
     }
   },
 
-  async updateYoutubeChannelLastImport(id: number) {
-    try {
-      await db.update(youtubeChannels)
-        .set({ lastImport: new Date() })
-        .where(eq(youtubeChannels.id, id));
-    } catch (error) {
-      console.error(`Error updating YouTube channel last import for ID ${id}:`, error);
-      throw error;
+  async updateYoutubeChannelLastImport(channelId: number): Promise<void> {
+    await db.update(schema.youtubeChannels)
+      .set({ lastImport: new Date() })
+      .where(eq(schema.youtubeChannels.id, channelId));
+  }
+
+  async updateYoutubeChannelImportedCount(channelId: number, newlyImportedCount: number): Promise<void> {
+    // Get current imported count
+    const channel = await db.query.youtubeChannels.findFirst({
+      where: eq(schema.youtubeChannels.id, channelId)
+    });
+
+    if (channel) {
+      const newTotal = (channel.importedVideoCount || 0) + newlyImportedCount;
+      await db.update(schema.youtubeChannels)
+        .set({ importedVideoCount: newTotal })
+        .where(eq(schema.youtubeChannels.id, channelId));
     }
-  },
+  }
 
   async deleteYoutubeChannel(id: number) {
     try {
@@ -774,8 +783,8 @@ export const storage = {
         },
         author: {
           name: post.author?.fullName || post.author?.username || 'Unknown',
-          avatar: post.author?.fullName 
-            ? `https://ui-avatars.com/api/?name=${encodeURIComponent(post.author.fullName)}&background=random`
+          avatar: featuredPost.author?.fullName 
+            ? `https://ui-avatars.com/api/?name=${encodeURIComponent(featuredPost.author.fullName)}&background=random`
             : `https://ui-avatars.com/api/?name=Unknown&background=random`,
         },
         publishedAt: post.publishedAt || new Date().toISOString(),

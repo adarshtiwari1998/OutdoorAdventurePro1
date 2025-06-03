@@ -1356,8 +1356,9 @@ app.delete(`${apiPrefix}/admin/wordpress/credentials`, async (req, res) => {
         }
       }
 
-      // Update channel's lastImport date
+      // Update channel's lastImport date and imported video count
       await storage.updateYoutubeChannelLastImport(parseInt(id));
+      await storage.updateYoutubeChannelImportedCount(parseInt(id), importedCount);
 
       console.log(`📊 Import complete: ${importedCount} imported, ${skippedCount} skipped`);
       
