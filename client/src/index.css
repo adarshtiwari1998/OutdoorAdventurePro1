@@ -324,6 +324,19 @@ header {
     z-index: 20;
   }
 
+  /* Admin table container for consistent width and scrolling */
+  .admin-table-container {
+    width: 100%;
+    overflow-x: auto;
+    border: 1px solid hsl(var(--border));
+    border-radius: 0.375rem;
+  }
+
+  .admin-table-container .table {
+    width: 100%;
+    min-width: 1400px;
+  }
+
   tbody td.sticky {
     z-index: 10;
   }

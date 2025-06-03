@@ -666,7 +666,7 @@ const YoutubeImport = () => {
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <div className="rounded-md border">
+              <div className="admin-table-container">
                 <Table>
                   <TableHeader>
                     <TableRow>
@@ -960,7 +960,7 @@ const YoutubeImport = () => {
                 </div>
               )}
               <div className="admin-table-container">
-                <Table className="w-full min-w-[1200px]">
+                <Table>
                   <TableHeader>
                     <TableRow>
                       <TableHead className="w-[50px] sticky left-0 bg-white dark:bg-gray-950 z-10 border-r">
