@@ -119,7 +119,7 @@ export class YouTubeService {
     }
   }
 
-  async getChannelVideos(channelId: string, maxResults = 10): Promise<YouTubeVideo[]> {
+  async getChannelVideos(channelId: string, maxResults = 10, offset = 0): Promise<YouTubeVideo[]> {
     try {
       // First, get the uploads playlist ID for the channel
       const channelResponse = await this.makeRequest('channels', {
@@ -133,19 +133,60 @@ export class YouTubeService {
 
       const uploadsPlaylistId = channelResponse.items[0].contentDetails.relatedPlaylists.uploads;
 
-      // Then, get the videos from the uploads playlist
-      const playlistResponse = await this.makeRequest('playlistItems', {
-        part: 'snippet,contentDetails',
-        playlistId: uploadsPlaylistId,
-        maxResults: maxResults.toString()
-      });
+      // Calculate how many videos to skip and fetch
+      let videosToFetch = [];
+      let pageToken = '';
+      let currentOffset = 0;
+      let remainingToFetch = maxResults;
 
-      if (!playlistResponse.items) {
+      // If we need to skip videos (offset > 0), we need to paginate through results
+      while (remainingToFetch > 0) {
+        const batchSize = Math.min(50, offset - currentOffset + remainingToFetch); // YouTube API max is 50
+        
+        const requestParams: any = {
+          part: 'snippet,contentDetails',
+          playlistId: uploadsPlaylistId,
+          maxResults: batchSize.toString()
+        };
+
+        if (pageToken) {
+          requestParams.pageToken = pageToken;
+        }
+
+        const playlistResponse = await this.makeRequest('playlistItems', requestParams);
+
+        if (!playlistResponse.items || playlistResponse.items.length === 0) {
+          break;
+        }
+
+        // If we haven't reached our offset yet, continue to next page
+        if (currentOffset + playlistResponse.items.length <= offset) {
+          currentOffset += playlistResponse.items.length;
+          pageToken = playlistResponse.nextPageToken;
+          if (!pageToken) break; // No more pages
+          continue;
+        }
+
+        // We're in the range we want to fetch
+        const startIndex = Math.max(0, offset - currentOffset);
+        const endIndex = Math.min(playlistResponse.items.length, startIndex + remainingToFetch);
+        
+        const batchVideos = playlistResponse.items.slice(startIndex, endIndex);
+        videosToFetch.push(...batchVideos);
+        
+        remainingToFetch -= batchVideos.length;
+        currentOffset += playlistResponse.items.length;
+        
+        pageToken = playlistResponse.nextPageToken;
+        if (!pageToken) break; // No more pages
+      }
+
+      if (videosToFetch.length === 0) {
         return [];
       }
 
       // Get the full video details for each video
-      const videoIds = playlistResponse.items.map((item: any) => item.contentDetails.videoId).join(',');
+      const videoIds = videosToFetch.map((item: any) => item.contentDetails.videoId).join(',');
       const videosResponse = await this.makeRequest('videos', {
         part: 'snippet,contentDetails,statistics',
         id: videoIds
