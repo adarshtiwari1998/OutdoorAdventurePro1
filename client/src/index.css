@@ -289,6 +289,44 @@ header {
     scrollbar-width: none;  /* Firefox */
   }
 
+  /* Sticky table columns with shadows */
+  .sticky {
+    position: sticky;
+    z-index: 10;
+  }
+
+  /* Add shadow to sticky columns for better visual separation */
+  .sticky.left-0::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    right: -1px;
+    bottom: 0;
+    width: 1px;
+    background: linear-gradient(to right, rgba(0,0,0,0.1), transparent);
+    pointer-events: none;
+  }
+
+  .sticky.right-0::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -1px;
+    bottom: 0;
+    width: 1px;
+    background: linear-gradient(to left, rgba(0,0,0,0.1), transparent);
+    pointer-events: none;
+  }
+
+  /* Ensure table headers stay above body cells */
+  thead th.sticky {
+    z-index: 20;
+  }
+
+  tbody td.sticky {
+    z-index: 10;
+  }
+
   /* Blog section specific styles */
   .blog-section-container {
     display: flex;
