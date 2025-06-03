@@ -297,65 +297,33 @@ export class YouTubeService {
     try {
       console.log(`🎯 Fetching transcript for video: ${videoId}`);
 
-      // PRIORITY 1: Try automation script method for clean transcript
-      try {
-        console.log(`🔄 Attempting to fetch transcript using automation script method for: ${videoId}`);
-        const cleanTranscript = await this.fetchCleanTranscript(videoId);
-        if (cleanTranscript && cleanTranscript.length > 0) {
-          const videoDetails = await this.getVideoDetails(videoId);
+      // PRIORITY 1: Try multiple language and format approaches
+      const transcriptMethods = [
+        // Method 1: Clean transcript with multiple language fallbacks
+        () => this.fetchCleanTranscriptAdvanced(videoId),
+        // Method 2: Alternative transcript with formatting
+        () => this.fetchTranscriptAlternative(videoId),
+        // Method 3: Raw transcript with basic cleaning
+        () => this.fetchRawTranscript(videoId)
+      ];
+
+      for (let i = 0; i < transcriptMethods.length; i++) {
+        try {
+          console.log(`🔄 Attempting transcript method ${i + 1} for: ${videoId}`);
+          const transcript = await transcriptMethods[i]();
           
-          console.log(`✅ Successfully fetched clean transcript for: ${videoId}`);
-          return `[REAL TRANSCRIPT for "${videoDetails.title}"]
-
-Channel: ${videoDetails.channelTitle}
-Published: ${new Date(videoDetails.publishedAt).toLocaleDateString()}
-Video ID: ${videoId}
-Transcript Length: ${cleanTranscript.length} characters
-
-${cleanTranscript}
-
-[End of real transcript]`;
-        }
-      } catch (cleanError) {
-        console.warn(`⚠️ Clean transcript method failed for ${videoId}:`, cleanError.message);
-      }
-
-      // PRIORITY 2: Try enhanced alternative method
-      try {
-        console.log(`🔄 Attempting to fetch formatted subtitle transcript for: ${videoId}`);
-        const transcript = await this.fetchTranscriptAlternative(videoId);
-        if (transcript) {
-          console.log(`✅ Successfully fetched formatted subtitle transcript for: ${videoId}`);
-          return transcript;
-        }
-      } catch (altError) {
-        console.warn(`⚠️ Formatted subtitle transcript failed for ${videoId}:`, altError.message);
-      }
-
-      // PRIORITY 2: Try to fetch captions using YouTube API (limited by OAuth2)
-      try {
-        const captionsResponse = await this.makeRequest('captions', {
-          part: 'snippet',
-          videoId: videoId
-        });
-
-        if (captionsResponse.items && captionsResponse.items.length > 0) {
-          // Find English caption or first available
-          const englishCaption = captionsResponse.items.find((item: any) => 
-            item.snippet.language === 'en' || item.snippet.language === 'en-US'
-          ) || captionsResponse.items[0];
-
-          if (englishCaption) {
-            console.log(`📝 Found caption track: ${englishCaption.snippet.language}`);
-            console.log(`⚠️ Note: Caption download requires OAuth2 authentication`);
+          if (transcript && transcript.length > 50) { // Ensure meaningful content
+            console.log(`✅ Successfully fetched transcript using method ${i + 1} for: ${videoId}`);
+            return transcript;
           }
+        } catch (methodError) {
+          console.warn(`⚠️ Transcript method ${i + 1} failed for ${videoId}:`, methodError.message);
+          continue;
         }
-      } catch (captionError) {
-        console.warn(`⚠️ Could not fetch captions list for ${videoId}:`, captionError.message);
       }
 
       // FALLBACK: Generate structured content from video details
-      console.log(`📄 No real transcript available, creating content-based extract for: ${videoId}`);
+      console.log(`📄 All transcript methods failed, creating content-based extract for: ${videoId}`);
       const videoDetails = await this.getVideoDetails(videoId);
 
       return `[CONTENT-BASED TRANSCRIPT for "${videoDetails.title}"]
@@ -415,72 +383,224 @@ Unable to fetch any transcript content for this video. This may be due to:
 
   private async fetchTranscriptAlternative(videoId: string): Promise<string | null> {
     try {
-      console.log(`🔄 Attempting to fetch real transcript for: ${videoId}`);
+      console.log(`🔄 Attempting alternative transcript fetch for: ${videoId}`);
 
-      // Enhanced transcript fetching logic from automation script
-      const transcriptData = await YoutubeTranscript.fetchTranscript(videoId);
-      
-      if (transcriptData && transcriptData.length > 0) {
-        console.log(`✅ Successfully fetched ${transcriptData.length} transcript segments`);
-        
-        // Clean transcript using automation script logic
-        const cleanedTranscript = transcriptData
-          .map(item => item.text.replace(/\$.*?\$/g, '').trim()) // Remove unwanted patterns
-          .filter(text => text.length > 0) // Filter out empty text
-          .join(' '); // Join all text segments
+      // More comprehensive language options for alternative method
+      const languageOptions = [
+        // Most specific to least specific English options
+        { lang: 'en-US' },
+        { lang: 'en-GB' },
+        { lang: 'en-CA' },
+        { lang: 'en-AU' },
+        { lang: 'en', country: 'US' },
+        { lang: 'en', country: 'GB' },
+        { lang: 'en', country: 'CA' },
+        { lang: 'en', country: 'AU' },
+        { lang: 'en' },
+        // Auto-generated captions
+        { lang: 'a.en' }, // Auto-generated English
+        { lang: 'auto' },
+        // No specific language
+        {}
+      ];
 
-        if (cleanedTranscript.length > 0) {
-          // Get video details for header
-          const videoDetails = await this.getVideoDetails(videoId);
+      for (const option of languageOptions) {
+        try {
+          console.log(`🔍 Alternative method trying:`, option);
+          const transcriptItems = await YoutubeTranscript.fetchTranscript(videoId, option);
+          
+          if (transcriptItems && transcriptItems.length > 0) {
+            console.log(`✅ Alternative method found ${transcriptItems.length} transcript segments with:`, option);
+            
+            // Enhanced cleaning and formatting
+            const formattedTranscript = this.formatTranscriptAdvanced(transcriptItems);
 
-          return `[REAL TRANSCRIPT for "${videoDetails.title}"]
+            if (formattedTranscript && formattedTranscript.length > 50) {
+              const videoDetails = await this.getVideoDetails(videoId);
+
+              return `[FORMATTED TRANSCRIPT for "${videoDetails.title}"]
 
 Channel: ${videoDetails.channelTitle}
 Published: ${new Date(videoDetails.publishedAt).toLocaleDateString()}
 Video ID: ${videoId}
-Transcript Length: ${cleanedTranscript.length} characters
+Language: ${option?.lang || 'auto-detected'}
+Transcript Length: ${formattedTranscript.length} characters
 
-${cleanedTranscript}
+${formattedTranscript}
 
-[End of real transcript]`;
+[End of formatted transcript]`;
+            }
+          }
+        } catch (langError) {
+          console.log(`⚠️ Alternative method failed with ${JSON.stringify(option)}:`, langError.message);
+          continue;
         }
       }
 
-      console.log(`⚠️ No transcript found for ${videoId}`);
+      console.log(`⚠️ Alternative method: No transcript found for ${videoId}`);
       return null;
     } catch (error) {
-      console.error(`❌ Failed to fetch transcript for ${videoId}:`, error.message);
-      
-      // Try with fallback options if the main attempt fails
-      try {
-        console.log(`🔄 Trying fallback transcript fetch for: ${videoId}`);
+      console.error(`❌ Alternative transcript method failed for ${videoId}:`, error.message);
+      return null;
+    }
+  }
+
+  private formatTranscriptAdvanced(transcriptItems: any[]): string {
+    if (!transcriptItems || transcriptItems.length === 0) {
+      return '';
+    }
+
+    console.log(`📝 Advanced formatting ${transcriptItems.length} transcript items...`);
+
+    // Enhanced text cleaning and formatting
+    const cleanedSegments = transcriptItems
+      .map(item => {
+        if (!item.text) return null;
         
-        const languageOptions = [
-          { lang: 'en', country: 'US' },
-          { lang: 'en', country: 'GB' },
-          { lang: 'en' },
-          { lang: 'auto' },
-          {} // No language preference
-        ];
+        let text = item.text.trim();
+        
+        // Remove various unwanted patterns
+        text = text
+          .replace(/\$.*?\$/g, '') // Remove $...$ patterns
+          .replace(/\[.*?\]/g, '') // Remove [Music], [Applause], etc.
+          .replace(/\(.*?\)/g, '') // Remove (inaudible), (laughs), etc.
+          .replace(/♪.*?♪/g, '') // Remove music notes
+          .replace(/\{.*?\}/g, '') // Remove {subtitle formatting}
+          .replace(/<.*?>/g, '') // Remove HTML-like tags
+          .replace(/\buh+\b/gi, '') // Remove filler words like "uh", "uhh"
+          .replace(/\bum+\b/gi, '') // Remove filler words like "um", "umm"
+          .replace(/\bahh+\b/gi, '') // Remove filler words like "ahh"
+          .replace(/\berr+\b/gi, '') // Remove filler words like "err"
+          .replace(/\s+/g, ' ') // Replace multiple spaces with single space
+          .replace(/\n+/g, ' ') // Replace newlines with spaces
+          .trim();
 
-        for (const option of languageOptions) {
-          try {
-            console.log(`🔄 Trying transcript fetch with options:`, option);
-            const transcriptItems = await YoutubeTranscript.fetchTranscript(videoId, option);
+        return text.length > 0 ? {
+          text,
+          offset: item.offset || 0,
+          duration: item.duration || 0
+        } : null;
+      })
+      .filter(item => item !== null);
+
+    if (cleanedSegments.length === 0) {
+      return '';
+    }
+
+    // Join segments with smart paragraph breaks
+    let formattedText = '';
+    let currentParagraph = '';
+    let wordCount = 0;
+
+    for (let i = 0; i < cleanedSegments.length; i++) {
+      const segment = cleanedSegments[i];
+      const text = segment.text;
+      
+      if (!text) continue;
+
+      currentParagraph += text;
+      wordCount += text.split(' ').length;
+
+      // Add space if next segment doesn't start with punctuation
+      const nextSegment = cleanedSegments[i + 1];
+      if (nextSegment && !nextSegment.text.match(/^[.!?,:;]/)) {
+        currentParagraph += ' ';
+      }
+
+      // Create paragraph breaks at natural points
+      const endsWithPunctuation = text.match(/[.!?]$/);
+      const isLongEnough = currentParagraph.length > 200;
+      const hasNaturalBreak = text.match(/\. [A-Z]/) || text.match(/[.!?] /);
+
+      if ((endsWithPunctuation && isLongEnough) || 
+          hasNaturalBreak || 
+          currentParagraph.length > 400) {
+        formattedText += currentParagraph.trim() + '\n\n';
+        currentParagraph = '';
+      }
+    }
+
+    // Add any remaining paragraph
+    if (currentParagraph.trim().length > 0) {
+      formattedText += currentParagraph.trim();
+    }
+
+    // Final cleanup
+    const finalTranscript = formattedText
+      .replace(/\s+/g, ' ') // Clean up extra spaces
+      .replace(/\n\s*\n\s*\n+/g, '\n\n') // Remove triple+ newlines
+      .replace(/([.!?])\s*([.!?])/g, '$1 $2') // Fix punctuation spacing
+      .replace(/\s+([.!?,:;])/g, '$1') // Remove spaces before punctuation
+      .replace(/([.!?])\s*([A-Z])/g, '$1 $2') // Ensure space after sentence endings
+      .trim();
+
+    console.log(`📝 Advanced formatted transcript: ${wordCount} words, ${finalTranscript.length} characters`);
+    
+    return finalTranscript.length > 20 ? finalTranscript : '';
+  }
+
+  /**
+   * Enhanced transcript fetching method with comprehensive language support
+   * @param videoId YouTube video ID
+   * @returns Clean transcript text or null if unavailable
+   */
+  async fetchCleanTranscriptAdvanced(videoId: string): Promise<string | null> {
+    try {
+      console.log(`🎯 Fetching advanced clean transcript for video: ${videoId}`);
+      
+      // Define comprehensive language and country options
+      const languageOptions = [
+        // English variants
+        { lang: 'en', country: 'US' },
+        { lang: 'en', country: 'GB' },
+        { lang: 'en', country: 'CA' },
+        { lang: 'en', country: 'AU' },
+        { lang: 'en' },
+        // Auto-generated options
+        { lang: 'en-US' },
+        { lang: 'en-GB' },
+        // No specific language (let YouTube decide)
+        {},
+        // Other common languages as fallback
+        { lang: 'es' },
+        { lang: 'fr' },
+        { lang: 'de' },
+        { lang: 'it' },
+        { lang: 'pt' },
+        { lang: 'nl' },
+        { lang: 'auto' }
+      ];
+
+      for (const option of languageOptions) {
+        try {
+          console.log(`🔍 Trying transcript fetch with options:`, option);
+          const transcriptData = await YoutubeTranscript.fetchTranscript(videoId, option);
+          
+          if (transcriptData && transcriptData.length > 0) {
+            console.log(`✅ Found transcript with ${transcriptData.length} segments using options:`, option);
             
-            if (transcriptItems && transcriptItems.length > 0) {
-              console.log(`✅ Successfully fetched transcript with fallback options:`, option);
+            // Enhanced cleaning logic
+            const cleanedTranscript = transcriptData
+              .map(item => {
+                if (!item.text) return '';
+                
+                return item.text
+                  .replace(/\$.*?\$/g, '') // Remove patterns like $...$
+                  .replace(/\[.*?\]/g, '') // Remove [Music], [Applause], etc.
+                  .replace(/\(.*?\)/g, '') // Remove (inaudible), (laughs), etc.
+                  .replace(/♪.*?♪/g, '') // Remove music notes
+                  .replace(/\s+/g, ' ') // Replace multiple spaces with single space
+                  .trim();
+              })
+              .filter(text => text.length > 0) // Filter out empty text
+              .join(' '); // Join all segments
+
+            if (cleanedTranscript.length > 50) { // Ensure meaningful content
+              const videoDetails = await this.getVideoDetails(videoId);
               
-              // Apply the same cleaning logic
-              const cleanedTranscript = transcriptItems
-                .map(item => item.text.replace(/\$.*?\$/g, '').trim())
-                .filter(text => text.length > 0)
-                .join(' ');
-
-              if (cleanedTranscript.length > 0) {
-                const videoDetails = await this.getVideoDetails(videoId);
-
-                return `[REAL TRANSCRIPT for "${videoDetails.title}"]
+              console.log(`✅ Successfully extracted clean transcript: ${cleanedTranscript.length} characters`);
+              
+              return `[REAL TRANSCRIPT for "${videoDetails.title}"]
 
 Channel: ${videoDetails.channelTitle}
 Published: ${new Date(videoDetails.publishedAt).toLocaleDateString()}
@@ -491,114 +611,63 @@ Transcript Length: ${cleanedTranscript.length} characters
 ${cleanedTranscript}
 
 [End of real transcript]`;
-              }
             }
-          } catch (langError) {
-            console.log(`⚠️ Failed with options ${JSON.stringify(option)}:`, langError.message);
-            continue;
           }
+        } catch (langError) {
+          console.log(`⚠️ Failed with options ${JSON.stringify(option)}:`, langError.message);
+          continue;
         }
-      } catch (fallbackError) {
-        console.error(`❌ Fallback transcript fetch also failed for ${videoId}:`, fallbackError.message);
-      }
-
-      return null;
-    }
-  }
-
-  private formatTranscript(transcriptItems: any[]): string {
-    if (!transcriptItems || transcriptItems.length === 0) {
-      return '';
-    }
-
-    let formattedTranscript = '';
-    let currentParagraph = '';
-    let lastTimestamp = 0;
-    let wordCount = 0;
-
-    console.log(`📝 Formatting ${transcriptItems.length} transcript items...`);
-
-    for (const item of transcriptItems) {
-      const text = (item.text || '').trim();
-      const timestamp = item.offset || 0;
-      const duration = item.duration || 0;
-
-      if (!text) continue;
-
-      // Add timestamp markers every 60 seconds for reference
-      if (timestamp - lastTimestamp > 60000 && currentParagraph.length > 0) {
-        const minutes = Math.floor(timestamp / 60000);
-        const seconds = Math.floor((timestamp % 60000) / 1000);
-        formattedTranscript += currentParagraph.trim() + `\n\n[${minutes}:${seconds.toString().padStart(2, '0')}]\n`;
-        currentParagraph = '';
-      }
-
-      // Clean up the text - preserve sentence structure
-      const cleanText = text
-        .replace(/\s+/g, ' ') // Replace multiple spaces with single space
-        .replace(/\n/g, ' ') // Replace newlines with spaces
-        .replace(/\[.*?\]/g, '') // Remove [Music], [Applause] etc.
-        .replace(/\buh\b/gi, '') // Remove filler words
-        .replace(/\bum\b/gi, '')
-        .replace(/\s+/g, ' ') // Clean up spaces again
-        .trim();
-
-      if (!cleanText) continue;
-
-      currentParagraph += cleanText + ' ';
-      wordCount += cleanText.split(' ').length;
-      lastTimestamp = timestamp;
-
-      // Create paragraph breaks at natural sentence endings or after enough content
-      if ((cleanText.match(/[.!?]$/) && currentParagraph.length > 150) || 
-          currentParagraph.length > 300) {
-        formattedTranscript += currentParagraph.trim() + '\n\n';
-        currentParagraph = '';
-      }
-    }
-
-    // Add the final paragraph
-    if (currentParagraph.trim().length > 0) {
-      formattedTranscript += currentParagraph.trim();
-    }
-
-    // Clean up the final result
-    const finalTranscript = formattedTranscript
-      .replace(/\s+/g, ' ') // Clean up extra spaces
-      .replace(/\n\s*\n\s*\n/g, '\n\n') // Remove triple+ newlines
-      .replace(/^\s+|\s+$/g, '') // Trim start and end
-      .trim();
-
-    console.log(`📝 Formatted transcript: ${wordCount} words, ${finalTranscript.length} characters`);
-    
-    return finalTranscript || '[No readable transcript content found]';
-  }
-
-  /**
-   * Enhanced transcript fetching method that matches automation script logic
-   * @param videoId YouTube video ID
-   * @returns Clean transcript text or null if unavailable
-   */
-  async fetchCleanTranscript(videoId: string): Promise<string | null> {
-    try {
-      console.log(`🎯 Fetching clean transcript for video: ${videoId}`);
-      
-      const transcriptData = await YoutubeTranscript.fetchTranscript(videoId);
-      
-      if (transcriptData && transcriptData.length > 0) {
-        // Apply automation script cleaning logic
-        const cleanedTranscript = transcriptData
-          .map(item => item.text.replace(/\$.*?\$/g, '').trim()) // Remove patterns like $...$ 
-          .filter(text => text.length > 0) // Filter out empty text
-          .join(' '); // Join all segments into single text
-
-        console.log(`✅ Clean transcript extracted: ${cleanedTranscript.length} characters`);
-        return cleanedTranscript;
       }
 
       return null;
     } catch (error) {
-      console.error(`❌ Failed to fetch clean transcript for video ${videoId}:`, error.message);
+      console.error(`❌ Failed to fetch advanced clean transcript for video ${videoId}:`, error.message);
+      return null;
+    }
+  }
+
+  /**
+   * Raw transcript fetching as final fallback
+   * @param videoId YouTube video ID
+   * @returns Raw transcript or null
+   */
+  async fetchRawTranscript(videoId: string): Promise<string | null> {
+    try {
+      console.log(`🔄 Attempting raw transcript fetch for: ${videoId}`);
+      
+      // Try without any options first
+      const transcriptData = await YoutubeTranscript.fetchTranscript(videoId);
+      
+      if (transcriptData && transcriptData.length > 0) {
+        console.log(`✅ Raw transcript found with ${transcriptData.length} segments`);
+        
+        // Minimal cleaning - just join the text
+        const rawTranscript = transcriptData
+          .map(item => item.text || '')
+          .filter(text => text.trim().length > 0)
+          .join(' ')
+          .replace(/\s+/g, ' ')
+          .trim();
+
+        if (rawTranscript.length > 30) {
+          const videoDetails = await this.getVideoDetails(videoId);
+          
+          return `[RAW TRANSCRIPT for "${videoDetails.title}"]
+
+Channel: ${videoDetails.channelTitle}
+Published: ${new Date(videoDetails.publishedAt).toLocaleDateString()}
+Video ID: ${videoId}
+Transcript Length: ${rawTranscript.length} characters
+
+${rawTranscript}
+
+[End of raw transcript]`;
+        }
+      }
+
+      return null;
+    } catch (error) {
+      console.error(`❌ Raw transcript fetch failed for ${videoId}:`, error.message);
       return null;
     }
   }
