@@ -23,6 +23,8 @@ interface YouTubeVideo {
   publishedAt: string;
   channelId: string;
   channelTitle: string;
+  duration: number; // Duration in seconds
+  videoType: 'video' | 'short';
 }
 
 interface YouTubeChannel {
@@ -121,6 +123,13 @@ export class YouTubeService {
       }
 
       const video = response.items[0];
+      
+      // Parse duration from ISO 8601 format (PT4M13S) to seconds
+      const duration = this.parseDuration(video.contentDetails.duration);
+      
+      // Determine if it's a short (typically <= 60 seconds and vertical format)
+      const videoType = this.determineVideoType(duration, video);
+
       return {
         id: video.id,
         title: video.snippet.title,
@@ -128,7 +137,9 @@ export class YouTubeService {
         thumbnailUrl: video.snippet.thumbnails.high.url,
         publishedAt: video.snippet.publishedAt,
         channelId: video.snippet.channelId,
-        channelTitle: video.snippet.channelTitle
+        channelTitle: video.snippet.channelTitle,
+        duration,
+        videoType
       };
     } catch (error) {
       console.error(`Error fetching YouTube video details for ${videoId}:`, error);
@@ -237,15 +248,23 @@ export class YouTubeService {
         return [];
       }
 
-      const detailedVideos = videosResponse.items.map((video: any) => ({
-        id: video.id,
-        title: video.snippet.title,
-        description: video.snippet.description,
-        thumbnailUrl: video.snippet.thumbnails.high?.url || video.snippet.thumbnails.default?.url,
-        publishedAt: new Date(video.snippet.publishedAt),
-        channelId: video.snippet.channelId,
-        channelTitle: video.snippet.channelTitle
-      }));
+      const detailedVideos = videosResponse.items.map((video: any) => {
+        // Parse duration and determine video type
+        const duration = this.parseDuration(video.contentDetails.duration);
+        const videoType = this.determineVideoType(duration, video);
+        
+        return {
+          id: video.id,
+          title: video.snippet.title,
+          description: video.snippet.description,
+          thumbnailUrl: video.snippet.thumbnails.high?.url || video.snippet.thumbnails.default?.url,
+          publishedAt: new Date(video.snippet.publishedAt),
+          channelId: video.snippet.channelId,
+          channelTitle: video.snippet.channelTitle,
+          duration,
+          videoType
+        };
+      });
 
       console.log(`✅ Successfully prepared ${detailedVideos.length} new videos for import`);
       return detailedVideos;
@@ -253,6 +272,55 @@ export class YouTubeService {
       console.error(`❌ Error fetching YouTube videos for channel ${channelId}:`, error);
       throw error;
     }
+  }
+
+  /**
+   * Parse ISO 8601 duration (PT4M13S) to seconds
+   */
+  private parseDuration(isoDuration: string): number {
+    if (!isoDuration) return 0;
+    
+    const regex = /PT(?:(\d+)H)?(?:(\d+)M)?(?:(\d+)S)?/;
+    const matches = isoDuration.match(regex);
+    
+    if (!matches) return 0;
+    
+    const hours = parseInt(matches[1] || '0', 10);
+    const minutes = parseInt(matches[2] || '0', 10);
+    const seconds = parseInt(matches[3] || '0', 10);
+    
+    return (hours * 3600) + (minutes * 60) + seconds;
+  }
+
+  /**
+   * Determine if video is a Short based on duration and other factors
+   */
+  private determineVideoType(duration: number, video: any): 'video' | 'short' {
+    // YouTube Shorts are typically:
+    // 1. 60 seconds or less in duration
+    // 2. Vertical format (9:16 aspect ratio)
+    // 3. Often have #Shorts in title or description
+    
+    const title = video.snippet.title?.toLowerCase() || '';
+    const description = video.snippet.description?.toLowerCase() || '';
+    
+    // Check for explicit Short indicators
+    const hasShortIndicator = title.includes('#shorts') || 
+                             title.includes('#short') ||
+                             description.includes('#shorts') ||
+                             description.includes('#short');
+    
+    // Duration-based detection (primary factor)
+    const isShortDuration = duration > 0 && duration <= 60;
+    
+    // If duration is <= 60 seconds OR has explicit Short indicators, classify as Short
+    if (isShortDuration || hasShortIndicator) {
+      console.log(`🎬 Detected SHORT: ${video.snippet.title} (${duration}s, hasIndicator: ${hasShortIndicator})`);
+      return 'short';
+    }
+    
+    console.log(`🎥 Detected VIDEO: ${video.snippet.title} (${duration}s)`);
+    return 'video';
   }
 
   async searchVideos(query: string, maxResults = 10): Promise<YouTubeVideo[]> {
@@ -278,15 +346,23 @@ export class YouTubeService {
         return [];
       }
 
-      return videosResponse.items.map((video: any) => ({
-        id: video.id,
-        title: video.snippet.title,
-        description: video.snippet.description,
-        thumbnailUrl: video.snippet.thumbnails.high.url,
-        publishedAt: new Date(video.snippet.publishedAt),
-        channelId: video.snippet.channelId,
-        channelTitle: video.snippet.channelTitle
-      }));
+      return videosResponse.items.map((video: any) => {
+        // Parse duration and determine video type
+        const duration = this.parseDuration(video.contentDetails.duration);
+        const videoType = this.determineVideoType(duration, video);
+        
+        return {
+          id: video.id,
+          title: video.snippet.title,
+          description: video.snippet.description,
+          thumbnailUrl: video.snippet.thumbnails.high.url,
+          publishedAt: new Date(video.snippet.publishedAt),
+          channelId: video.snippet.channelId,
+          channelTitle: video.snippet.channelTitle,
+          duration,
+          videoType
+        };
+      });
     } catch (error) {
       console.error(`Error searching YouTube videos for "${query}":`, error);
       throw error;

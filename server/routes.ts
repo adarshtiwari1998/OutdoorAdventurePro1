@@ -1276,7 +1276,9 @@ app.get(`${apiPrefix}/admin/youtube/videos`, async (req, res) => {
         description: description || videoDetails.description,
         thumbnail: videoDetails.thumbnailUrl,
         publishedAt: videoDetails.publishedAt,
-        channelId: videoDetails.channelId
+        channelId: videoDetails.channelId,
+        videoType: videoDetails.videoType,
+        duration: videoDetails.duration
       });
 
       res.status(201).json(newVideo);
@@ -1365,7 +1367,9 @@ app.get(`${apiPrefix}/admin/youtube/videos`, async (req, res) => {
             channelId: channel.id,
             categoryId: categoryId ? parseInt(categoryId) : null,
             transcript: transcript,
-            importStatus: importStatus
+            importStatus: importStatus,
+            videoType: video.videoType,
+            duration: video.duration
           });
 
           // Add to existing set to prevent duplicates within this import session

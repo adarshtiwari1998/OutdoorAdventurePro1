@@ -294,17 +294,19 @@ export const storage = {
     }
   },
 
-  async createYoutubeVideo(videoData: {
+  async createYoutubeVideo(video: {
     videoId: string;
     title: string;
-    description: string;
-    thumbnail: string;
+    description?: string;
+    thumbnail?: string;
     publishedAt: Date | string;
-    channelId: number;
+    channelId?: string | number;
     categoryId?: number | null;
     transcript?: string;
     importStatus?: string;
-  }): Promise<any> {
+    videoType?: string;
+    duration?: number;
+  }) {
     try {
       // Check for existing blog posts with similar titles
       const existingBlogPosts = await db.query.blogPosts.findMany({
@@ -319,7 +321,7 @@ export const storage = {
 
       // Simple title matching - check if video title contains blog post title or vice versa
       for (const blogPost of existingBlogPosts) {
-        const videoTitle = videoData.title.toLowerCase().trim();
+        const videoTitle = video.title.toLowerCase().trim();
         const blogTitle = blogPost.title.toLowerCase().trim();
 
         if (videoTitle.includes(blogTitle) || blogTitle.includes(videoTitle) || 
@@ -330,21 +332,35 @@ export const storage = {
         }
       }
 
-      const [video] = await db.insert(schema.youtubeVideos).values({
-        videoId: videoData.videoId,
-        title: videoData.title,
-        description: videoData.description,
-        thumbnail: videoData.thumbnail,
-        publishedAt: new Date(videoData.publishedAt),
-        channelId: videoData.channelId,
-        categoryId: videoData.categoryId,
-        transcript: videoData.transcript || null,
-        importStatus: videoData.importStatus || 'imported',
+    const insertData: any = {
+      videoId: video.videoId,
+      title: video.title,
+      description: video.description || '',
+      thumbnail: video.thumbnail || '',
+      publishedAt: video.publishedAt,
+      transcript: video.transcript || '',
+      importStatus: video.importStatus || 'pending',
+      videoType: video.videoType || 'video',
+      duration: video.duration || null
+    };
+
+      const [newVideo] = await db.insert(schema.youtubeVideos).values({
+        videoId: video.videoId,
+        title: video.title,
+        description: video.description,
+        thumbnail: video.thumbnail,
+        publishedAt: new Date(video.publishedAt),
+        channelId: video.channelId,
+        categoryId: video.categoryId,
+        transcript: video.transcript || null,
+        importStatus: video.importStatus || 'imported',
         createdAt: new Date(),
-        updatedAt: new Date()
+        updatedAt: new Date(),
+        videoType: video.videoType,
+        duration: video.duration
       }).returning();
 
-      return video;
+      return newVideo;
     } catch (error) {
       console.error('Error creating YouTube video:', error);
       throw error;

@@ -122,6 +122,8 @@ export const youtubeVideos = pgTable("youtube_videos", {
   hasBlogPostMatch: boolean("has_blog_post_match").default(false).notNull(),
   matchingBlogPostTitle: text("matching_blog_post_title"),
   errorMessage: text("error_message"),
+  videoType: text("video_type").default("video").notNull(), // 'video' or 'short'
+  duration: integer("duration"), // Duration in seconds
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
 });

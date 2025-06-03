@@ -71,6 +71,8 @@ type YoutubeVideo = {
   hasBlogPostMatch: boolean;
   matchingBlogPostTitle?: string;
   errorMessage?: string;
+  videoType?: "video" | "short";
+  duration?: number;
 };
 
 const YoutubeImport = () => {
@@ -87,6 +89,7 @@ const YoutubeImport = () => {
   const [filterCategory, setFilterCategory] = useState<string>("all");
   const [filterChannel, setFilterChannel] = useState<string>("all");
   const [filterStatus, setFilterStatus] = useState<string>("all");
+  const [filterVideoType, setFilterVideoType] = useState<string>("all");
   const [importProgress, setImportProgress] = useState({
     isImporting: false,
     currentStep: '',
@@ -137,7 +140,9 @@ const YoutubeImport = () => {
 
     const statusMatch = filterStatus === "all" || video.importStatus === filterStatus;
 
-    return categoryMatch && channelMatch && statusMatch;
+    const typeMatch = filterVideoType === "all" || video.videoType === filterVideoType;
+
+    return categoryMatch && channelMatch && statusMatch && typeMatch;
   }) || [];
 
   // Forms
@@ -779,7 +784,7 @@ const YoutubeImport = () => {
             <CardContent>
               {/* Filter Controls */}
               <div className="mb-4 p-4 bg-gray-50 dark:bg-gray-900/20 rounded-lg">
-                <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
                   <div>
                     <label className="text-sm font-medium mb-1 block">Filter by Category</label>
                     <Select value={filterCategory} onValueChange={setFilterCategory}>
@@ -830,6 +835,20 @@ const YoutubeImport = () => {
                     </Select>
                   </div>
 
+                  <div>
+                    <label className="text-sm font-medium mb-1 block">Filter by Type</label>
+                    <Select value={filterVideoType} onValueChange={setFilterVideoType}>
+                      <SelectTrigger>
+                        <SelectValue placeholder="All types" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="all">All Types</SelectItem>
+                        <SelectItem value="video">Videos</SelectItem>
+                        <SelectItem value="short">Shorts</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+
                   <div className="flex items-end">
                     <Button 
                       variant="outline" 
@@ -837,6 +856,7 @@ const YoutubeImport = () => {
                         setFilterCategory("all");
                         setFilterChannel("all");
                         setFilterStatus("all");
+                        setFilterVideoType("all");
                       }}
                       size="sm"
                       className="w-full"
@@ -851,6 +871,7 @@ const YoutubeImport = () => {
                   {filterCategory !== "all" && ` • Category: ${filterCategory === "no-category" ? "No Category" : blogCategories?.find(c => c.id === filterCategory)?.name}`}
                   {filterChannel !== "all" && ` • Channel: ${channels?.find(c => c.id.toString() === filterChannel)?.name}`}
                   {filterStatus !== "all" && ` • Status: ${filterStatus}`}
+                  {filterVideoType !== "all" && ` • Type: ${filterVideoType === "video" ? "Videos" : "Shorts"}`}
                 </div>
               </div>
 
@@ -953,6 +974,8 @@ const YoutubeImport = () => {
                       <TableHead>Title</TableHead>
                       <TableHead>Channel ID</TableHead>
                       <TableHead>Category</TableHead>
+                      <TableHead>Type</TableHead>
+                      <TableHead>Duration</TableHead>
                       <TableHead>Published</TableHead>
                       <TableHead>Status</TableHead>
                       <TableHead>Blog Post Match</TableHead>
@@ -964,7 +987,7 @@ const YoutubeImport = () => {
                       renderVideoSkeleton()
                     ) : filteredVideos?.length === 0 ? (
                       <TableRow>
-                        <TableCell colSpan={9} className="text-center py-8">
+                        <TableCell colSpan={11} className="text-center py-8">
                           {videos?.length === 0 
                             ? "No videos found for this channel. Import videos or add them manually."
                             : "No videos match the current filters. Try adjusting your filter criteria."
@@ -1047,6 +1070,16 @@ const YoutubeImport = () => {
                                 </Select>
                               </div>
                             )}
+                          </TableCell>
+                          <TableCell>
+                            <Badge variant={video.videoType === 'short' ? 'secondary' : 'default'}>
+                              {video.videoType === 'short' ? '🩳 Short' : '🎬 Video'}
+                            </Badge>
+                          </TableCell>
+                          <TableCell>
+                            <span className="text-sm font-mono">
+                              {video.duration ? `${Math.floor(video.duration / 60)}:${(video.duration % 60).toString().padStart(2, '0')}` : 'N/A'}
+                            </span>
                           </TableCell>
                           <TableCell>
                             {format(new Date(video.publishedAt), 'MMM d, yyyy')}
@@ -1234,7 +1267,7 @@ const YoutubeImport = () => {
                         {/* Expandable row content */}
                         {expandedRows.has(video.id) && (
                           <TableRow>
-                            <TableCell colSpan={9} className="bg-gray-50 dark:bg-gray-900/50">
+                            <TableCell colSpan={11} className="bg-gray-50 dark:bg-gray-900/50">
                               <div className="py-4 space-y-4">
                                 <div>
                                   <h4 className="font-semibold text-sm mb-2">Video Description:</h4>
@@ -1252,10 +1285,22 @@ const YoutubeImport = () => {
                                   </div>
                                 )}
 
-                                <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
+                                <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4 text-sm">
                                   <div>
                                     <span className="font-semibold">Video ID:</span>
                                     <div className="text-muted-foreground font-mono">{video.videoId}</div>
+                                  </div>
+                                  <div>
+                                    <span className="font-semibold">Type:</span>
+                                    <div className="text-muted-foreground capitalize">
+                                      {video.videoType === 'short' ? '🩳 Short' : '🎬 Video'}
+                                    </div>
+                                  </div>
+                                  <div>
+                                    <span className="font-semibold">Duration:</span>
+                                    <div className="text-muted-foreground font-mono">
+                                      {video.duration ? `${Math.floor(video.duration / 60)}:${(video.duration % 60).toString().padStart(2, '0')}` : 'N/A'}
+                                    </div>
                                   </div>
                                   <div>
                                     <span className="font-semibold">Published:</span>
