@@ -666,7 +666,7 @@ const YoutubeImport = () => {
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <div className="admin-table-container">
+              <div className="admin-table-container channels-table">
                 <Table>
                   <TableHeader>
                     <TableRow>
@@ -934,7 +934,8 @@ const YoutubeImport = () => {
                       onClick={() => {
                         const videosWithoutCategory = filteredVideos?.filter(v => !v.category).map(v => v.id) || [];
                         if (videosWithoutCategory.length > 0 && bulkCategoryId) {
-                          bulkUpdateCategoryMutation.mutate({
+                          bulkUpdateCategoryMutation.```python
+mutate({
                             videoIds: videosWithoutCategory,
                             categoryId: bulkCategoryId
                           });
@@ -959,7 +960,7 @@ const YoutubeImport = () => {
                   </div>
                 </div>
               )}
-              <div className="admin-table-container">
+              <div className="admin-table-container videos-table">
                 <Table>
                   <TableHeader>
                     <TableRow>
