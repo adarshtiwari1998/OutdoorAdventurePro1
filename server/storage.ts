@@ -214,7 +214,7 @@ export const storage = {
     await db.update(schema.youtubeChannels)
       .set({ lastImport: new Date() })
       .where(eq(schema.youtubeChannels.id, channelId));
-  }
+  },
 
   async updateYoutubeChannelImportedCount(channelId: number, newlyImportedCount: number): Promise<void> {
     // Get current imported count
