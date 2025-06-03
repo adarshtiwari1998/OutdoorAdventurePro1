@@ -81,7 +81,7 @@ const YoutubeImport = () => {
   const [showImportDialog, setShowImportDialog] = useState(false);
   const [importChannelId, setImportChannelId] = useState<string | null>(null);
   const [importLimit, setImportLimit] = useState(10);
-  const [selectedCategoryForImport, setSelectedCategoryForImport] = useState<string>("");
+  const [selectedCategoryForImport, setSelectedCategoryForImport] = useState<string | undefined>(undefined);
   const [selectedVideos, setSelectedVideos] = useState<string[]>([]);
   const [bulkCategoryId, setBulkCategoryId] = useState<string>("");
   const [importProgress, setImportProgress] = useState({
@@ -453,7 +453,7 @@ const YoutubeImport = () => {
       importChannelVideosMutation.mutate({ 
         channelId: importChannelId, 
         limit: importLimit,
-        categoryId: selectedCategoryForImport || null
+        categoryId: selectedCategoryForImport && selectedCategoryForImport !== "no-category" ? selectedCategoryForImport : null
       });
     }
   };
@@ -1113,12 +1113,12 @@ const YoutubeImport = () => {
                 <label htmlFor="import-category" className="text-sm font-medium mb-2 block">
                   Assign Category (Optional):
                 </label>
-                <Select value={selectedCategoryForImport || ""} onValueChange={setSelectedCategoryForImport}>
+                <Select value={selectedCategoryForImport} onValueChange={setSelectedCategoryForImport}>
                   <SelectTrigger>
                     <SelectValue placeholder="Select a category (optional)" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="">No Category</SelectItem>
+                    <SelectItem value="no-category">No Category</SelectItem>
                     {blogCategories?.map(category => (
                       <SelectItem key={category.id} value={category.id}>
                         {category.name}
