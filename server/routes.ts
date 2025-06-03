@@ -1311,40 +1311,41 @@ app.get(`${apiPrefix}/admin/youtube/videos`, async (req, res) => {
         });
       }
 
-      // Validate limit
+      // Validate limit - ensure exact count
       const desiredNewVideos = Math.min(Math.max(1, parseInt(limit) || 10), 50);
-      console.log(`📊 Target: ${desiredNewVideos} NEW videos to import`);
+      console.log(`📊 Target: EXACTLY ${desiredNewVideos} NEW videos to import`);
 
       // Get ALL existing video IDs for this channel from database
       const existingVideos = await storage.getYoutubeVideosByChannel(channel.id.toString());
       const existingVideoIds = new Set(existingVideos.map((v: any) => v.videoId));
       console.log(`📊 Found ${existingVideoIds.size} existing videos in database for this channel`);
 
-      // Fetch new videos from YouTube (the service will handle filtering)
-      console.log(`🔍 Fetching ${desiredNewVideos} NEW videos from YouTube API...`);
+      // Fetch new videos from YouTube with higher buffer to ensure we get enough
+      console.log(`🔍 Fetching NEW videos from YouTube API (buffer: ${desiredNewVideos * 2})...`);
       const videos = await youtubeService.getChannelVideos(
         channel.channelId, 
-        desiredNewVideos,
-        existingVideoIds // Pass existing IDs so the service can filter them out
+        desiredNewVideos * 2, // Fetch more to account for filtering
+        existingVideoIds
       );
 
-      console.log(`📋 YouTube service returned ${videos.length} NEW videos to import`);
+      // Take exactly the requested number of videos
+      const videosToImport = videos.slice(0, desiredNewVideos);
+      console.log(`📋 Selected EXACTLY ${videosToImport.length} videos to import from ${videos.length} available`);
 
       let importedCount = 0;
-      let skippedCount = 0;
+      let transcriptSuccessCount = 0;
+      let transcriptErrorCount = 0;
+      const transcriptErrors: string[] = [];
 
-      // Import each new video
-      for (const video of videos) {
+      // Process videos one by one with transcript
+      for (let i = 0; i < videosToImport.length; i++) {
+        const video = videosToImport[i];
+        
         try {
-          // Double-check that video doesn't exist (safety check)
-          if (existingVideoIds.has(video.id)) {
-            console.log(`⏭️ Video already exists (safety check): ${video.title} (${video.id})`);
-            skippedCount++;
-            continue;
-          }
-
-          // Import the new video without transcript initially
-          await storage.createYoutubeVideo({
+          console.log(`\n🔄 Processing video ${i + 1}/${videosToImport.length}: ${video.title}`);
+          
+          // Step 1: Import video metadata first
+          const savedVideo = await storage.createYoutubeVideo({
             videoId: video.id,
             title: video.title,
             description: video.description,
@@ -1353,112 +1354,95 @@ app.get(`${apiPrefix}/admin/youtube/videos`, async (req, res) => {
             channelId: channel.id,
             categoryId: categoryId ? parseInt(categoryId) : null,
             transcript: null,
-            importStatus: 'pending_transcript',
+            importStatus: 'processing',
             videoType: video.videoType,
             duration: video.duration
           });
 
-          // Add to existing set to prevent duplicates within this import session
-          existingVideoIds.add(video.id);
-
           importedCount++;
-          console.log(`✅ Imported video ${importedCount}/${videos.length}: ${video.title}`);
+          console.log(`✅ Step 1/2: Video metadata imported (${i + 1}/${videosToImport.length})`);
 
-        } catch (error) {
-          console.error(`❌ Error saving video ${video.id}:`, error);
-          skippedCount++;
+          // Step 2: Fetch transcript immediately
+          try {
+            console.log(`📄 Step 2/2: Fetching transcript for: ${video.title}`);
+            
+            const transcript = await youtubeService.getVideoTranscript(video.id);
+            
+            // Update video with transcript
+            await storage.updateYoutubeVideoTranscript(savedVideo.id, transcript);
+            await db.update(schema.youtubeVideos)
+              .set({ importStatus: 'completed' })
+              .where(eq(schema.youtubeVideos.id, savedVideo.id));
+
+            transcriptSuccessCount++;
+            console.log(`✅ Step 2/2: Transcript fetched successfully for: ${video.title}`);
+
+          } catch (transcriptError) {
+            console.error(`❌ Step 2/2: Error fetching transcript for ${video.title}:`, transcriptError);
+            
+            // Set fallback transcript but still mark as completed
+            const fallbackTranscript = `[TRANSCRIPT UNAVAILABLE]
+
+Video: ${video.title}
+Channel: ${channel.name}
+Duration: ${Math.floor(video.duration / 60)} minutes
+Published: ${new Date(video.publishedAt).toLocaleDateString()}
+
+Description:
+${video.description.substring(0, 500)}...
+
+[Transcript could not be fetched: ${transcriptError.message}]`;
+            
+            await storage.updateYoutubeVideoTranscript(savedVideo.id, fallbackTranscript);
+            await db.update(schema.youtubeVideos)
+              .set({ importStatus: 'completed_no_transcript' })
+              .where(eq(schema.youtubeVideos.id, savedVideo.id));
+
+            transcriptErrorCount++;
+            transcriptErrors.push(`${video.title}: ${transcriptError.message}`);
+          }
+
+          // Add delay between videos to avoid rate limiting
+          if (i < videosToImport.length - 1) {
+            console.log(`⏳ Waiting 3 seconds before processing next video...`);
+            await new Promise(resolve => setTimeout(resolve, 3000));
+          }
+
+        } catch (videoError) {
+          console.error(`❌ Error processing video ${video.id}:`, videoError);
+          transcriptErrors.push(`${video.title}: Failed to import - ${videoError.message}`);
         }
       }
 
-      // Update channel's lastImport date and recalculate actual imported video count
+      // Update channel statistics
       await storage.updateYoutubeChannelLastImport(parseInt(id));
-      
-      // Get the actual count of videos in database for this channel
       const actualVideoCount = await storage.getYoutubeVideosByChannel(channel.id.toString());
       await storage.setYoutubeChannelImportedCount(parseInt(id), actualVideoCount.length);
 
-      console.log(`📊 Video import complete: ${importedCount} imported, ${skippedCount} skipped`);
-      console.log(`📊 Total videos in database for this channel: ${actualVideoCount.length}`);
-
-      // Now fetch transcripts for the newly imported videos
-      console.log(`🎯 Starting transcript fetch for ${importedCount} newly imported videos...`);
-      
-      let transcriptSuccessCount = 0;
-      let transcriptErrorCount = 0;
-      const transcriptErrors: string[] = [];
-
-      // Get the newly imported videos that need transcripts
-      const videosNeedingTranscripts = await db.query.youtubeVideos.findMany({
-        where: and(
-          eq(schema.youtubeVideos.channelId, channel.id),
-          eq(schema.youtubeVideos.importStatus, 'pending_transcript')
-        ),
-        orderBy: desc(schema.youtubeVideos.createdAt),
-        limit: importedCount
-      });
-
-      for (let i = 0; i < videosNeedingTranscripts.length; i++) {
-        const video = videosNeedingTranscripts[i];
-        
-        try {
-          console.log(`📄 Fetching transcript ${i + 1}/${videosNeedingTranscripts.length} for: ${video.title}`);
-          
-          const transcript = await youtubeService.getVideoTranscript(video.videoId);
-          
-          // Update video with transcript
-          await storage.updateYoutubeVideoTranscript(video.id, transcript);
-          await db.update(schema.youtubeVideos)
-            .set({ importStatus: 'imported' })
-            .where(eq(schema.youtubeVideos.id, video.id));
-
-          transcriptSuccessCount++;
-          console.log(`✅ Transcript ${i + 1}/${videosNeedingTranscripts.length} fetched successfully for: ${video.title}`);
-
-          // Add delay to avoid rate limiting
-          if (i < videosNeedingTranscripts.length - 1) {
-            console.log(`⏳ Waiting 2 seconds before next transcript fetch...`);
-            await new Promise(resolve => setTimeout(resolve, 2000));
-          }
-        } catch (transcriptError) {
-          console.error(`❌ Error fetching transcript ${i + 1}/${videosNeedingTranscripts.length} for ${video.title}:`, transcriptError);
-          
-          // Set fallback transcript and mark as imported
-          const fallbackTranscript = `[TRANSCRIPT UNAVAILABLE]\n\nVideo: ${video.title}\nDescription: ${video.description}\n\n[No transcript could be fetched for this video due to: ${transcriptError.message}]`;
-          
-          await storage.updateYoutubeVideoTranscript(video.id, fallbackTranscript);
-          await db.update(schema.youtubeVideos)
-            .set({ importStatus: 'imported' })
-            .where(eq(schema.youtubeVideos.id, video.id));
-
-          transcriptErrorCount++;
-          transcriptErrors.push(`${video.title}: ${transcriptError.message}`);
-        }
-      }
-
-      console.log(`📊 Transcript fetch complete: ${transcriptSuccessCount} successful, ${transcriptErrorCount} failed`);
-      console.log(`📊 Final summary: ${importedCount} videos imported, ${transcriptSuccessCount} transcripts fetched successfully`);
+      console.log(`\n📊 IMPORT COMPLETE:`);
+      console.log(`   - Videos imported: ${importedCount}/${desiredNewVideos}`);
+      console.log(`   - Transcripts successful: ${transcriptSuccessCount}`);
+      console.log(`   - Transcript failures: ${transcriptErrorCount}`);
+      console.log(`   - Total videos in channel: ${actualVideoCount.length}`);
 
       const message = importedCount === desiredNewVideos 
-        ? `Successfully imported ${importedCount} new videos with ${transcriptSuccessCount} transcripts fetched.`
-        : importedCount > 0 
-          ? `Successfully imported ${importedCount} new videos with ${transcriptSuccessCount} transcripts fetched. Only ${importedCount} new videos were available.`
-          : `No new videos found. All recent videos already exist in your database.`;
+        ? `✅ Successfully imported exactly ${importedCount} videos with ${transcriptSuccessCount} transcripts.`
+        : `⚠️ Imported ${importedCount} of ${desiredNewVideos} requested videos with ${transcriptSuccessCount} transcripts.`;
 
       res.json({ 
         success: true, 
         count: importedCount,
-        skipped: skippedCount,
-        total: videos.length,
-        actualCount: actualVideoCount.length,
+        requested: desiredNewVideos,
         transcriptSuccessCount,
         transcriptErrorCount,
         transcriptErrors,
+        actualCount: actualVideoCount.length,
         message
       });
+
     } catch (error) {
       console.error(`❌ Error importing videos for channel ${req.params.id}:`, error);
 
-      // Provide more specific error messages
       let errorMessage = "Failed to import videos from channel";
       if (error.message.includes("YouTube API error")) {
         errorMessage = "YouTube API error: " + error.message;
