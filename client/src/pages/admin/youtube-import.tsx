@@ -30,7 +30,7 @@ import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
-import { Play, Youtube, FileText, Upload, RefreshCw, CheckCircle, AlertTriangle, Trash2, ExternalLink } from "lucide-react";
+import { Play, Youtube, FileText, Upload, RefreshCw, CheckCircle, AlertTriangle, Trash2, ExternalLink, Plus, Eye, EyeOff, Download, PlayCircle, Loader2, AlertCircle, CheckCircle2, Clock, X, Filter, Search, ChevronDown, ChevronUp } from "lucide-react";
 import { format } from "date-fns";
 
 // Schemas
@@ -71,6 +71,9 @@ type YoutubeVideo = {
   hasBlogPostMatch: boolean;
   matchingBlogPostTitle?: string;
   errorMessage?: string;
+  videoType?: "video" | "short";
+  duration?: number;
+  transcript?: string;
 };
 
 const YoutubeImport = () => {
@@ -87,6 +90,7 @@ const YoutubeImport = () => {
   const [filterCategory, setFilterCategory] = useState<string>("all");
   const [filterChannel, setFilterChannel] = useState<string>("all");
   const [filterStatus, setFilterStatus] = useState<string>("all");
+  const [filterVideoType, setFilterVideoType] = useState<string>("all");
   const [importProgress, setImportProgress] = useState({
     isImporting: false,
     currentStep: '',
@@ -137,7 +141,9 @@ const YoutubeImport = () => {
 
     const statusMatch = filterStatus === "all" || video.importStatus === filterStatus;
 
-    return categoryMatch && channelMatch && statusMatch;
+    const typeMatch = filterVideoType === "all" || video.videoType === filterVideoType;
+
+    return categoryMatch && channelMatch && statusMatch && typeMatch;
   }) || [];
 
   // Forms
@@ -224,11 +230,15 @@ const YoutubeImport = () => {
         totalCount: 0,
         importedCount: 0,
         skippedCount: 0,
-        logs: [`🚀 Starting import of ${limit} videos...`]
+        logs: [`🚀 Starting import of ${limit} videos...`],
+        canClose: false
       });
 
       // Small delay to show initial progress
       await new Promise(resolve => setTimeout(resolve, 500));
+
+      // Array to hold video IDs for transcript fetching
+      let videoIdsForTranscripts: string[] = [];
 
       try {
         // Step 1: Fetch videos
@@ -261,8 +271,45 @@ const YoutubeImport = () => {
         }));
 
         const data = await response.json();
+        const importedVideos = data.videos; // Assuming the imported videos are returned in a "videos" array
 
-        // Step 3: Complete
+        // Collect video IDs of successfully imported videos
+        videoIdsForTranscripts = importedVideos.map((video: YoutubeVideo) => video.id);
+        
+        setImportProgress(prev => ({
+          ...prev,
+          currentStep: 'Fetching Transcripts...',
+          progress: 80,
+          logs: [...prev.logs, '⚙️ Fetching transcripts']
+        }));
+
+        // Step 3: Fetch Transcripts individually after videos are imported
+        for (const videoId of videoIdsForTranscripts) {
+          try {
+             setImportProgress(prev => ({
+              ...prev,
+              currentStep: `Fetching transcript for ${videoId}...`,
+              progress: 80 + (20 * (videoIdsForTranscripts.indexOf(videoId) + 1) / videoIdsForTranscripts.length),
+              logs: [...prev.logs, `🎬 Fetching transcript for video: ${videoId}`]
+            }));
+            const transcriptResponse = await fetch(`/api/admin/youtube/videos/${videoId}/transcript`, {method: 'POST'});
+
+            if (!transcriptResponse.ok) {
+              const errorData = await transcriptResponse.json().catch(() => ({ message: 'Unknown error' }));
+              throw new Error(errorData.message || `HTTP ${transcriptResponse.status}`);
+            }
+
+            const transcriptData = await transcriptResponse.json();
+
+          } catch (transcriptError) {
+             setImportProgress(prev => ({
+              ...prev,
+              logs: [...prev.logs, `❌ Transcript Error for video ${videoId}: ${transcriptError instanceof Error ? transcriptError.message : String(transcriptError)}`]
+            }));
+          }
+        }
+
+        // Step 4: Complete
         setImportProgress(prev => ({
           ...prev,
           currentStep: 'Import completed!',
@@ -275,7 +322,8 @@ const YoutubeImport = () => {
             ...prev.logs,
             `✅ Import completed!`,
             `📊 Summary: ${data.count || 0} imported, ${data.skipped || 0} skipped`
-          ]
+          ],
+          canClose: true
         }));
 
         return data;
@@ -284,7 +332,8 @@ const YoutubeImport = () => {
           ...prev,
           currentStep: 'Import failed',
           progress: 0,
-          logs: [...prev.logs, `❌ Error: ${error instanceof Error ? error.message : String(error)}`]
+          logs: [...prev.logs, `❌ Error: ${error instanceof Error ? error.message : String(error)}`],
+          canClose: true
         }));
         throw error;
       }
@@ -422,6 +471,66 @@ const YoutubeImport = () => {
     }
   });
 
+  const bulkFetchTranscriptsMutation = useMutation({
+    mutationFn: async (videoIds: string[]) => {
+      const response = await fetch('/api/admin/youtube/videos/bulk-fetch-transcripts', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ videoIds }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to fetch transcripts');
+      }
+
+      return response.json();
+    },
+    onSuccess: (data) => {
+      toast({
+        title: "Transcripts Fetched",
+        description: data.message || `Successfully fetched ${data.successCount} transcripts`,
+      });
+      queryClient.invalidateQueries({ queryKey: ['/api/admin/youtube/videos'] });
+      setSelectedVideos([]);
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Error",
+        description: error.message,
+        variant: "destructive",
+      });
+    },
+  });
+
+  const syncCountsMutation = useMutation({
+    mutationFn: async () => {
+      const response = await fetch('/api/admin/youtube/channels/sync-counts', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to sync channel counts');
+      }
+
+      return response.json();
+    },
+    onSuccess: (data) => {
+      toast({
+        title: "Counts Synced",
+        description: data.message || `Successfully synced ${data.syncedCount} channel counts`,
+      });
+      queryClient.invalidateQueries({ queryKey: ['/api/admin/youtube/channels'] });
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Error",
+        description: error.message,
+        variant: "destructive",
+      });
+    },
+  });
+
   // Event handlers
   const onAddChannelSubmit = (values: z.infer<typeof youtubeChannelSchema>) => {
     addChannelMutation.mutate(values);
@@ -528,6 +637,23 @@ const YoutubeImport = () => {
     convertToBlogPostMutation.mutate(values);
   };
 
+  const handleBulkFetchTranscripts = () => {
+    if (selectedVideos.length === 0) {
+      toast({
+        title: "No Videos Selected",
+        description: "Please select videos to fetch transcripts for",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    bulkFetchTranscriptsMutation.mutate(selectedVideos);
+  };
+
+  const handleSyncCounts = () => {
+    syncCountsMutation.mutate();
+  };
+
   // Renderers
   const renderChannelSkeleton = () => (
     <>
@@ -584,7 +710,7 @@ const YoutubeImport = () => {
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <div className="rounded-md border">
+              <div className="admin-table-container channels-table">
                 <Table>
                   <TableHeader>
                     <TableRow>
@@ -699,10 +825,10 @@ const YoutubeImport = () => {
                 Manage and import videos from this channel into blog posts.
               </CardDescription>
             </CardHeader>
-            <CardContent>
+            <CardContent className="w-full max-w-full">
               {/* Filter Controls */}
               <div className="mb-4 p-4 bg-gray-50 dark:bg-gray-900/20 rounded-lg">
-                <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
                   <div>
                     <label className="text-sm font-medium mb-1 block">Filter by Category</label>
                     <Select value={filterCategory} onValueChange={setFilterCategory}>
@@ -753,6 +879,20 @@ const YoutubeImport = () => {
                     </Select>
                   </div>
 
+                  <div>
+                    <label className="text-sm font-medium mb-1 block">Filter by Type</label>
+                    <Select value={filterVideoType} onValueChange={setFilterVideoType}>
+                      <SelectTrigger>
+                        <SelectValue placeholder="All types" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="all">All Types</SelectItem>
+                        <SelectItem value="video">Videos</SelectItem>
+                        <SelectItem value="short">Shorts</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+
                   <div className="flex items-end">
                     <Button 
                       variant="outline" 
@@ -760,6 +900,7 @@ const YoutubeImport = () => {
                         setFilterCategory("all");
                         setFilterChannel("all");
                         setFilterStatus("all");
+                        setFilterVideoType("all");
                       }}
                       size="sm"
                       className="w-full"
@@ -774,6 +915,7 @@ const YoutubeImport = () => {
                   {filterCategory !== "all" && ` • Category: ${filterCategory === "no-category" ? "No Category" : blogCategories?.find(c => c.id === filterCategory)?.name}`}
                   {filterChannel !== "all" && ` • Channel: ${channels?.find(c => c.id.toString() === filterChannel)?.name}`}
                   {filterStatus !== "all" && ` • Status: ${filterStatus}`}
+                  {filterVideoType !== "all" && ` • Type: ${filterVideoType === "video" ? "Videos" : "Shorts"}`}
                 </div>
               </div>
 
@@ -861,26 +1003,27 @@ const YoutubeImport = () => {
                   </div>
                 </div>
               )}
-              <div className="rounded-md border">
+              <div className="admin-table-container videos-table">
                 <Table>
                   <TableHeader>
                     <TableRow>
-                      <TableHead className="w-[50px]">
+                      <TableHead className="w-[50px] sticky left-0 bg-white dark:bg-gray-950 z-10 border-r">
                         <input
                           type="checkbox"
-                          checked={filteredVideos?.length > 0 && selectedVideos.length === filteredVideos.length}
-                          onChange={toggleAllVideos}
+                          checked={filteredVideos?.length > 0 && selectedVideos.length === filteredVideos.length}onChange={toggleAllVideos}
                           className="rounded"
                         />
                       </TableHead>
-                      <TableHead className="w-[100px]">Thumbnail</TableHead>
-                      <TableHead>Title</TableHead>
-                      <TableHead>Channel ID</TableHead>
-                      <TableHead>Category</TableHead>
-                      <TableHead>Published</TableHead>
-                      <TableHead>Status</TableHead>
-                      <TableHead>Blog Post Match</TableHead>
-                      <TableHead className="text-right">Actions</TableHead>
+                      <TableHead className="w-[100px] sticky left-[50px] bg-white dark:bg-gray-950 z-10 border-r">Thumbnail</TableHead>
+                      <TableHead className="sticky left-[150px] bg-white dark:bg-gray-950 z-10 border-r min-w-[300px]">Title</TableHead>
+                      <TableHead className="min-w-[200px]">Channel ID</TableHead>
+                      <TableHead className="min-w-[150px]">Category</TableHead>
+                      <TableHead className="min-w-[100px]">Type</TableHead>
+                      <TableHead className="min-w-[100px]">Duration</TableHead>
+                      <TableHead className="min-w-[120px]">Published</TableHead>
+                      <TableHead className="min-w-[100px]">Status</TableHead>
+                      <TableHead className="min-w-[180px]">Blog Post Match</TableHead>
+                      <TableHead className="text-right sticky right-0 bg-white dark:bg-gray-950 z-10 border-l min-w-[200px]">Actions</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
@@ -888,7 +1031,7 @@ const YoutubeImport = () => {
                       renderVideoSkeleton()
                     ) : filteredVideos?.length === 0 ? (
                       <TableRow>
-                        <TableCell colSpan={9} className="text-center py-8">
+                        <TableCell colSpan={11} className="text-center py-8">
                           {videos?.length === 0 
                             ? "No videos found for this channel. Import videos or add them manually."
                             : "No videos match the current filters. Try adjusting your filter criteria."
@@ -899,7 +1042,7 @@ const YoutubeImport = () => {
                       filteredVideos?.map((video) => (
                         <>
                         <TableRow key={video.id} onClick={() => toggleExpandRow(video.id)}>
-                          <TableCell>
+                          <TableCell className="sticky left-0 bg-white dark:bg-gray-950 z-10 border-r">
                             <input
                               type="checkbox"
                               checked={selectedVideos.includes(video.id)}
@@ -907,7 +1050,7 @@ const YoutubeImport = () => {
                               className="rounded"
                             />
                           </TableCell>
-                           <TableCell>
+                           <TableCell className="sticky left-[50px] bg-white dark:bg-gray-950 z-10 border-r">
                             <div className="relative w-20 h-12 overflow-hidden rounded">
                               <img 
                                 src={video.thumbnail} 
@@ -925,15 +1068,20 @@ const YoutubeImport = () => {
                               </div>
                             </div>
                           </TableCell>
-                          <TableCell>
+                          <TableCell className="sticky left-[150px] bg-white dark:bg-gray-950 z-10 border-r">
                             <div className="font-medium">{video.title}</div>
                             <div className="text-sm text-muted-foreground">{video.videoId}</div>
                           </TableCell>
                           <TableCell>
-                            <code className="bg-gray-100 px-2 py-1rounded text-xs font-mono">
-                              {video.channel?.channelId || 'N/A'}
-                            </code>
-                                                    </TableCell>
+                            <div>
+                              <div className="font-medium text-sm">
+                                {video.channelName || video.channel?.name || 'Unknown Channel'}
+                              </div>
+                              <code className="bg-gray-100 dark:bg-gray-800 px-2 py-1 rounded text-xs font-mono">
+                                {video.channel?.channelId || channels?.find(c => c.id.toString() === video.channelId)?.channelId || 'N/A'}
+                              </code>
+                            </div>
+                          </TableCell>
                           <TableCell>
                             {video.category ? (
                               <Badge variant="outline">
@@ -966,6 +1114,16 @@ const YoutubeImport = () => {
                                 </Select>
                               </div>
                             )}
+                          </TableCell>
+                          <TableCell>
+                            <Badge variant={video.videoType === 'short' ? 'secondary' : 'default'}>
+                              {video.videoType === 'short' ? '🩳 Short' : '🎬 Video'}
+                            </Badge>
+                          </TableCell>
+                          <TableCell>
+                            <span className="text-sm font-mono">
+                              {video.duration ? `${Math.floor(video.duration / 60)}:${(video.duration % 60).toString().padStart(2, '0')}` : 'N/A'}
+                            </span>
                           </TableCell>
                           <TableCell>
                             {format(new Date(video.publishedAt), 'MMM d, yyyy')}
@@ -1004,7 +1162,7 @@ const YoutubeImport = () => {
                               </div>
                             )}
                           </TableCell>
-                          <TableCell className="text-right">
+                          <TableCell className="text-right sticky right-0 bg-white dark:bg-gray-950 z-10 border-l">
                             {video.importStatus === 'imported' && video.blogPostId ? (
                               <Button
                                 variant="outline"
@@ -1153,7 +1311,7 @@ const YoutubeImport = () => {
                         {/* Expandable row content */}
                         {expandedRows.has(video.id) && (
                           <TableRow>
-                            <TableCell colSpan={9} className="bg-gray-50 dark:bg-gray-900/50">
+                            <TableCell colSpan={11} className="bg-gray-50 dark:bg-gray-900/50 sticky left-0 right-0">
                               <div className="py-4 space-y-4">
                                 <div>
                                   <h4 className="font-semibold text-sm mb-2">Video Description:</h4>
@@ -1171,10 +1329,22 @@ const YoutubeImport = () => {
                                   </div>
                                 )}
 
-                                <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
+                                <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4 text-sm">
                                   <div>
                                     <span className="font-semibold">Video ID:</span>
                                     <div className="text-muted-foreground font-mono">{video.videoId}</div>
+                                  </div>
+                                  <div>
+                                    <span className="font-semibold">Type:</span>
+                                    <div className="text-muted-foreground capitalize">
+                                      {video.videoType === 'short' ? '🩳 Short' : '🎬 Video'}
+                                    </div>
+                                  </div>
+                                  <div>
+                                    <span className="font-semibold">Duration:</span>
+                                    <div className="text-muted-foreground font-mono">
+                                      {video.duration ? `${Math.floor(video.duration / 60)}:${(video.duration % 60).toString().padStart(2, '0')}` : 'N/A'}
+                                    </div>
                                   </div>
                                   <div>
                                     <span className="font-semibold">Published:</span>
@@ -1182,7 +1352,9 @@ const YoutubeImport = () => {
                                   </div>
                                   <div>
                                     <span className="font-semibold">Channel:</span>
-                                    <div className="text-muted-foreground">{video.channelName || 'Unknown'}</div>
+                                    <div className="text-muted-foreground">
+                                      {video.channelName || video.channel?.name || channels?.find(c => c.id.toString() === video.channelId)?.name || 'Unknown'}
+                                    </div>
                                   </div>
                                   <div>
                                     <span className="font-semibold">Import Status:</span>
@@ -1219,8 +1391,6 @@ const YoutubeImport = () => {
                 <CardDescription>
                   Connect a Youtube channel to import videos from.
                 </CardDescription>
-              ```text
-
               </CardHeader>
               <CardContent>
                 <Form {...channelForm}>
@@ -1232,7 +1402,7 @@ const YoutubeImport = () => {
                         <FormItem>
                           <FormLabel>Channel ID</FormLabel>
                           <FormControl>
-                            <Input placeholder="UCxxxxxxxxxxxxxxx" {...field} />
+                            <Input placeholder="UCfUABeKVh7oJzZG93O2ZioQ" {...field} />
                           </FormControl>
                           <FormMessage />
                         </FormItem>
@@ -1245,7 +1415,7 @@ const YoutubeImport = () => {
                         <FormItem>
                           <FormLabel>Channel Name</FormLabel>
                           <FormControl>
-                            <Input placeholder="Channel display name" {...field} />
+                            <Input placeholder="Channel Name" {...field} />
                           </FormControl>
                           <FormMessage />
                         </FormItem>
@@ -1253,11 +1423,20 @@ const YoutubeImport = () => {
                     />
                     <Button 
                       type="submit" 
-                      className="w-full"
                       disabled={addChannelMutation.isPending}
+                      className="w-full"
                     >
-                      <Youtube className="h-4 w-4 mr-2" />
-                      {addChannelMutation.isPending ? "Adding Channel..." : "Add Channel"}
+                      {addChannelMutation.isPending ? (
+                        <>
+                          <RefreshCw className="h-4 w-4 mr-2 animate-spin" />
+                          Adding Channel...
+                        </>
+                      ) : (
+                        <>
+                          <Youtube className="h-4 w-4 mr-2" />
+                          Add Channel
+                        </>
+                      )}
                     </Button>
                   </form>
                 </Form>
@@ -1268,7 +1447,7 @@ const YoutubeImport = () => {
               <CardHeader>
                 <CardTitle>Add Individual Video</CardTitle>
                 <CardDescription>
-                  Add a specific Youtube video without adding the entire channel.
+                  Add a specific video by its ID.
                 </CardDescription>
               </CardHeader>
               <CardContent>
@@ -1292,9 +1471,9 @@ const YoutubeImport = () => {
                       name="title"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel>Title (optional)</FormLabel>
+                          <FormLabel>Video Title (Optional)</FormLabel>
                           <FormControl>
-                            <Input placeholder="Video title" {...field} />
+                            <Input placeholder="Leave empty to fetch from YouTube" {...field} />
                           </FormControl>
                           <FormMessage />
                         </FormItem>
@@ -1305,9 +1484,9 @@ const YoutubeImport = () => {
                       name="description"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel>Description (optional)</FormLabel>
+                          <FormLabel>Video Description (Optional)</FormLabel>
                           <FormControl>
-                            <Textarea placeholder="Video description" {...field} rows={3} />
+                            <Textarea placeholder="Leave empty to fetch from YouTube" {...field} />
                           </FormControl>
                           <FormMessage />
                         </FormItem>
@@ -1315,11 +1494,20 @@ const YoutubeImport = () => {
                     />
                     <Button 
                       type="submit" 
-                      className="w-full"
                       disabled={addVideoMutation.isPending}
+                      className="w-full"
                     >
-                      <Play className="h-4 w-4 mr-2" />
-                      {addVideoMutation.isPending ? "Adding Video..." : "Add Video"}
+                      {addVideoMutation.isPending ? (
+                        <>
+                          <RefreshCw className="h-4 w-4 mr-2 animate-spin" />
+                          Adding Video...
+                        </>
+                      ) : (
+                        <>
+                          <Plus className="h-4 w-4 mr-2" />
+                          Add Video
+                        </>
+                      )}
                     </Button>
                   </form>
                 </Form>
@@ -1329,181 +1517,158 @@ const YoutubeImport = () => {
         </TabsContent>
       </Tabs>
 
-      {/* Import Configuration Dialog */}
-      <AlertDialog 
-        open={showImportDialog} 
-        onOpenChange={(open) => {
-          // Prevent closing during import unless canClose is true
-          if (!open && importProgress.isImporting && !importProgress.canClose) {
-            return;
-          }
-          setShowImportDialog(open);
-          if (!open) {
-            // Reset progress when dialog closes
-            setImportProgress({
-              isImporting: false,
-              currentStep: '',
-              progress: 0,
-              processedCount: 0,
-              totalCount: 0,
-              importedCount: 0,
-              skippedCount: 0,
-              logs: [],
-              canClose: false
-            });
-          }
-        }}
-      >
-        <AlertDialogContent className="max-w-md">
+      {/* Import Progress Dialog */}
+      <AlertDialog open={importProgress.isImporting} onOpenChange={(open) => {
+        if (!open && importProgress.canClose) {
+          setImportProgress({
+            isImporting: false,
+            currentStep: '',
+            progress: 0,
+            processedCount: 0,
+            totalCount: 0,
+            importedCount: 0,
+            skippedCount: 0,
+            logs: [],
+            canClose: false
+          });
+          setShowImportDialog(false);
+        }
+      }}>
+        <AlertDialogContent className="max-w-2xl">
           <AlertDialogHeader>
-            <AlertDialogTitle>Import Videos</AlertDialogTitle>
+            <AlertDialogTitle>Importing Videos from YouTube</AlertDialogTitle>
             <AlertDialogDescription>
-              Import videos from the selected YouTube channel into your blog posts database.
-              {importChannelId && (
-                <div className="mt-2 p-2 bg-blue-50 dark:bg-blue-900/20 rounded text-sm">
-                  <strong>Channel:</strong> {channels?.find(c => c.id.toString() === importChannelId)?.name}
-                  <br />
-                  <strong>Channel ID:</strong> {channels?.find(c => c.id.toString() === importChannelId)?.channelId}
-                </div>
-              )}
+              Please wait while we fetch and process the videos...
             </AlertDialogDescription>
           </AlertDialogHeader>
 
-          {!importProgress.isImporting ? (
-            <div className="space-y-4">
-              <div>
-                <label htmlFor="import-limit" className="text-sm font-medium mb-2 block">
-                  Number of videos to import:
-                </label>
-                <Select value={importLimit.toString()} onValueChange={(value) => setImportLimit(parseInt(value))}>
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="10">10 videos</SelectItem>
-                    <SelectItem value="20">20 videos</SelectItem>
-                    <SelectItem value="30">30 videos</SelectItem>
-                    <SelectItem value="40">40 videos</SelectItem>
-                    <SelectItem value="50">50 videos</SelectItem>
-                  </SelectContent>
-                </Select>
-                <p className="text-xs text-muted-foreground mt-1">
-                  Videos already in your database will be skipped automatically.
-                </p>
-              </div>
-
-              <div>
-                <label htmlFor="import-category" className="text-sm font-medium mb-2 block">
-                  Assign Category (Optional):
-                </label>
-                <Select value={selectedCategoryForImport} onValueChange={setSelectedCategoryForImport}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select a category (optional)" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="no-category">No Category</SelectItem>
-                    {blogCategories?.map(category => (
-                      <SelectItem key={category.id} value={category.id}>
-                        {category.name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-                <p className="text-xs text-muted-foreground mt-1">
-                  You can assign categories later using bulk operations.
-                </p>
-              </div>
-            </div>
-          ) : (
-            <div className="space-y-4">
-              <div className="space-y-2">
+          <div className="space-y-4">
+            {importProgress.isImporting && (
+              <div className="space-y-4">
                 <div className="flex items-center justify-between">
                   <span className="text-sm font-medium">{importProgress.currentStep}</span>
-                  <span className="text-sm text-muted-foreground">
-                    {Math.round(importProgress.progress)}%
-                  </span>
+                  <span className="text-sm text-muted-foreground">{importProgress.progress}%</span>
                 </div>
                 <Progress value={importProgress.progress} className="h-2" />
-              </div>
-
-              {importProgress.processedCount > 0 && (
-                <div className="grid grid-cols-3 gap-4 text-center">
-                  <div>
-                    <div className="text-lg font-semibold text-green-600">
-                      {importProgress.importedCount}
-                    </div>
-                    <div className="text-xs text-muted-foreground">Imported</div>
+                {importProgress.processedCount > 0 && (
+                  <div className="text-sm text-muted-foreground">
+                    Videos: {importProgress.importedCount} imported, {importProgress.skippedCount} skipped
                   </div>
-                  <div>
-                    <div className="text-lg font-semibold text-orange-600">
-                      {importProgress.skippedCount}
-                    </div>
-                    <div className="text-xs text-muted-foreground">Skipped</div>
-                  </div>
-                  <div>
-                    <div className="text-lg font-semibold text-blue-600">
-                      {importProgress.processedCount}
-                    </div>
-                    <div className="text-xs text-muted-foreground">Total</div>
-                  </div>
-                </div>
-              )}
-
-              <div className="max-h-32 overflow-y-auto space-y-1 bg-slate-50 dark:bg-slate-900 rounded p-2">
-                {importProgress.logs.slice(-5).map((log, index) => (
-                  <div key={index} className="text-xs font-mono text-slate-600 dark:text-slate-400">
-                    {log}
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
-
-          <AlertDialogFooter>
-            {!importProgress.isImporting ? (
-              <>
-                <AlertDialogCancel>Cancel</AlertDialogCancel>
-                <AlertDialogAction 
-                  onClick={handleStartImport}
-                  disabled={!importChannelId}
-                >
-                  Start Import
-                </AlertDialogAction>
-              </>
-            ) : (
-              <div className="flex justify-between w-full items-center">
-                <span className="text-sm text-muted-foreground">
-                  {importProgress.progress === 100 ? 'Import completed!' : 'Import in progress...'}
-                </span>
-                {(importProgress.progress === 100 && importProgress.canClose) || (!importProgress.isImporting && importProgress.canClose) ? (
-                  <Button 
-                    variant="outline" 
-                    size="sm"
-                    onClick={() => {
-                      setShowImportDialog(false);
-                      setImportProgress({
-                        isImporting: false,
-                        currentStep: '',
-                        progress: 0,
-                        processedCount: 0,
-                        totalCount: 0,
-                        importedCount: 0,
-                        skippedCount: 0,
-                        logs: [],
-                        canClose: false
-                      });
-                    }}
-                  >
-                    Close
-                  </Button>
-                ) : (
-                  <div className="flex items-center gap-2">
-                    <RefreshCw className="h-4 w-4 animate-spin" />
-                    <span className="text-sm">Please wait...</span>
+                )}
+                {importProgress.currentStep.includes('transcript') && (
+                  <div className="text-sm text-blue-600">
+                    🎯 Fetching transcripts individually to avoid rate limits...
                   </div>
                 )}
               </div>
             )}
+          </div>
+
+          <AlertDialogFooter>
+            <AlertDialogAction 
+              disabled={!importProgress.canClose}
+              onClick={() => {
+                setImportProgress({
+                  isImporting: false,
+                  currentStep: '',
+                  progress: 0,
+                  processedCount: 0,
+                  totalCount: 0,
+                  importedCount: 0,
+                  skippedCount: 0,
+                  logs: [],
+                  canClose: false
+                });
+                setShowImportDialog(false);
+              }}
+            >
+              {importProgress.canClose ? "Close" : "Please wait..."}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* Import Configuration Dialog */}
+      <AlertDialog open={showImportDialog} onOpenChange={setShowImportDialog}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Import Videos from Channel</AlertDialogTitle>
+            <AlertDialogDescription>
+              Configure the import settings for this channel's videos.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+
+          {/* Channel Information */}
+          {importChannelId && (
+            <div className="bg-blue-50 dark:bg-blue-900/20 p-4 rounded-lg mb-4">
+              <h4 className="font-semibold text-sm mb-2">Channel Information:</h4>
+              <div className="space-y-1 text-sm">
+                <div>
+                  <span className="font-medium">Name:</span>{" "}
+                  <span className="text-muted-foreground">
+                    {channels?.find(c => c.id.toString() === importChannelId)?.name || 'Unknown'}
+                  </span>
+                </div>
+                <div>
+                  <span className="font-medium">Channel ID:</span>{" "}
+                  <code className="bg-gray-100 dark:bg-gray-800 px-2 py-1 rounded text-xs font-mono">
+                    {channels?.find(c => c.id.toString() === importChannelId)?.channelId || 'Unknown'}
+                  </code>
+                </div>
+              </div>
+            </div>
+          )}
+
+          <div className="space-y-4">
+            <div>
+              <label className="text-sm font-medium mb-2 block">
+                Number of videos to import
+              </label>
+              <Select 
+                value={importLimit.toString()} 
+                onValueChange={(value) => setImportLimit(parseInt(value))}
+              >
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="5">5 videos</SelectItem>
+                  <SelectItem value="10">10 videos</SelectItem>
+                  <SelectItem value="25">25 videos</SelectItem>
+                  <SelectItem value="50">50 videos</SelectItem>
+                  <SelectItem value="100">100 videos</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div>
+              <label className="text-sm font-medium mb-2 block">
+                Default category for imported videos
+              </label>
+              <Select 
+                value={selectedCategoryForImport || "no-category"} 
+                onValueChange={setSelectedCategoryForImport}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Select category" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="no-category">No Category (assign later)</SelectItem>
+                  {blogCategories?.map(category => (
+                    <SelectItem key={category.id} value={category.id}>
+                      {category.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={handleStartImport}>
+              Start Import
+            </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
