@@ -1432,8 +1432,8 @@ Status: Transcript extraction failed during import. Video may have captions that
 
           // Smart delay between videos based on success/failure rate
           if (i < videosToImport.length - 1) {
-            const baseDelay = 4000; // Base 4 seconds
-            const errorMultiplier = transcriptErrorCount > 2 ? 2 : 1; // Double delay if many errors
+            const baseDelay = 8000; // Increased base to 8 seconds
+            const errorMultiplier = transcriptErrorCount > 1 ? 3 : 1; // Triple delay if any errors
             const finalDelay = baseDelay * errorMultiplier;
             
             console.log(`⏳ Waiting ${finalDelay/1000} seconds before next video (error count: ${transcriptErrorCount})...`);

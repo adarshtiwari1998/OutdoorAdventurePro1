@@ -373,8 +373,8 @@ export class YouTubeService {
     try {
       console.log(`📄 Fetching transcript for: ${videoId}`);
 
-      // Add random delay to prevent rate limiting (1-3 seconds)
-      const delay = Math.floor(Math.random() * 2000) + 1000;
+      // Add random delay to prevent rate limiting (3-6 seconds)
+      const delay = Math.floor(Math.random() * 3000) + 3000;
       await new Promise(resolve => setTimeout(resolve, delay));
 
       // Primary method: Direct transcript fetch with retry logic
@@ -451,7 +451,7 @@ ${cleanedTranscript}
           console.log(`🔄 Trying transcript with ${lang.name} (${lang.code}) for ${videoId}`);
           
           // Progressive delay between language attempts
-          await new Promise(resolve => setTimeout(resolve, 3000));
+          await new Promise(resolve => setTimeout(resolve, 5000));
           
           const transcriptData = await YoutubeTranscript.fetchTranscript(videoId, { 
             lang: lang.code 
