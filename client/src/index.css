@@ -336,8 +336,15 @@ header {
 
   /* Prevent body overflow from tables */
   .admin-content-container {
-    overflow-x: hidden;
+    overflow-x: auto;
     max-width: 100%;
+    min-width: 0; /* Allow flex child to shrink */
+  }
+
+  /* Ensure admin main content can scroll horizontally when needed */
+  .admin-layout-main {
+    overflow-x: auto;
+    min-width: 0;
   }
 
   /* Blog section specific styles */

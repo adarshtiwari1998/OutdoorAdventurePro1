@@ -486,7 +486,7 @@ const AdminLayout = ({ children, title }: AdminLayoutProps) => {
           </div>
         </header>
 
-        <main className="flex-1 p-6 admin-content-container">
+        <main className="flex-1 p-6 admin-content-container admin-layout-main">
           {children}
         </main>
 
