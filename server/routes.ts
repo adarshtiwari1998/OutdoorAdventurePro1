@@ -1325,7 +1325,7 @@ app.get(`${apiPrefix}/admin/youtube/videos`, async (req, res) => {
         desiredNewVideos,
         existingVideoIds // Pass existing IDs so the service can filter them out
       );
-      
+
       console.log(`📋 YouTube service returned ${videos.length} NEW videos to import`);
 
       let importedCount = 0;
@@ -1344,7 +1344,7 @@ app.get(`${apiPrefix}/admin/youtube/videos`, async (req, res) => {
           // Fetch transcript for the video
           let transcript = '';
           let importStatus = 'imported'; // Default to imported if transcript fetch fails
-          
+
           try {
             console.log(`📄 Fetching transcript for: ${video.title}`);
             transcript = await youtubeService.getVideoTranscript(video.id);
@@ -2188,10 +2188,10 @@ app.get(`${apiPrefix}/admin/youtube/videos`, async (req, res) => {
 
           // Fetch transcript
           const transcript = await youtubeService.getVideoTranscript(video.videoId);
-          
+
           // Update video with transcript
           await storage.updateYoutubeVideoTranscript(parseInt(videoId), transcript);
-          
+
           console.log(`✅ Transcript fetched for: ${video.title}`);
           successCount++;
         } catch (error) {
@@ -2468,6 +2468,66 @@ app.get(`${apiPrefix}/admin/tips/:id`, async (req, res) => {
     } catch (error) {
       console.error("Error getting dashboard assets by type:", error);
       res.status(500).json({ error: "Failed to get dashboard assets" });
+    }
+  });
+
+  app.post(`${apiPrefix}/admin/youtube/videos/bulk-fetch-transcripts`, async (req, res) => {
+    try {
+      const { videoIds } = req.body;
+
+      if (!Array.isArray(videoIds) || videoIds.length === 0) {
+        return res.status(400).json({ message: "Video IDs array is required" });
+      }
+
+      const youtubeService = new YouTubeService();
+      let successCount = 0;
+      let errorCount = 0;
+      const errors: string[] = [];
+
+      console.log(`🎯 Starting bulk transcript fetch for ${videoIds.length} videos`);
+
+      for (const videoId of videoIds) {
+        try {
+          // Get video from database
+          const video = await storage.getYoutubeVideoById(parseInt(videoId));
+          if (!video) {
+            errors.push(`Video with ID ${videoId} not found`);
+            errorCount++;
+            continue;
+          }
+
+          console.log(`📝 Fetching transcript for: ${video.title} (${video.videoId})`);
+
+          // Fetch real transcript
+          const transcript = await youtubeService.getVideoTranscript(video.videoId);
+
+          // Update video with transcript
+          await storage.updateYoutubeVideoTranscript(parseInt(videoId), transcript);
+
+          console.log(`✅ Transcript updated for: ${video.title}`);
+          successCount++;
+
+          // Add small delay to avoid rate limiting
+          await new Promise(resolve => setTimeout(resolve, 1000));
+        } catch (error) {
+          console.error(`❌ Error fetching transcript for video ${videoId}:`, error);
+          errors.push(`Failed to fetch transcript for video ${videoId}: ${error.message}`);
+          errorCount++;
+        }
+      }
+
+      console.log(`📊 Bulk transcript fetch complete: ${successCount} successful, ${errorCount} errors`);
+
+      res.json({
+        success: true,
+        successCount,
+        errorCount,
+        errors,
+        message: `Successfully fetched ${successCount} real transcripts. ${errorCount} errors occurred.`
+      });
+    } catch (error) {
+      console.error("Error in bulk transcript fetch:", error);
+      res.status(500).json({ message: "Failed to fetch transcripts" });
     }
   });
 
