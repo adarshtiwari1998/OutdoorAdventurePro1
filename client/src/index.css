@@ -360,6 +360,7 @@ header {
   .admin-table-container {
     overflow-x: auto;
     overflow-y: visible;
+    width: 100%;
     max-width: 100%;
     border: 1px solid hsl(var(--border));
     border-radius: 0.375rem;

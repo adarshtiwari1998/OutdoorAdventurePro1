@@ -781,7 +781,7 @@ const YoutubeImport = () => {
                 Manage and import videos from this channel into blog posts.
               </CardDescription>
             </CardHeader>
-            <CardContent>
+            <CardContent className="w-full max-w-full">
               {/* Filter Controls */}
               <div className="mb-4 p-4 bg-gray-50 dark:bg-gray-900/20 rounded-lg">
                 <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
@@ -960,7 +960,7 @@ const YoutubeImport = () => {
                 </div>
               )}
               <div className="admin-table-container">
-                <Table className="min-w-[1200px]">
+                <Table className="w-full min-w-[1200px]">
                   <TableHeader>
                     <TableRow>
                       <TableHead className="w-[50px] sticky left-0 bg-white dark:bg-gray-950 z-10 border-r">
