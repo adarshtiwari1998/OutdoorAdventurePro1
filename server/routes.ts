@@ -875,7 +875,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       if (!name || !slug) {
         return res.status(400).json({ message: "Name and slug are required" });
-            }
+      }
 
       const newCategory = await storage.createBlogCategory({
         name,
@@ -1340,10 +1340,10 @@ app.get(`${apiPrefix}/admin/youtube/videos`, async (req, res) => {
       // Process videos one by one with improved rate limiting
       for (let i = 0; i < videosToImport.length; i++) {
         const video = videosToImport[i];
-        
+
         try {
           console.log(`\n🔄 Processing video ${i + 1}/${videosToImport.length}: ${video.title}`);
-          
+
           // Step 1: Import video metadata first
           const savedVideo = await storage.createYoutubeVideo({
             videoId: video.id,
@@ -1365,17 +1365,17 @@ app.get(`${apiPrefix}/admin/youtube/videos`, async (req, res) => {
           // Step 2: Fetch transcript (simple approach)
           try {
             console.log(`📄 Step 2/2: Fetching transcript for: ${video.title} (${video.id})`);
-            
+
             const transcript = await youtubeService.getVideoTranscript(video.id);
-            
+
             // Check if we got a real transcript vs content extract
             const isRealTranscript = transcript.includes('[REAL TRANSCRIPT') || 
                                    transcript.includes('[TRANSCRIPT for') || 
                                    transcript.includes('[CAPTIONS DETECTED');
-            
+
             // Update video with transcript
             await storage.updateYoutubeVideoTranscript(savedVideo.id, transcript);
-            
+
             const finalStatus = isRealTranscript ? 'completed' : 'completed_content_only';
             await db.update(schema.youtubeVideos)
               .set({ importStatus: finalStatus })
@@ -1391,7 +1391,7 @@ app.get(`${apiPrefix}/admin/youtube/videos`, async (req, res) => {
 
           } catch (transcriptError) {
             console.error(`❌ Step 2/2: Error fetching transcript for ${video.title}:`, transcriptError);
-            
+
             // Create enhanced fallback transcript
             const fallbackTranscript = `[TRANSCRIPT UNAVAILABLE - IMPORT ERROR]
 
@@ -1410,7 +1410,7 @@ ${transcriptError.message}
 Status: Transcript extraction failed during import. Video may have captions that can be accessed manually.
 
 [End of error transcript]`;
-            
+
             await storage.updateYoutubeVideoTranscript(savedVideo.id, fallbackTranscript);
             await db.update(schema.youtubeVideos)
               .set({ 
@@ -1423,17 +1423,20 @@ Status: Transcript extraction failed during import. Video may have captions that
             transcriptErrors.push(`${video.title}: ${transcriptError.message}`);
           }
 
-          // Simple delay between videos (like your working code)
+          // Smart delay between videos based on success/failure rate
           if (i < videosToImport.length - 1) {
-            const delay = 1000; // Just 1 second delay
-            console.log(`⏳ Waiting ${delay/1000} second before next video...`);
-            await new Promise(resolve => setTimeout(resolve, delay));
+            const baseDelay = 15000; // Increased base to 15 seconds
+            const errorMultiplier = transcriptErrorCount > 0 ? 2 : 1; // Double delay if ANY errors
+            const finalDelay = baseDelay * errorMultiplier;
+
+            console.log(`⏳ Waiting ${finalDelay/1000} seconds before next video (error count: ${transcriptErrorCount})...`);
+            await new Promise(resolve => setTimeout(resolve, finalDelay));
           }
 
         } catch (videoError) {
           console.error(`❌ Error processing video ${video.id}:`, videoError);
           transcriptErrors.push(`${video.title}: Failed to import - ${videoError.message}`);
-          
+
           // Still increment error count for rate limiting logic
           transcriptErrorCount++;
         }
@@ -2599,7 +2602,7 @@ app.get(`${apiPrefix}/admin/tips/:id`, async (req, res) => {
   app.post(`${apiPrefix}/admin/youtube/channels/sync-counts`, async (req, res) => {
     try {
       console.log(`🔄 Starting sync of imported video counts for all channels`);
-      
+
       const channels = await storage.getAdminYoutubeChannels();
       let syncedCount = 0;
 
@@ -2651,7 +2654,7 @@ app.get(`${apiPrefix}/admin/tips/:id`, async (req, res) => {
 
       for (let i = 0; i < videoIds.length; i++) {
         const videoId = parseInt(videoIds[i]);
-        
+
         try {
           // Get video from database
           const video = await storage.getYoutubeVideoById(videoId);
@@ -2668,7 +2671,7 @@ app.get(`${apiPrefix}/admin/tips/:id`, async (req, res) => {
               video.transcript.includes('[TRANSCRIPT for') ||
               video.transcript.includes('[CAPTIONS DETECTED')
             );
-            
+
             if (hasRealTranscript) {
               console.log(`⏭️ Skipping ${video.title} - already has real transcript`);
               skippedCount++;
@@ -2687,15 +2690,15 @@ app.get(`${apiPrefix}/admin/tips/:id`, async (req, res) => {
 
           // Retry transcript fetch
           const transcript = await youtubeService.getVideoTranscript(video.videoId);
-          
+
           // Check if we got a real transcript
           const isRealTranscript = transcript.includes('[REAL TRANSCRIPT') || 
                                  transcript.includes('[TRANSCRIPT for') || 
                                  transcript.includes('[CAPTIONS DETECTED');
-          
+
           // Update video with new transcript
           await storage.updateYoutubeVideoTranscript(videoId, transcript);
-          
+
           const newStatus = isRealTranscript ? 'completed' : 'completed_content_only';
           await db.update(schema.youtubeVideos)
             .set({ 
@@ -2718,7 +2721,7 @@ app.get(`${apiPrefix}/admin/tips/:id`, async (req, res) => {
           console.error(`❌ Error retrying transcript for video ${videoId}:`, error);
           errors.push(`Video ${videoId}: ${error.message}`);
           errorCount++;
-          
+
           // Mark video with error status
           try {
             await db.update(schema.youtubeVideos)
