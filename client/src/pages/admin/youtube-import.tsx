@@ -725,6 +725,7 @@ const YoutubeImport = () => {
                       <TableHead className="w-[100px]">Thumbnail</TableHead>
                       <TableHead>Title</TableHead>
                       <TableHead>Channel ID</TableHead>
+                      <TableHead>Category</TableHead>
                       <TableHead>Published</TableHead>
                       <TableHead>Status</TableHead>
                       <TableHead>Blog Post Match</TableHead>
@@ -736,7 +737,7 @@ const YoutubeImport = () => {
                       renderVideoSkeleton()
                     ) : videos?.length === 0 ? (
                       <TableRow>
-                        <TableCell colSpan={7} className="text-center py-8">
+                        <TableCell colSpan={8} className="text-center py-8">
                           No videos found for this channel. Import videos or add them manually.
                         </TableCell>
                       </TableRow>
@@ -777,6 +778,15 @@ const YoutubeImport = () => {
                             <code className="bg-gray-100 px-2 py-1 rounded text-xs font-mono">
                               {video.channel?.channelId || 'N/A'}
                             </code>
+                          </TableCell>
+                          <TableCell>
+                            {video.category ? (
+                              <Badge variant="outline">
+                                {video.category.name}
+                              </Badge>
+                            ) : (
+                              <span className="text-muted-foreground text-sm">No Category</span>
+                            )}
                           </TableCell>
                           <TableCell>
                             {format(new Date(video.publishedAt), 'MMM d, yyyy')}
