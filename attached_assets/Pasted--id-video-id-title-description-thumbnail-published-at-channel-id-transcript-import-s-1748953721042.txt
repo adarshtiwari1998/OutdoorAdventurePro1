@@ -1,0 +1,35 @@
+"id"	"video_id"	"title"	"description"	"thumbnail"	"published_at"	"channel_id"	"transcript"	"import_status"	"blog_post_id"	"error_message"	"created_at"	"updated_at"	"category_id"	"has_blog_post_match"	"matching_blog_post_title"
+1	"txdVYGlhENI"	"Christiansted National Historic Site in St  Croix"	"Fort Christiansvaern full walking tour in Christiansted, the largest town on Saint Croix, one of the main islands of the United States Virgin Islands, a territory of the United States of America. Join us as we tour Christiansted National Historic Site. Christiansted National Historic park commemorates urban colonial development of the Virgin Islands. It features 18th- and 19th-century structures in the heart of Christiansted, the capital of the former Danish West Indies on St. Croix Island. Fort Christiansvaern is one of the best-preserved colonial forts in the Caribbean and is the largest structure at the historic site. Gem of the Caribbean!
+
+#travel #stcroix  #christiansted #usvi  #travelguide2025 #traveltips #travelvlog #travelguide 
+#vacationideas #vacationtips 
+
+For more Information Fort Christiansvaern and Christiansted National Historic Site in St. Croix.
+https://www.nps.gov/places/fort-christiansvaern.htm
+https://en.wikipedia.org/wiki/Christiansted,_U.S._Virgin_Islands
+https://en.wikipedia.org/wiki/Christiansted_National_Historic_Site
+https://www.nps.gov/chri/index.htm
+https://www.gotostcroix.com/national-parks/national-parks-christiansted/
+https://www.nationalparks.org/explore/parks/christiansted-national-historic-site
+
+Check out our other St. Croix Videos:
+The Buccaneer Beach & Golf Resort Full Review
+https://youtu.be/e4lt7DjVDJk
+
+The Buccaneer Resort Full Golf Course Review
+https://youtu.be/zKLwCHlBT60
+
+Please like, comment & share this video if you enjoy it! Help us to grow this YouTube channel, so we can keep bringing interesting Vacation Ideas to all of you in the future.
+
+Also check out our Facebook and Instagram channels!
+Check out our sister channels!
+How To Have Fun Camping
+How To Have Fun Fishing
+How To Have Fun Cruising
+How To Have Fun Hiking
+How To Have Fun 4x4
+
+LIKE/SHARE/SUBSCRIBE
+www.HowToHaveFunOutdoors.com
+© How To Have Fun Outdoors. All Rights Reserved.
+We appreciate everyone's support of this YouTube channel. Please subscribe, like and share this video with your friends and family!"	"https://i.ytimg.com/vi/txdVYGlhENI/hqdefault.jpg"	"2025-06-01 19:30:09"	1		"pending"			"2025-06-02 20:31:02.877577"	"2025-06-02 20:31:02.877577"		false	
