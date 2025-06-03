@@ -1,5 +1,5 @@
 
-const { Client } = require('pg');
+import { Client } from 'pg';
 
 async function fixImportedVideoCounts() {
   const client = new Client({
