@@ -724,6 +724,7 @@ const YoutubeImport = () => {
                       </TableHead>
                       <TableHead className="w-[100px]">Thumbnail</TableHead>
                       <TableHead>Title</TableHead>
+                      <TableHead>Channel ID</TableHead>
                       <TableHead>Published</TableHead>
                       <TableHead>Status</TableHead>
                       <TableHead>Blog Post Match</TableHead>
@@ -771,6 +772,11 @@ const YoutubeImport = () => {
                           <TableCell>
                             <div className="font-medium">{video.title}</div>
                             <div className="text-sm text-muted-foreground">{video.videoId}</div>
+                          </TableCell>
+                          <TableCell>
+                            <code className="bg-gray-100 px-2 py-1 rounded text-xs font-mono">
+                              {video.channel?.channelId || 'N/A'}
+                            </code>
                           </TableCell>
                           <TableCell>
                             {format(new Date(video.publishedAt), 'MMM d, yyyy')}
@@ -1086,9 +1092,9 @@ const YoutubeImport = () => {
               Import videos from the selected YouTube channel into your blog posts database.
               {importChannelId && (
                 <div className="mt-2 p-2 bg-blue-50 dark:bg-blue-900/20 rounded text-sm">
-                  <strong>Channel:</strong> {channels?.find(c => c.id === importChannelId)?.name}
+                  <strong>Channel:</strong> {channels?.find(c => c.id.toString() === importChannelId)?.name}
                   <br />
-                  <strong>Channel ID:</strong> {channels?.find(c => c.id === importChannelId)?.channelId}
+                  <strong>Channel ID:</strong> {channels?.find(c => c.id.toString() === importChannelId)?.channelId}
                 </div>
               )}
             </AlertDialogDescription>

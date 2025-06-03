@@ -4,7 +4,7 @@ import { storage } from "./storage";
 import { db } from "@db";
 import * as schema from "@shared/schema";
 import { blogPosts } from "@shared/schema";
-import { eq, asc, inArray } from "drizzle-orm";
+import { eq, asc, desc, inArray } from "drizzle-orm";
 import { z } from "zod";
 import { setupAuth } from "./auth";
 
@@ -1207,8 +1207,16 @@ app.delete(`${apiPrefix}/admin/wordpress/credentials`, async (req, res) => {
   });
 app.get(`${apiPrefix}/admin/youtube/videos`, async (req, res) => {
     try {
+      const { channelId } = req.query;
+      
+      let whereCondition;
+      if (channelId) {
+        whereCondition = eq(schema.youtubeVideos.channelId, parseInt(channelId as string));
+      }
+
       const videos = await db.query.youtubeVideos.findMany({
-        orderBy: desc(schema.youtubeVideos.publishedAt),
+        where: whereCondition,
+        orderBy: [desc(schema.youtubeVideos.publishedAt)],
         with: {
           category: true,
           channel: true, // Include channel information
