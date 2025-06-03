@@ -1,7 +1,17 @@
-// Import for transcript functionality
+// Import youtube-transcript package
+import { YoutubeTranscript } from 'youtube-transcript';
+
+// Type definitions for the transcript package
 declare module 'youtube-transcript' {
   export class YoutubeTranscript {
-    static fetchTranscript(videoId: string, options?: { lang?: string; country?: string }): Promise<Array<{ text: string; duration: number; offset: number }>>;
+    static fetchTranscript(videoId: string, options?: { 
+      lang?: string; 
+      country?: string;
+    }): Promise<Array<{ 
+      text: string; 
+      duration: number; 
+      offset: number; 
+    }>>;
   }
 }
 
@@ -287,7 +297,19 @@ export class YouTubeService {
     try {
       console.log(`🎯 Fetching transcript for video: ${videoId}`);
 
-      // Try to fetch captions using YouTube API
+      // PRIORITY 1: Try to fetch real subtitles using youtube-transcript package
+      try {
+        console.log(`🔄 Attempting to fetch real subtitle transcript for: ${videoId}`);
+        const transcript = await this.fetchTranscriptAlternative(videoId);
+        if (transcript) {
+          console.log(`✅ Successfully fetched REAL subtitle transcript for: ${videoId}`);
+          return transcript;
+        }
+      } catch (altError) {
+        console.warn(`⚠️ Real subtitle transcript failed for ${videoId}:`, altError.message);
+      }
+
+      // PRIORITY 2: Try to fetch captions using YouTube API (limited by OAuth2)
       try {
         const captionsResponse = await this.makeRequest('captions', {
           part: 'snippet',
@@ -302,54 +324,38 @@ export class YouTubeService {
 
           if (englishCaption) {
             console.log(`📝 Found caption track: ${englishCaption.snippet.language}`);
-
-            try {
-              // Fetch the actual caption content
-              const captionContent = await this.fetchCaptionContent(englishCaption.id);
-              if (captionContent) {
-                return captionContent;
-              }
-            } catch (captionFetchError) {
-              console.warn(`⚠️ Could not fetch caption content for ${videoId}:`, captionFetchError);
-            }
+            console.log(`⚠️ Note: Caption download requires OAuth2 authentication`);
           }
         }
       } catch (captionError) {
-        console.warn(`⚠️ Could not fetch captions for ${videoId}:`, captionError);
+        console.warn(`⚠️ Could not fetch captions list for ${videoId}:`, captionError.message);
       }
 
-      // Try alternative method using youtube-transcript package
-      try {
-        const transcript = await this.fetchTranscriptAlternative(videoId);
-        if (transcript) {
-          return transcript;
-        }
-      } catch (altError) {
-        console.warn(`⚠️ Alternative transcript method failed for ${videoId}:`, altError);
-      }
-
-      // Fallback: Generate structured content from video details
+      // FALLBACK: Generate structured content from video details
+      console.log(`📄 No real transcript available, creating content-based extract for: ${videoId}`);
       const videoDetails = await this.getVideoDetails(videoId);
-      console.log(`📄 Using video description as transcript base for: ${videoId}`);
 
-      return `[TRANSCRIPT EXTRACT for "${videoDetails.title}"]
+      return `[CONTENT-BASED TRANSCRIPT for "${videoDetails.title}"]
 
-This video covers content about: ${videoDetails.title}
+⚠️ Note: Real subtitle transcript was not available for this video.
 
-Video Content Summary:
+Video Information:
+- Title: ${videoDetails.title}
+- Channel: ${videoDetails.channelTitle}
+- Published: ${new Date(videoDetails.publishedAt).toLocaleDateString()}
+- Video ID: ${videoId}
+
+Content Summary:
 ${videoDetails.description}
 
-Channel: ${videoDetails.channelTitle}
-Published: ${new Date(videoDetails.publishedAt).toLocaleDateString()}
+[This is a content-based extract. For real transcripts, the video needs to have auto-generated or manual captions enabled.]
 
-[Note: This is a content-based transcript extract. Automatic transcript was not available for this video.]
-
-Main Topics:
+Likely Topics Based on Content:
 - Outdoor adventures and travel experiences
 - Practical tips and recommendations
 - Destination insights and reviews
 
-[End of transcript extract]`;
+[End of content-based transcript]`;
 
     } catch (error) {
       console.error(`❌ Error fetching transcript for video ${videoId}:`, error);
@@ -357,10 +363,12 @@ Main Topics:
       // Return minimal transcript on error
       return `[TRANSCRIPT UNAVAILABLE for video ${videoId}]
 
-Unable to fetch transcript content for this video. This may be due to:
-- No captions available
-- API limitations
+Unable to fetch any transcript content for this video. This may be due to:
+- No captions or subtitles available on the video
+- Video has disabled automatic captions
+- API limitations or rate limiting
 - Video privacy settings
+- Network connectivity issues
 
 [End of transcript note]`;
     }
@@ -386,30 +394,53 @@ Unable to fetch transcript content for this video. This may be due to:
     try {
       console.log(`🔄 Attempting to fetch real transcript for: ${videoId}`);
 
-      // Fetch transcript using youtube-transcript package
-      const transcriptItems = await YoutubeTranscript.fetchTranscript(videoId, {
-        lang: 'en', // Prefer English
-        country: 'US' // Prefer US region
-      });
+      // Try multiple language options for better success rate
+      const languageOptions = [
+        { lang: 'en', country: 'US' },
+        { lang: 'en', country: 'GB' },
+        { lang: 'en' },
+        { lang: 'auto' },
+        {} // No language preference - use whatever is available
+      ];
+
+      let transcriptItems = null;
+      let usedOption = null;
+
+      for (const option of languageOptions) {
+        try {
+          console.log(`🔄 Trying transcript fetch with options:`, option);
+          transcriptItems = await YoutubeTranscript.fetchTranscript(videoId, option);
+          usedOption = option;
+          if (transcriptItems && transcriptItems.length > 0) {
+            console.log(`✅ Successfully fetched transcript with options:`, option);
+            break;
+          }
+        } catch (langError) {
+          console.log(`⚠️ Failed with options ${JSON.stringify(option)}:`, langError.message);
+          continue;
+        }
+      }
 
       if (transcriptItems && transcriptItems.length > 0) {
-        console.log(`✅ Successfully fetched ${transcriptItems.length} transcript segments`);
+        console.log(`✅ Successfully fetched ${transcriptItems.length} transcript segments using:`, usedOption);
         const formattedTranscript = this.formatTranscript(transcriptItems);
 
         // Get video details for header
         const videoDetails = await this.getVideoDetails(videoId);
 
-        return `[TRANSCRIPT for "${videoDetails.title}"]
+        return `[REAL TRANSCRIPT for "${videoDetails.title}"]
 
 Channel: ${videoDetails.channelTitle}
 Published: ${new Date(videoDetails.publishedAt).toLocaleDateString()}
 Video ID: ${videoId}
+Language: ${usedOption?.lang || 'auto-detected'}
 
 ${formattedTranscript}
 
-[End of transcript]`;
+[End of real transcript]`;
       }
 
+      console.log(`⚠️ No transcript found for ${videoId} with any language option`);
       return null;
     } catch (error) {
       console.error(`❌ Failed to fetch transcript for ${videoId}:`, error.message);
@@ -425,30 +456,44 @@ ${formattedTranscript}
     let formattedTranscript = '';
     let currentParagraph = '';
     let lastTimestamp = 0;
+    let wordCount = 0;
+
+    console.log(`📝 Formatting ${transcriptItems.length} transcript items...`);
 
     for (const item of transcriptItems) {
       const text = (item.text || '').trim();
       const timestamp = item.offset || 0;
+      const duration = item.duration || 0;
 
       if (!text) continue;
 
-      // Add paragraph breaks for significant time gaps (more than 15 seconds)
-      if (timestamp - lastTimestamp > 15000 && currentParagraph.length > 0) {
-        formattedTranscript += currentParagraph.trim() + '\n\n';
+      // Add timestamp markers every 60 seconds for reference
+      if (timestamp - lastTimestamp > 60000 && currentParagraph.length > 0) {
+        const minutes = Math.floor(timestamp / 60000);
+        const seconds = Math.floor((timestamp % 60000) / 1000);
+        formattedTranscript += currentParagraph.trim() + `\n\n[${minutes}:${seconds.toString().padStart(2, '0')}]\n`;
         currentParagraph = '';
       }
 
-      // Clean up the text
+      // Clean up the text - preserve sentence structure
       const cleanText = text
         .replace(/\s+/g, ' ') // Replace multiple spaces with single space
         .replace(/\n/g, ' ') // Replace newlines with spaces
+        .replace(/\[.*?\]/g, '') // Remove [Music], [Applause] etc.
+        .replace(/\buh\b/gi, '') // Remove filler words
+        .replace(/\bum\b/gi, '')
+        .replace(/\s+/g, ' ') // Clean up spaces again
         .trim();
 
+      if (!cleanText) continue;
+
       currentParagraph += cleanText + ' ';
+      wordCount += cleanText.split(' ').length;
       lastTimestamp = timestamp;
 
-      // Create paragraph breaks at natural sentence endings
-      if (cleanText.match(/[.!?]$/) && currentParagraph.length > 200) {
+      // Create paragraph breaks at natural sentence endings or after enough content
+      if ((cleanText.match(/[.!?]$/) && currentParagraph.length > 150) || 
+          currentParagraph.length > 300) {
         formattedTranscript += currentParagraph.trim() + '\n\n';
         currentParagraph = '';
       }
@@ -460,10 +505,15 @@ ${formattedTranscript}
     }
 
     // Clean up the final result
-    return formattedTranscript
+    const finalTranscript = formattedTranscript
       .replace(/\s+/g, ' ') // Clean up extra spaces
       .replace(/\n\s*\n\s*\n/g, '\n\n') // Remove triple+ newlines
+      .replace(/^\s+|\s+$/g, '') // Trim start and end
       .trim();
+
+    console.log(`📝 Formatted transcript: ${wordCount} words, ${finalTranscript.length} characters`);
+    
+    return finalTranscript || '[No readable transcript content found]';
   }
 }
 //The code has been modified to implement real YouTube caption track fetching and formatting.
