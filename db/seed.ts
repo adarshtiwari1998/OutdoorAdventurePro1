@@ -152,8 +152,6 @@ async function seed() {
       has_blog_post_match BOOLEAN NOT NULL DEFAULT FALSE,
       matching_blog_post_title TEXT,
       error_message TEXT,
-      video_type TEXT NOT NULL DEFAULT 'video',
-      duration INTEGER,
       created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
       updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
   );
