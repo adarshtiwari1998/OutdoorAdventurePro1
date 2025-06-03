@@ -297,16 +297,39 @@ export class YouTubeService {
     try {
       console.log(`🎯 Fetching transcript for video: ${videoId}`);
 
-      // PRIORITY 1: Try to fetch real subtitles using youtube-transcript package
+      // PRIORITY 1: Try automation script method for clean transcript
       try {
-        console.log(`🔄 Attempting to fetch real subtitle transcript for: ${videoId}`);
+        console.log(`🔄 Attempting to fetch transcript using automation script method for: ${videoId}`);
+        const cleanTranscript = await this.fetchCleanTranscript(videoId);
+        if (cleanTranscript && cleanTranscript.length > 0) {
+          const videoDetails = await this.getVideoDetails(videoId);
+          
+          console.log(`✅ Successfully fetched clean transcript for: ${videoId}`);
+          return `[REAL TRANSCRIPT for "${videoDetails.title}"]
+
+Channel: ${videoDetails.channelTitle}
+Published: ${new Date(videoDetails.publishedAt).toLocaleDateString()}
+Video ID: ${videoId}
+Transcript Length: ${cleanTranscript.length} characters
+
+${cleanTranscript}
+
+[End of real transcript]`;
+        }
+      } catch (cleanError) {
+        console.warn(`⚠️ Clean transcript method failed for ${videoId}:`, cleanError.message);
+      }
+
+      // PRIORITY 2: Try enhanced alternative method
+      try {
+        console.log(`🔄 Attempting to fetch formatted subtitle transcript for: ${videoId}`);
         const transcript = await this.fetchTranscriptAlternative(videoId);
         if (transcript) {
-          console.log(`✅ Successfully fetched REAL subtitle transcript for: ${videoId}`);
+          console.log(`✅ Successfully fetched formatted subtitle transcript for: ${videoId}`);
           return transcript;
         }
       } catch (altError) {
-        console.warn(`⚠️ Real subtitle transcript failed for ${videoId}:`, altError.message);
+        console.warn(`⚠️ Formatted subtitle transcript failed for ${videoId}:`, altError.message);
       }
 
       // PRIORITY 2: Try to fetch captions using YouTube API (limited by OAuth2)
@@ -394,56 +417,91 @@ Unable to fetch any transcript content for this video. This may be due to:
     try {
       console.log(`🔄 Attempting to fetch real transcript for: ${videoId}`);
 
-      // Try multiple language options for better success rate
-      const languageOptions = [
-        { lang: 'en', country: 'US' },
-        { lang: 'en', country: 'GB' },
-        { lang: 'en' },
-        { lang: 'auto' },
-        {} // No language preference - use whatever is available
-      ];
+      // Enhanced transcript fetching logic from automation script
+      const transcriptData = await YoutubeTranscript.fetchTranscript(videoId);
+      
+      if (transcriptData && transcriptData.length > 0) {
+        console.log(`✅ Successfully fetched ${transcriptData.length} transcript segments`);
+        
+        // Clean transcript using automation script logic
+        const cleanedTranscript = transcriptData
+          .map(item => item.text.replace(/\$.*?\$/g, '').trim()) // Remove unwanted patterns
+          .filter(text => text.length > 0) // Filter out empty text
+          .join(' '); // Join all text segments
 
-      let transcriptItems = null;
-      let usedOption = null;
+        if (cleanedTranscript.length > 0) {
+          // Get video details for header
+          const videoDetails = await this.getVideoDetails(videoId);
 
-      for (const option of languageOptions) {
-        try {
-          console.log(`🔄 Trying transcript fetch with options:`, option);
-          transcriptItems = await YoutubeTranscript.fetchTranscript(videoId, option);
-          usedOption = option;
-          if (transcriptItems && transcriptItems.length > 0) {
-            console.log(`✅ Successfully fetched transcript with options:`, option);
-            break;
-          }
-        } catch (langError) {
-          console.log(`⚠️ Failed with options ${JSON.stringify(option)}:`, langError.message);
-          continue;
-        }
-      }
-
-      if (transcriptItems && transcriptItems.length > 0) {
-        console.log(`✅ Successfully fetched ${transcriptItems.length} transcript segments using:`, usedOption);
-        const formattedTranscript = this.formatTranscript(transcriptItems);
-
-        // Get video details for header
-        const videoDetails = await this.getVideoDetails(videoId);
-
-        return `[REAL TRANSCRIPT for "${videoDetails.title}"]
+          return `[REAL TRANSCRIPT for "${videoDetails.title}"]
 
 Channel: ${videoDetails.channelTitle}
 Published: ${new Date(videoDetails.publishedAt).toLocaleDateString()}
 Video ID: ${videoId}
-Language: ${usedOption?.lang || 'auto-detected'}
+Transcript Length: ${cleanedTranscript.length} characters
 
-${formattedTranscript}
+${cleanedTranscript}
 
 [End of real transcript]`;
+        }
       }
 
-      console.log(`⚠️ No transcript found for ${videoId} with any language option`);
+      console.log(`⚠️ No transcript found for ${videoId}`);
       return null;
     } catch (error) {
       console.error(`❌ Failed to fetch transcript for ${videoId}:`, error.message);
+      
+      // Try with fallback options if the main attempt fails
+      try {
+        console.log(`🔄 Trying fallback transcript fetch for: ${videoId}`);
+        
+        const languageOptions = [
+          { lang: 'en', country: 'US' },
+          { lang: 'en', country: 'GB' },
+          { lang: 'en' },
+          { lang: 'auto' },
+          {} // No language preference
+        ];
+
+        for (const option of languageOptions) {
+          try {
+            console.log(`🔄 Trying transcript fetch with options:`, option);
+            const transcriptItems = await YoutubeTranscript.fetchTranscript(videoId, option);
+            
+            if (transcriptItems && transcriptItems.length > 0) {
+              console.log(`✅ Successfully fetched transcript with fallback options:`, option);
+              
+              // Apply the same cleaning logic
+              const cleanedTranscript = transcriptItems
+                .map(item => item.text.replace(/\$.*?\$/g, '').trim())
+                .filter(text => text.length > 0)
+                .join(' ');
+
+              if (cleanedTranscript.length > 0) {
+                const videoDetails = await this.getVideoDetails(videoId);
+
+                return `[REAL TRANSCRIPT for "${videoDetails.title}"]
+
+Channel: ${videoDetails.channelTitle}
+Published: ${new Date(videoDetails.publishedAt).toLocaleDateString()}
+Video ID: ${videoId}
+Language: ${option?.lang || 'auto-detected'}
+Transcript Length: ${cleanedTranscript.length} characters
+
+${cleanedTranscript}
+
+[End of real transcript]`;
+              }
+            }
+          } catch (langError) {
+            console.log(`⚠️ Failed with options ${JSON.stringify(option)}:`, langError.message);
+            continue;
+          }
+        }
+      } catch (fallbackError) {
+        console.error(`❌ Fallback transcript fetch also failed for ${videoId}:`, fallbackError.message);
+      }
+
       return null;
     }
   }
@@ -514,6 +572,35 @@ ${formattedTranscript}
     console.log(`📝 Formatted transcript: ${wordCount} words, ${finalTranscript.length} characters`);
     
     return finalTranscript || '[No readable transcript content found]';
+  }
+
+  /**
+   * Enhanced transcript fetching method that matches automation script logic
+   * @param videoId YouTube video ID
+   * @returns Clean transcript text or null if unavailable
+   */
+  async fetchCleanTranscript(videoId: string): Promise<string | null> {
+    try {
+      console.log(`🎯 Fetching clean transcript for video: ${videoId}`);
+      
+      const transcriptData = await YoutubeTranscript.fetchTranscript(videoId);
+      
+      if (transcriptData && transcriptData.length > 0) {
+        // Apply automation script cleaning logic
+        const cleanedTranscript = transcriptData
+          .map(item => item.text.replace(/\$.*?\$/g, '').trim()) // Remove patterns like $...$ 
+          .filter(text => text.length > 0) // Filter out empty text
+          .join(' '); // Join all segments into single text
+
+        console.log(`✅ Clean transcript extracted: ${cleanedTranscript.length} characters`);
+        return cleanedTranscript;
+      }
+
+      return null;
+    } catch (error) {
+      console.error(`❌ Failed to fetch clean transcript for video ${videoId}:`, error.message);
+      return null;
+    }
   }
 }
 //The code has been modified to implement real YouTube caption track fetching and formatting.
