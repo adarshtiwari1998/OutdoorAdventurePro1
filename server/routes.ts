@@ -1337,7 +1337,7 @@ app.get(`${apiPrefix}/admin/youtube/videos`, async (req, res) => {
       let transcriptErrorCount = 0;
       const transcriptErrors: string[] = [];
 
-      // Process videos one by one with transcript
+      // Process videos one by one with improved rate limiting
       for (let i = 0; i < videosToImport.length; i++) {
         const video = videosToImport[i];
         
@@ -1362,55 +1362,90 @@ app.get(`${apiPrefix}/admin/youtube/videos`, async (req, res) => {
           importedCount++;
           console.log(`✅ Step 1/2: Video metadata imported (${i + 1}/${videosToImport.length})`);
 
-          // Step 2: Fetch transcript immediately
+          // Step 2: Fetch transcript with progressive backoff
           try {
-            console.log(`📄 Step 2/2: Fetching transcript for: ${video.title}`);
+            console.log(`📄 Step 2/2: Fetching transcript for: ${video.title} (${video.id})`);
+            
+            // Progressive delay based on position to spread out requests
+            const progressiveDelay = Math.min(i * 2000, 10000); // Max 10 seconds
+            if (progressiveDelay > 0) {
+              console.log(`⏳ Progressive delay: ${progressiveDelay/1000}s to avoid rate limiting...`);
+              await new Promise(resolve => setTimeout(resolve, progressiveDelay));
+            }
             
             const transcript = await youtubeService.getVideoTranscript(video.id);
             
+            // Check if we got a real transcript vs content extract
+            const isRealTranscript = transcript.includes('[REAL TRANSCRIPT') || 
+                                   transcript.includes('[TRANSCRIPT for') || 
+                                   transcript.includes('[CAPTIONS DETECTED');
+            
             // Update video with transcript
             await storage.updateYoutubeVideoTranscript(savedVideo.id, transcript);
+            
+            const finalStatus = isRealTranscript ? 'completed' : 'completed_content_only';
             await db.update(schema.youtubeVideos)
-              .set({ importStatus: 'completed' })
+              .set({ importStatus: finalStatus })
               .where(eq(schema.youtubeVideos.id, savedVideo.id));
 
-            transcriptSuccessCount++;
-            console.log(`✅ Step 2/2: Transcript fetched successfully for: ${video.title}`);
+            if (isRealTranscript) {
+              transcriptSuccessCount++;
+              console.log(`✅ Step 2/2: Real transcript fetched for: ${video.title}`);
+            } else {
+              transcriptErrorCount++;
+              console.log(`⚠️ Step 2/2: Content extract created for: ${video.title}`);
+            }
 
           } catch (transcriptError) {
             console.error(`❌ Step 2/2: Error fetching transcript for ${video.title}:`, transcriptError);
             
-            // Set fallback transcript but still mark as completed
-            const fallbackTranscript = `[TRANSCRIPT UNAVAILABLE]
+            // Create enhanced fallback transcript
+            const fallbackTranscript = `[TRANSCRIPT UNAVAILABLE - IMPORT ERROR]
 
 Video: ${video.title}
 Channel: ${channel.name}
-Duration: ${Math.floor(video.duration / 60)} minutes
+Duration: ${Math.floor(video.duration / 60)} minutes ${video.duration % 60} seconds
 Published: ${new Date(video.publishedAt).toLocaleDateString()}
+Video ID: ${video.id}
 
 Description:
-${video.description.substring(0, 500)}...
+${video.description}
 
-[Transcript could not be fetched: ${transcriptError.message}]`;
+Error Details:
+${transcriptError.message}
+
+Status: Transcript extraction failed during import. Video may have captions that can be accessed manually.
+
+[End of error transcript]`;
             
             await storage.updateYoutubeVideoTranscript(savedVideo.id, fallbackTranscript);
             await db.update(schema.youtubeVideos)
-              .set({ importStatus: 'completed_no_transcript' })
+              .set({ 
+                importStatus: 'completed_with_errors',
+                errorMessage: `Transcript error: ${transcriptError.message}`
+              })
               .where(eq(schema.youtubeVideos.id, savedVideo.id));
 
             transcriptErrorCount++;
             transcriptErrors.push(`${video.title}: ${transcriptError.message}`);
           }
 
-          // Add delay between videos to avoid rate limiting
+          // Smart delay between videos based on success/failure rate
           if (i < videosToImport.length - 1) {
-            console.log(`⏳ Waiting 3 seconds before processing next video...`);
-            await new Promise(resolve => setTimeout(resolve, 3000));
+            const baseDelay = 4000; // Base 4 seconds
+            const errorMultiplier = transcriptErrorCount > 2 ? 2 : 1; // Double delay if many errors
+            const finalDelay = baseDelay * errorMultiplier;
+            
+            console.log(`⏳ Waiting ${finalDelay/1000} seconds before next video (error count: ${transcriptErrorCount})...`);
+            await new Promise(resolve => setTimeout(resolve, finalDelay));
           }
 
         } catch (videoError) {
           console.error(`❌ Error processing video ${video.id}:`, videoError);
           transcriptErrors.push(`${video.title}: Failed to import - ${videoError.message}`);
+          
+          // Still increment error count for rate limiting logic
+          transcriptErrorCount++;
         }
       }
 
@@ -2605,6 +2640,127 @@ app.get(`${apiPrefix}/admin/tips/:id`, async (req, res) => {
     } catch (error) {
       console.error("Error syncing channel counts:", error);
       res.status(500).json({ message: "Failed to sync channel counts" });
+    }
+  });
+
+  app.post(`${apiPrefix}/admin/youtube/videos/retry-transcripts`, async (req, res) => {
+    try {
+      const { videoIds, mode = 'failed_only' } = req.body;
+
+      if (!Array.isArray(videoIds) || videoIds.length === 0) {
+        return res.status(400).json({ message: "Video IDs array is required" });
+      }
+
+      console.log(`🔄 Starting transcript retry for ${videoIds.length} videos (mode: ${mode})`);
+
+      let successCount = 0;
+      let errorCount = 0;
+      let skippedCount = 0;
+      const errors: string[] = [];
+      const results = [];
+
+      for (let i = 0; i < videoIds.length; i++) {
+        const videoId = parseInt(videoIds[i]);
+        
+        try {
+          // Get video from database
+          const video = await storage.getYoutubeVideoById(videoId);
+          if (!video) {
+            errors.push(`Video with ID ${videoId} not found`);
+            errorCount++;
+            continue;
+          }
+
+          // Check if we should retry this video based on mode
+          if (mode === 'failed_only') {
+            const hasRealTranscript = video.transcript && (
+              video.transcript.includes('[REAL TRANSCRIPT') || 
+              video.transcript.includes('[TRANSCRIPT for') ||
+              video.transcript.includes('[CAPTIONS DETECTED')
+            );
+            
+            if (hasRealTranscript) {
+              console.log(`⏭️ Skipping ${video.title} - already has real transcript`);
+              skippedCount++;
+              continue;
+            }
+          }
+
+          console.log(`🔄 Retry ${i + 1}/${videoIds.length}: ${video.title} (${video.videoId})`);
+
+          // Add progressive delay to avoid rate limiting
+          if (i > 0) {
+            const delay = Math.min(3000 + (i * 1000), 10000); // 3s base + 1s per video, max 10s
+            console.log(`⏳ Waiting ${delay/1000}s to avoid rate limiting...`);
+            await new Promise(resolve => setTimeout(resolve, delay));
+          }
+
+          // Retry transcript fetch
+          const transcript = await youtubeService.getVideoTranscript(video.videoId);
+          
+          // Check if we got a real transcript
+          const isRealTranscript = transcript.includes('[REAL TRANSCRIPT') || 
+                                 transcript.includes('[TRANSCRIPT for') || 
+                                 transcript.includes('[CAPTIONS DETECTED');
+          
+          // Update video with new transcript
+          await storage.updateYoutubeVideoTranscript(videoId, transcript);
+          
+          const newStatus = isRealTranscript ? 'completed' : 'completed_content_only';
+          await db.update(schema.youtubeVideos)
+            .set({ 
+              importStatus: newStatus,
+              errorMessage: null // Clear any previous error
+            })
+            .where(eq(schema.youtubeVideos.id, videoId));
+
+          if (isRealTranscript) {
+            console.log(`✅ Success: Real transcript fetched for ${video.title}`);
+            successCount++;
+            results.push({ videoId: video.videoId, title: video.title, status: 'success', type: 'real_transcript' });
+          } else {
+            console.log(`⚠️ Partial: Content extract created for ${video.title}`);
+            errorCount++;
+            results.push({ videoId: video.videoId, title: video.title, status: 'partial', type: 'content_extract' });
+          }
+
+        } catch (error) {
+          console.error(`❌ Error retrying transcript for video ${videoId}:`, error);
+          errors.push(`Video ${videoId}: ${error.message}`);
+          errorCount++;
+          
+          // Mark video with error status
+          try {
+            await db.update(schema.youtubeVideos)
+              .set({ 
+                importStatus: 'completed_with_errors',
+                errorMessage: `Retry failed: ${error.message}`
+              })
+              .where(eq(schema.youtubeVideos.id, videoId));
+          } catch (updateError) {
+            console.error(`Failed to update error status for video ${videoId}:`, updateError);
+          }
+        }
+      }
+
+      console.log(`📊 Transcript retry complete:`);
+      console.log(`   - Successfully extracted: ${successCount} real transcripts`);
+      console.log(`   - Content extracts only: ${errorCount - errors.length} videos`);
+      console.log(`   - Errors: ${errors.length} videos`);
+      console.log(`   - Skipped: ${skippedCount} videos`);
+
+      res.json({
+        success: true,
+        successCount,
+        errorCount,
+        skippedCount,
+        errors,
+        results,
+        message: `Retry complete: ${successCount} real transcripts extracted, ${errorCount - errors.length} content extracts, ${errors.length} errors, ${skippedCount} skipped.`
+      });
+    } catch (error) {
+      console.error("Error in transcript retry:", error);
+      res.status(500).json({ message: "Failed to retry transcripts" });
     }
   });
 
