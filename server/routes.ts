@@ -2636,15 +2636,16 @@ app.get(`${apiPrefix}/admin/tips/:id`, async (req, res) => {
     }
   });
 
+  // Intelligent retry system with circuit breaker pattern for YouTube transcript fetching.
   app.post(`${apiPrefix}/admin/youtube/videos/retry-transcripts`, async (req, res) => {
     try {
-      const { videoIds, mode = 'failed_only' } = req.body;
+      const { videoIds, mode = 'failed_only', batchSize = 3 } = req.body;
 
       if (!Array.isArray(videoIds) || videoIds.length === 0) {
         return res.status(400).json({ message: "Video IDs array is required" });
       }
 
-      console.log(`🔄 Starting transcript retry for ${videoIds.length} videos (mode: ${mode})`);
+      console.log(`🔄 Starting intelligent transcript retry for ${videoIds.length} videos (mode: ${mode}, batch: ${batchSize})`);
 
       let successCount = 0;
       let errorCount = 0;
@@ -2652,95 +2653,170 @@ app.get(`${apiPrefix}/admin/tips/:id`, async (req, res) => {
       const errors: string[] = [];
       const results = [];
 
-      for (let i = 0; i < videoIds.length; i++) {
-        const videoId = parseInt(videoIds[i]);
+      // Circuit breaker pattern
+      let consecutiveFailures = 0;
+      const maxConsecutiveFailures = 5;
+      let circuitOpen = false;
 
-        try {
-          // Get video from database
-          const video = await storage.getYoutubeVideoById(videoId);
-          if (!video) {
-            errors.push(`Video with ID ${videoId} not found`);
-            errorCount++;
-            continue;
-          }
+      // Process in small batches to avoid overwhelming the API
+      for (let batchIndex = 0; batchIndex < videoIds.length; batchIndex += batchSize) {
+        const batch = videoIds.slice(batchIndex, batchIndex + batchSize);
 
-          // Check if we should retry this video based on mode
-          if (mode === 'failed_only') {
-            const hasRealTranscript = video.transcript && (
-              video.transcript.includes('[REAL TRANSCRIPT') || 
-              video.transcript.includes('[TRANSCRIPT for') ||
-              video.transcript.includes('[CAPTIONS DETECTED')
-            );
+        console.log(`📦 Processing batch ${Math.floor(batchIndex / batchSize) + 1}/${Math.ceil(videoIds.length / batchSize)} (${batch.length} videos)`);
 
-            if (hasRealTranscript) {
-              console.log(`⏭️ Skipping ${video.title} - already has real transcript`);
-              skippedCount++;
+        // Circuit breaker check
+        if (circuitOpen) {
+          console.log(`🚫 Circuit breaker open - waiting 60s before retry...`);
+          await new Promise(resolve => setTimeout(resolve, 60000));
+          circuitOpen = false;
+          consecutiveFailures = 0;
+        }
+
+        for (let i = 0; i < batch.length; i++) {
+          const videoId = parseInt(batch[i]);
+          const globalIndex = batchIndex + i;
+
+          try {
+            // Get video from database
+            const video = await storage.getYoutubeVideoById(videoId);
+            if (!video) {
+              errors.push(`Video with ID ${videoId} not found`);
+              errorCount++;
               continue;
             }
-          }
 
-          console.log(`🔄 Retry ${i + 1}/${videoIds.length}: ${video.title} (${video.videoId})`);
+            // Check if we should retry this video based on mode
+            if (mode === 'failed_only') {
+              const hasRealTranscript = video.transcript && (
+                video.transcript.includes('[REAL TRANSCRIPT') && 
+                !video.transcript.includes('[CAPTIONS DETECTED') &&
+                !video.transcript.includes('[TRANSCRIPT EXTRACTION FAILED')
+              );
 
-          // Add progressive delay to avoid rate limiting
-          if (i > 0) {
-            const delay = Math.min(3000 + (i * 1000), 10000); // 3s base + 1s per video, max 10s
-            console.log(`⏳ Waiting ${delay/1000}s to avoid rate limiting...`);
-            await new Promise(resolve => setTimeout(resolve, delay));
-          }
+              if (hasRealTranscript) {
+                console.log(`⏭️ Skipping ${video.title} - already has real transcript`);
+                skippedCount++;
+                continue;
+              }
+            }
 
-          // Retry transcript fetch
-          const transcript = await youtubeService.getVideoTranscript(video.videoId);
+            console.log(`🔄 Retry ${globalIndex + 1}/${videoIds.length}: ${video.title} (${video.videoId})`);
 
-          // Check if we got a real transcript
-          const isRealTranscript = transcript.includes('[REAL TRANSCRIPT') || 
-                                 transcript.includes('[TRANSCRIPT for') || 
-                                 transcript.includes('[CAPTIONS DETECTED');
+            // Smart delay calculation
+            const baseDelay = 25000; // 25 seconds base
+            const batchDelay = batchIndex * 5000; // Additional 5s per batch
+            const positionDelay = i * 8000; // 8s between videos in batch
+            const errorPenalty = consecutiveFailures * 10000; // 10s per consecutive failure
 
-          // Update video with new transcript
-          await storage.updateYoutubeVideoTranscript(videoId, transcript);
+            const totalDelay = baseDelay + batchDelay + positionDelay + errorPenalty;
+            const maxDelay = 180000; // Max 3 minutes
+            const finalDelay = Math.min(totalDelay, maxDelay);
 
-          const newStatus = isRealTranscript ? 'completed' : 'completed_content_only';
-          await db.update(schema.youtubeVideos)
-            .set({ 
-              importStatus: newStatus,
-              errorMessage: null // Clear any previous error
-            })
-            .where(eq(schema.youtubeVideos.id, videoId));
+            if (globalIndex > 0) {
+              console.log(`⏳ Smart delay: ${finalDelay/1000}s (failures: ${consecutiveFailures})...`);
+              await new Promise(resolve => setTimeout(resolve, finalDelay));
+            }
 
-          if (isRealTranscript) {
-            console.log(`✅ Success: Real transcript fetched for ${video.title}`);
-            successCount++;
-            results.push({ videoId: video.videoId, title: video.title, status: 'success', type: 'real_transcript' });
-          } else {
-            console.log(`⚠️ Partial: Content extract created for ${video.title}`);
-            errorCount++;
-            results.push({ videoId: video.videoId, title: video.title, status: 'partial', type: 'content_extract' });
-          }
+            // Retry transcript fetch with timeout
+            const timeoutPromise = new Promise((_, reject) => {
+              setTimeout(() => reject(new Error('Transcript fetch timeout')), 120000); // 2 minute timeout
+            });
 
-        } catch (error) {
-          console.error(`❌ Error retrying transcript for video ${videoId}:`, error);
-          errors.push(`Video ${videoId}: ${error.message}`);
-          errorCount++;
+            const transcriptPromise = youtubeService.getVideoTranscript(video.videoId);
+            const transcript = await Promise.race([transcriptPromise, timeoutPromise]) as string;
 
-          // Mark video with error status
-          try {
+            // Enhanced transcript analysis
+            const isRealTranscript = transcript.includes('[REAL TRANSCRIPT') && 
+                                   !transcript.includes('[CAPTIONS DETECTED') &&
+                                   !transcript.includes('[TRANSCRIPT EXTRACTION FAILED');
+
+            const isContentExtract = transcript.includes('[CAPTIONS DETECTED');
+            const isFailed = transcript.includes('[TRANSCRIPT EXTRACTION FAILED');
+            const isRateLimit = transcript.includes('captcha') || transcript.includes('too many requests');
+
+            // Update video with transcript
+            await storage.updateYoutubeVideoTranscript(videoId, transcript);
+
+            let newStatus = 'completed_with_errors';
+            let resultType = 'error';
+
+            if (isRealTranscript) {
+              newStatus = 'completed';
+              resultType = 'real_transcript';
+              successCount++;
+              consecutiveFailures = 0; // Reset failure counter
+              console.log(`✅ Success: Real transcript extracted for ${video.title}`);
+            } else if (isContentExtract) {
+              newStatus = 'completed_content_only';
+              resultType = 'content_extract';
+              consecutiveFailures = 0; // Reset failure counter
+              console.log(`⚠️ Partial: Content extract created for ${video.title}`);
+            } else {
+              consecutiveFailures++;
+              if (isRateLimit) {
+                console.log(`🚫 Rate limited for ${video.title} - activating circuit breaker`);
+                if (consecutiveFailures >= maxConsecutiveFailures) {
+                  circuitOpen = true;
+                }
+              }
+              errorCount++;
+              console.log(`❌ Failed: Transcript extraction failed for ${video.title}`);
+            }
+
             await db.update(schema.youtubeVideos)
               .set({ 
-                importStatus: 'completed_with_errors',
-                errorMessage: `Retry failed: ${error.message}`
+                importStatus: newStatus,
+                errorMessage: isFailed ? 'Retry extraction failed' : null
               })
               .where(eq(schema.youtubeVideos.id, videoId));
-          } catch (updateError) {
-            console.error(`Failed to update error status for video ${videoId}:`, updateError);
+
+            results.push({ 
+              videoId: video.videoId, 
+              title: video.title, 
+              status: isRealTranscript ? 'success' : isContentExtract ? 'partial' : 'failed',
+              type: resultType,
+              retryAttempt: globalIndex + 1
+            });
+
+          } catch (error) {
+            console.error(`❌ Error retrying transcript for video ${videoId}:`, error);
+            errors.push(`Video ${videoId}: ${error.message}`);
+            errorCount++;
+            consecutiveFailures++;
+
+            // Activate circuit breaker if too many consecutive failures
+            if (consecutiveFailures >= maxConsecutiveFailures) {
+              circuitOpen = true;
+            }
+
+            // Mark video with error status
+            try {
+              await db.update(schema.youtubeVideos)
+                .set({ 
+                  importStatus: 'completed_with_errors',
+                  errorMessage: `Retry failed: ${error.message}`
+                })
+                .where(eq(schema.youtubeVideos.id, videoId));
+            } catch (updateError) {
+              console.error(`Failed to update error status for video ${videoId}:`, updateError);
+            }
           }
+        }
+
+        // Inter-batch delay (longer)
+        if (batchIndex + batchSize < videoIds.length) {
+          const interBatchDelay = 45000 + (Math.random() * 15000); // 45-60 seconds
+          console.log(`📦 Inter-batch delay: ${interBatchDelay/1000}s...`);
+          await new Promise(resolve => setTimeout(resolve, interBatchDelay));
         }
       }
 
-      console.log(`📊 Transcript retry complete:`);
+      console.log(`📊 Intelligent transcript retry complete:`);
       console.log(`   - Successfully extracted: ${successCount} real transcripts`);
-      console.log(`   - Content extracts only: ${errorCount - errors.length} videos`);
+      console.log(`   - Content extracts: ${results.filter(r => r.type === 'content_extract').length} videos`);
       console.log(`   - Errors: ${errors.length} videos`);
       console.log(`   - Skipped: ${skippedCount} videos`);
+      console.log(`   - Circuit breaker activated: ${circuitOpen ? 'Yes' : 'No'}`);
 
       res.json({
         success: true,
@@ -2749,10 +2825,11 @@ app.get(`${apiPrefix}/admin/tips/:id`, async (req, res) => {
         skippedCount,
         errors,
         results,
-        message: `Retry complete: ${successCount} real transcripts extracted, ${errorCount - errors.length} content extracts, ${errors.length} errors, ${skippedCount} skipped.`
+        circuitBreakerActivated: circuitOpen,
+        message: `Intelligent retry complete: ${successCount} real transcripts extracted, ${results.filter(r => r.type === 'content_extract').length} content extracts, ${errors.length} errors, ${skippedCount} skipped.`
       });
     } catch (error) {
-      console.error("Error in transcript retry:", error);
+      console.error("Error in intelligent transcript retry:", error);
       res.status(500).json({ message: "Failed to retry transcripts" });
     }
   });

@@ -373,89 +373,147 @@ export class YouTubeService {
     try {
       console.log(`📄 Fetching transcript for: ${videoId}`);
 
-      // Add random delay between 5-10 seconds to reduce rate limiting
-      const delay = Math.floor(Math.random() * 5000) + 5000;
-      console.log(`⏳ Waiting ${delay/1000}s before transcript request...`);
-      await new Promise(resolve => setTimeout(resolve, delay));
+      // Advanced rate limiting with jittered delays
+      const baseDelay = Math.floor(Math.random() * 8000) + 12000; // 12-20 seconds
+      console.log(`⏳ Waiting ${baseDelay/1000}s before transcript request...`);
+      await new Promise(resolve => setTimeout(resolve, baseDelay));
 
-      // Try multiple times with exponential backoff
+      // Try multiple approaches with different strategies
+      const strategies = [
+        { name: 'Direct', options: {} },
+        { name: 'With Language', options: { lang: 'en' } },
+        { name: 'Auto Language', options: { lang: 'auto' } },
+        { name: 'With Country', options: { lang: 'en', country: 'US' } }
+      ];
+
       let lastError;
-      for (let attempt = 1; attempt <= 3; attempt++) {
+      for (let strategyIndex = 0; strategyIndex < strategies.length; strategyIndex++) {
+        const strategy = strategies[strategyIndex];
+        
         try {
-          console.log(`🔄 Transcript attempt ${attempt}/3 for video: ${videoId}`);
+          console.log(`🔄 Strategy ${strategyIndex + 1}/4: ${strategy.name} for video: ${videoId}`);
           
-          const transcriptData = await YoutubeTranscript.fetchTranscript(videoId);
+          // Add progressive delay between strategies
+          if (strategyIndex > 0) {
+            const strategyDelay = 8000 + (strategyIndex * 3000); // 8s, 11s, 14s, 17s
+            console.log(`⏳ Strategy delay: ${strategyDelay/1000}s...`);
+            await new Promise(resolve => setTimeout(resolve, strategyDelay));
+          }
+          
+          const transcriptData = await YoutubeTranscript.fetchTranscript(videoId, strategy.options);
           
           if (transcriptData && transcriptData.length > 0) {
-            // Clean and format the transcript (same as your working code)
+            // Clean and format the transcript
             const cleanedTranscript = transcriptData
-              .map(item => item.text.replace(/\$.*?\$/g, '').trim())
+              .map(item => {
+                // Remove music notation and clean text
+                let text = item.text
+                  .replace(/\$.*?\$/g, '') // Remove $...$ patterns
+                  .replace(/\[.*?\]/g, '') // Remove [...]
+                  .replace(/♪.*?♪/g, '') // Remove music symbols
+                  .replace(/\s+/g, ' ') // Normalize whitespace
+                  .trim();
+                return text;
+              })
               .filter(text => text.length > 0)
               .join(' ');
 
-            if (cleanedTranscript.length > 0) {
-              const videoDetails = await this.getVideoDetails(videoId);
+            if (cleanedTranscript.length > 50) { // Ensure we have substantial content
+              let videoDetails;
+              try {
+                videoDetails = await this.getVideoDetails(videoId);
+              } catch (detailError) {
+                console.warn(`⚠️ Could not fetch video details for ${videoId}, using minimal info`);
+                videoDetails = {
+                  title: 'Unknown Title',
+                  channelTitle: 'Unknown Channel',
+                  publishedAt: new Date(),
+                  duration: 0
+                };
+              }
               
-              console.log(`✅ Successfully extracted transcript: ${cleanedTranscript.length} characters`);
+              console.log(`✅ Successfully extracted transcript using ${strategy.name}: ${cleanedTranscript.length} characters`);
               
-              return `[TRANSCRIPT for "${videoDetails.title}"]
+              return `[REAL TRANSCRIPT for "${videoDetails.title}"]
+
+Channel: ${videoDetails.channelTitle}
+Published: ${new Date(videoDetails.publishedAt).toLocaleDateString()}
+Video ID: ${videoId}
+Duration: ${Math.floor(videoDetails.duration / 60)} minutes ${videoDetails.duration % 60} seconds
+Extraction Method: ${strategy.name}
+
+${cleanedTranscript}
+
+[End of real transcript]`;
+            }
+          }
+          
+          console.log(`⚠️ Strategy ${strategy.name} found no usable transcript for: ${videoId}`);
+          
+        } catch (error) {
+          lastError = error;
+          console.error(`❌ Strategy ${strategy.name} failed for video ${videoId}:`, error.message);
+          
+          // If rate limited, implement smart backoff
+          if (error.message.includes('captcha') || error.message.includes('too many requests')) {
+            const backoffDelay = Math.min(30000 + (strategyIndex * 15000), 120000); // Max 2 minutes
+            console.log(`🚫 Rate limited, waiting ${backoffDelay/1000}s before next strategy...`);
+            await new Promise(resolve => setTimeout(resolve, backoffDelay));
+          }
+        }
+      }
+      
+      // If all strategies failed, try to get video details for content extraction
+      try {
+        const videoDetails = await this.getVideoDetails(videoId);
+        
+        console.log(`⚠️ All transcript strategies failed, creating content extract for: ${videoId}`);
+        
+        return `[CAPTIONS DETECTED - Content extract for "${videoDetails.title}"]
 
 Channel: ${videoDetails.channelTitle}
 Published: ${new Date(videoDetails.publishedAt).toLocaleDateString()}
 Video ID: ${videoId}
 Duration: ${Math.floor(videoDetails.duration / 60)} minutes ${videoDetails.duration % 60} seconds
 
-${cleanedTranscript}
+Video Description:
+${videoDetails.description || 'No description available'}
 
-[End of transcript]`;
-            }
-          }
-          
-          // If we get here, no transcript was found
-          console.log(`⚠️ No transcript available for: ${videoId}`);
-          return `[NO TRANSCRIPT AVAILABLE for video ${videoId}]
+Content Topics: ${this.extractTopicsFromTitle(videoDetails.title, videoDetails.description || '')}
 
-This video does not have accessible captions or transcripts.
+Note: This video likely has captions but they are not accessible via automated extraction. 
+Manual review may be required for full transcript access.
 
-[End of transcript check]`;
-
-        } catch (error) {
-          lastError = error;
-          console.error(`❌ Attempt ${attempt}/3 failed for video ${videoId}:`, error.message);
-          
-          // If this is a rate limiting error, wait longer before retry
-          if (error.message.includes('captcha') || error.message.includes('too many requests')) {
-            if (attempt < 3) {
-              const backoffDelay = attempt * 10000; // 10s, 20s exponential backoff
-              console.log(`⏳ Rate limited, waiting ${backoffDelay/1000}s before retry...`);
-              await new Promise(resolve => setTimeout(resolve, backoffDelay));
-            }
-          } else {
-            // For other errors, don't retry
-            break;
-          }
-        }
-      }
-      
-      // If all attempts failed, create fallback content
-      console.error(`❌ All transcript attempts failed for video ${videoId}`);
-      
-      return `[TRANSCRIPT EXTRACTION FAILED for video ${videoId}]
+[End of content extract]`;
+        
+      } catch (detailError) {
+        console.error(`❌ Could not fetch video details for fallback: ${detailError.message}`);
+        
+        return `[TRANSCRIPT EXTRACTION FAILED for video ${videoId}]
 
 Error: ${lastError?.message || 'Unknown error'}
 
-Note: YouTube is currently rate limiting transcript requests from this IP address. 
-This often resolves after waiting 1-2 hours. You can retry transcript extraction later 
-using the "Retry Transcripts" feature in the admin panel.
+Details Error: ${detailError.message}
+
+Note: YouTube is currently blocking transcript requests from this IP address. 
+This is a temporary restriction that typically resolves within 1-2 hours.
+
+Recommendations:
+1. Wait 1-2 hours before retrying
+2. Use the "Retry Transcripts" feature in the admin panel
+3. Consider processing videos in smaller batches
 
 [End of error report]`;
+      }
 
     } catch (error) {
       console.error(`❌ Critical error fetching transcript for video ${videoId}:`, error.message);
       
       return `[TRANSCRIPT EXTRACTION FAILED for video ${videoId}]
 
-Error: ${error.message}
+Critical Error: ${error.message}
+
+This may indicate a network connectivity issue or API changes.
 
 [End of error report]`;
     }
