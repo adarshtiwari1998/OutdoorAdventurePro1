@@ -308,7 +308,7 @@ export const storage = {
     duration?: number;
   }) {
     try {
-      // Check for existing blog posts with similar titles
+      // Check for existing blog posts with similar titles using advanced matching
       const existingBlogPosts = await db.query.blogPosts.findMany({
         columns: {
           id: true,
@@ -318,31 +318,27 @@ export const storage = {
 
       let hasBlogPostMatch = false;
       let matchingBlogPostTitle = null;
+      let bestMatchScore = 0;
 
-      // Simple title matching - check if video title contains blog post title or vice versa
+      // Advanced title matching with multiple algorithms
       for (const blogPost of existingBlogPosts) {
-        const videoTitle = video.title.toLowerCase().trim();
-        const blogTitle = blogPost.title.toLowerCase().trim();
-
-        if (videoTitle.includes(blogTitle) || blogTitle.includes(videoTitle) || 
-            this.calculateSimilarity(videoTitle, blogTitle) > 0.7) {
+        const matchScore = this.calculateAdvancedTitleSimilarity(video.title, blogPost.title);
+        
+        console.log(`🔍 Matching "${video.title}" vs "${blogPost.title}" - Score: ${matchScore}`);
+        
+        // Use a threshold of 0.6 for matches (60% similarity)
+        if (matchScore > 0.6 && matchScore > bestMatchScore) {
           hasBlogPostMatch = true;
           matchingBlogPostTitle = blogPost.title;
-          break;
+          bestMatchScore = matchScore;
         }
       }
 
-    const insertData: any = {
-      videoId: video.videoId,
-      title: video.title,
-      description: video.description || '',
-      thumbnail: video.thumbnail || '',
-      publishedAt: video.publishedAt,
-      transcript: video.transcript || '',
-      importStatus: video.importStatus || 'pending',
-      videoType: video.videoType || 'video',
-      duration: video.duration || null
-    };
+      if (hasBlogPostMatch) {
+        console.log(`✅ Found blog post match: "${matchingBlogPostTitle}" (Score: ${bestMatchScore})`);
+      } else {
+        console.log(`❌ No blog post match found for: "${video.title}"`);
+      }
 
       const [newVideo] = await db.insert(schema.youtubeVideos).values({
         videoId: video.videoId,
@@ -354,10 +350,12 @@ export const storage = {
         categoryId: video.categoryId,
         transcript: video.transcript || null,
         importStatus: video.importStatus || 'imported',
+        hasBlogPostMatch,
+        matchingBlogPostTitle,
+        videoType: video.videoType || 'video',
+        duration: video.duration || null,
         createdAt: new Date(),
-        updatedAt: new Date(),
-        videoType: video.videoType,
-        duration: video.duration
+        updatedAt: new Date()
       }).returning();
 
       return newVideo;
@@ -367,8 +365,49 @@ export const storage = {
     }
   },
 
-  // Helper function to calculate string similarity
-  calculateSimilarity(str1: string, str2: string): number {
+  // Advanced title similarity calculation using multiple algorithms
+  calculateAdvancedTitleSimilarity(videoTitle: string, blogTitle: string): number {
+    // Normalize titles for comparison
+    const normalizeTitle = (title: string): string => {
+      return title
+        .toLowerCase()
+        .replace(/[^\w\s]/g, ' ') // Replace punctuation with spaces
+        .replace(/\s+/g, ' ') // Replace multiple spaces with single space
+        .trim();
+    };
+
+    const videoNormalized = normalizeTitle(videoTitle);
+    const blogNormalized = normalizeTitle(blogTitle);
+
+    // 1. Exact match (highest score)
+    if (videoNormalized === blogNormalized) {
+      return 1.0;
+    }
+
+    // 2. One title contains the other (high score)
+    if (videoNormalized.includes(blogNormalized) || blogNormalized.includes(videoNormalized)) {
+      return 0.9;
+    }
+
+    // 3. Calculate multiple similarity scores
+    const levenshteinScore = this.calculateLevenshteinSimilarity(videoNormalized, blogNormalized);
+    const jaccardScore = this.calculateJaccardSimilarity(videoNormalized, blogNormalized);
+    const keywordScore = this.calculateKeywordSimilarity(videoNormalized, blogNormalized);
+    const semanticScore = this.calculateSemanticSimilarity(videoNormalized, blogNormalized);
+
+    // Weighted average of different similarity measures
+    const finalScore = (
+      levenshteinScore * 0.3 +
+      jaccardScore * 0.3 +
+      keywordScore * 0.25 +
+      semanticScore * 0.15
+    );
+
+    return Math.min(finalScore, 0.95); // Cap at 0.95 to reserve 1.0 for exact matches
+  },
+
+  // Levenshtein distance-based similarity
+  calculateLevenshteinSimilarity(str1: string, str2: string): number {
     const longer = str1.length > str2.length ? str1 : str2;
     const shorter = str1.length > str2.length ? str2 : str1;
     const editDistance = this.levenshteinDistance(longer, shorter);
@@ -397,6 +436,108 @@ export const storage = {
       }
     }
     return matrix[str2.length][str1.length];
+  },
+
+  // Jaccard similarity based on word sets
+  calculateJaccardSimilarity(str1: string, str2: string): number {
+    const words1 = new Set(str1.split(' ').filter(word => word.length > 2));
+    const words2 = new Set(str2.split(' ').filter(word => word.length > 2));
+    
+    const intersection = new Set([...words1].filter(word => words2.has(word)));
+    const union = new Set([...words1, ...words2]);
+    
+    return union.size === 0 ? 0 : intersection.size / union.size;
+  },
+
+  // Keyword-based similarity (important words carry more weight)
+  calculateKeywordSimilarity(str1: string, str2: string): number {
+    // Common stop words to ignore
+    const stopWords = new Set(['the', 'and', 'or', 'but', 'in', 'on', 'at', 'to', 'for', 'of', 'with', 'by', 'a', 'an', 'is', 'are', 'was', 'were', 'be', 'been', 'have', 'has', 'had', 'do', 'does', 'did', 'will', 'would', 'could', 'should', 'may', 'might', 'must', 'can', 'this', 'that', 'these', 'those', 'i', 'you', 'he', 'she', 'it', 'we', 'they', 'me', 'him', 'her', 'us', 'them']);
+    
+    const getKeywords = (str: string): string[] => {
+      return str
+        .split(' ')
+        .filter(word => word.length > 2 && !stopWords.has(word))
+        .map(word => word.toLowerCase());
+    };
+
+    const keywords1 = getKeywords(str1);
+    const keywords2 = getKeywords(str2);
+
+    if (keywords1.length === 0 || keywords2.length === 0) {
+      return 0;
+    }
+
+    let matches = 0;
+    const totalKeywords = Math.max(keywords1.length, keywords2.length);
+
+    // Check for exact keyword matches
+    for (const keyword1 of keywords1) {
+      for (const keyword2 of keywords2) {
+        if (keyword1 === keyword2) {
+          matches++;
+          break;
+        }
+        // Also check for partial matches on longer words
+        if (keyword1.length > 4 && keyword2.length > 4) {
+          if (keyword1.includes(keyword2) || keyword2.includes(keyword1)) {
+            matches += 0.7; // Partial match worth less
+            break;
+          }
+        }
+      }
+    }
+
+    return matches / totalKeywords;
+  },
+
+  // Semantic similarity based on context and meaning
+  calculateSemanticSimilarity(str1: string, str2: string): number {
+    // Common outdoor/adventure related synonyms and related terms
+    const semanticGroups = [
+      ['camping', 'camp', 'campsite', 'outdoor', 'outdoors'],
+      ['hiking', 'hike', 'trail', 'walk', 'trek', 'trekking'],
+      ['fishing', 'fish', 'angling', 'catch'],
+      ['travel', 'trip', 'journey', 'adventure', 'vacation'],
+      ['gear', 'equipment', 'tools', 'supplies'],
+      ['tips', 'advice', 'guide', 'how', 'tutorial'],
+      ['best', 'top', 'essential', 'must', 'need', 'important'],
+      ['things', 'items', 'stuff', 'essentials'],
+      ['fun', 'enjoy', 'experience', 'amazing', 'awesome']
+    ];
+
+    const words1 = str1.split(' ').filter(word => word.length > 2);
+    const words2 = str2.split(' ').filter(word => word.length > 2);
+
+    let semanticMatches = 0;
+    let totalComparisons = 0;
+
+    for (const word1 of words1) {
+      for (const word2 of words2) {
+        totalComparisons++;
+        
+        // Direct match
+        if (word1 === word2) {
+          semanticMatches += 1;
+          continue;
+        }
+
+        // Check semantic groups
+        for (const group of semanticGroups) {
+          if (group.includes(word1) && group.includes(word2)) {
+            semanticMatches += 0.8; // Semantic matches worth slightly less
+            break;
+          }
+        }
+      }
+    }
+
+    return totalComparisons === 0 ? 0 : semanticMatches / totalComparisons;
+  },
+
+  // Helper function for backward compatibility
+  calculateSimilarity(str1: string, str2: string): number {
+    return this.calculateAdvancedTitleSimilarity(str1, str2);
   },
 
   async updateYoutubeVideosCategory(videoIds: number[], categoryId: number) {
