@@ -959,7 +959,7 @@ const YoutubeImport = () => {
                   </div>
                 </div>
               )}
-              <div className="rounded-md border overflow-x-auto">
+              <div className="admin-table-container">
                 <Table className="min-w-[1200px]">
                   <TableHeader>
                     <TableRow>

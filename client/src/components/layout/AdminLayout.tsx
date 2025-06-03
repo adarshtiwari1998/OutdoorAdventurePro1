@@ -138,7 +138,7 @@ const AdminLayout = ({ children, title }: AdminLayoutProps) => {
     };
 
   return (
-    <div className="flex min-h-screen bg-slate-50 dark:bg-slate-900">
+    <div className="flex min-h-screen bg-slate-50 dark:bg-slate-900 admin-layout-container">
       {/* Mobile sidebar toggle */}
       {isMobile && (
         <div className="fixed top-4 left-4 z-50">
@@ -487,7 +487,9 @@ const AdminLayout = ({ children, title }: AdminLayoutProps) => {
         </header>
 
         <main className="flex-1 p-6 admin-content-container admin-layout-main">
-          {children}
+          <div className="max-w-full overflow-x-auto">
+            {children}
+          </div>
         </main>
 
         <footer className="py-4 px-6 border-t border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 text-center text-sm text-muted-foreground">
