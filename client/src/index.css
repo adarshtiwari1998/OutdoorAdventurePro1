@@ -365,7 +365,7 @@ header {
   /* Ensure table headers and cells have proper spacing */
   .admin-table-container th,
   .admin-table-container td {
-    white-space: nowrap;
+    /* white-space: nowrap; */
     overflow: hidden;
     text-overflow: ellipsis;
     padding: 0.75rem 1rem;
@@ -451,15 +451,15 @@ header {
 /* Set consistent 1200px width for both admin tables */
   .admin-table-container.channels-table table,
   .admin-table-container.videos-table table {
-    width: 1200px;
-    min-width: 1200px;
-    max-width: 1200px;
+    width: 1000px;
+    min-width: 1000px;
+    max-width: 1000px;
   }
 
   /* Constrain the tabs container width for YouTube import page */
   .admin-table-container.channels-table,
   .admin-table-container.videos-table {
-    max-width: 1200px;
+    max-width: 1150px;
   }
 
   /* Fix for wide content in admin cards */
