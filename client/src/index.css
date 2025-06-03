@@ -448,6 +448,14 @@ header {
     background: hsl(var(--background));
   }
 
+/* Set consistent 1200px width for both admin tables */
+  .admin-table-container.channels-table table,
+  .admin-table-container.videos-table table {
+    width: 1200px;
+    min-width: 1200px;
+    max-width: 1200px;
+  }
+
   /* Fix for wide content in admin cards */
   .admin-card-content {
     overflow-x: auto;
