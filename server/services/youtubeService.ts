@@ -38,9 +38,11 @@ interface YouTubeChannel {
 
 export class YouTubeService {
   private apiKey: string | undefined;
+  private proxyUrl: string | undefined;
 
   constructor() {
     this.apiKey = process.env.YOUTUBE_API_KEY;
+    this.proxyUrl = process.env.PROXY_URL; // Optional proxy for transcript requests
   }
 
   private get baseUrl() {
@@ -373,17 +375,17 @@ export class YouTubeService {
     try {
       console.log(`📄 Fetching transcript for: ${videoId}`);
 
-      // Advanced rate limiting with jittered delays
-      const baseDelay = Math.floor(Math.random() * 8000) + 12000; // 12-20 seconds
+      // Enhanced rate limiting with exponential backoff
+      const baseDelay = Math.floor(Math.random() * 15000) + 30000; // 30-45 seconds
       console.log(`⏳ Waiting ${baseDelay/1000}s before transcript request...`);
       await new Promise(resolve => setTimeout(resolve, baseDelay));
 
-      // Try multiple approaches with different strategies
+      // Try multiple approaches with different strategies and longer delays
       const strategies = [
-        { name: 'Direct', options: {} },
-        { name: 'With Language', options: { lang: 'en' } },
-        { name: 'Auto Language', options: { lang: 'auto' } },
-        { name: 'With Country', options: { lang: 'en', country: 'US' } }
+        { name: 'Direct', options: {}, delay: 0 },
+        { name: 'With Language', options: { lang: 'en' }, delay: 60000 },
+        { name: 'Auto Language', options: { lang: 'auto' }, delay: 90000 },
+        { name: 'With Country', options: { lang: 'en', country: 'US' }, delay: 120000 }
       ];
 
       let lastError;
@@ -393,9 +395,9 @@ export class YouTubeService {
         try {
           console.log(`🔄 Strategy ${strategyIndex + 1}/4: ${strategy.name} for video: ${videoId}`);
           
-          // Add progressive delay between strategies
+          // Add progressive delay between strategies with circuit breaker
           if (strategyIndex > 0) {
-            const strategyDelay = 8000 + (strategyIndex * 3000); // 8s, 11s, 14s, 17s
+            const strategyDelay = strategy.delay || (30000 + (strategyIndex * 30000)); // 30s, 60s, 90s, 120s
             console.log(`⏳ Strategy delay: ${strategyDelay/1000}s...`);
             await new Promise(resolve => setTimeout(resolve, strategyDelay));
           }
@@ -454,10 +456,11 @@ ${cleanedTranscript}
           lastError = error;
           console.error(`❌ Strategy ${strategy.name} failed for video ${videoId}:`, error.message);
           
-          // If rate limited, implement smart backoff
+          // If rate limited, implement exponential backoff
           if (error.message.includes('captcha') || error.message.includes('too many requests')) {
-            const backoffDelay = Math.min(30000 + (strategyIndex * 15000), 120000); // Max 2 minutes
-            console.log(`🚫 Rate limited, waiting ${backoffDelay/1000}s before next strategy...`);
+            const backoffDelay = Math.min(120000 + (strategyIndex * 60000), 300000); // 2-5 minutes
+            console.log(`🚫 CAPTCHA/Rate limited detected! Waiting ${backoffDelay/1000}s before next strategy...`);
+            console.log(`💡 Tip: Consider using a VPN or waiting 1-2 hours before retrying`);
             await new Promise(resolve => setTimeout(resolve, backoffDelay));
           }
         }
@@ -495,13 +498,31 @@ Error: ${lastError?.message || 'Unknown error'}
 
 Details Error: ${detailError.message}
 
-Note: YouTube is currently blocking transcript requests from this IP address. 
-This is a temporary restriction that typically resolves within 1-2 hours.
+🚫 CAPTCHA REQUIRED: YouTube is blocking transcript requests from this IP address.
 
-Recommendations:
-1. Wait 1-2 hours before retrying
-2. Use the "Retry Transcripts" feature in the admin panel
-3. Consider processing videos in smaller batches
+SOLUTIONS TO BYPASS CAPTCHA:
+1. 🌐 Change IP Address:
+   - Use a VPN service and connect to a different location
+   - Restart your router/modem to get a new IP
+   - Use mobile hotspot temporarily
+
+2. ⏰ Wait and Retry:
+   - Wait 2-4 hours before retrying
+   - YouTube's rate limits reset periodically
+   - Try during off-peak hours (late night/early morning)
+
+3. 🔧 Manual Bypass (if desperate):
+   - Open YouTube in browser from same IP
+   - Solve any visible captchas
+   - Try accessing video transcripts manually
+   - This may reset the rate limit temporarily
+
+4. 📦 Batch Processing:
+   - Process only 1-2 videos per hour
+   - Use longer delays (5+ minutes between requests)
+   - Split large imports across multiple days
+
+Current Status: BLOCKED - Manual intervention required
 
 [End of error report]`;
       }

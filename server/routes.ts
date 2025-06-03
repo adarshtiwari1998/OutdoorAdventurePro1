@@ -1423,12 +1423,28 @@ Status: Transcript extraction failed during import. Video may have captions that
             transcriptErrors.push(`${video.title}: ${transcriptError.message}`);
           }
 
-          // Smart delay between videos based on success/failure rate
+          // Enhanced circuit breaker with captcha detection
           if (i < videosToImport.length - 1) {
-            const baseDelay = 15000; // Increased base to 15 seconds
-            const errorMultiplier = transcriptErrorCount > 0 ? 2 : 1; // Double delay if ANY errors
+            const baseDelay = 60000; // Increased to 60 seconds minimum
+            let errorMultiplier = 1;
+            
+            // Check if we hit captcha/rate limit
+            const isCaptchaError = transcriptError && (
+              transcriptError.message.includes('captcha') || 
+              transcriptError.message.includes('too many requests')
+            );
+            
+            if (isCaptchaError) {
+              console.log(`🚫 CAPTCHA DETECTED! Stopping import to prevent further blocking.`);
+              console.log(`💡 Please wait 2-4 hours or change IP address before continuing.`);
+              break; // Stop processing immediately
+            }
+            
+            if (transcriptErrorCount > 0) {
+              errorMultiplier = Math.min(transcriptErrorCount + 1, 5); // Max 5x delay
+            }
+            
             const finalDelay = baseDelay * errorMultiplier;
-
             console.log(`⏳ Waiting ${finalDelay/1000} seconds before next video (error count: ${transcriptErrorCount})...`);
             await new Promise(resolve => setTimeout(resolve, finalDelay));
           }
