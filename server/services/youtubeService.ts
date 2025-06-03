@@ -119,8 +119,11 @@ export class YouTubeService {
     }
   }
 
-  async getChannelVideos(channelId: string, maxResults = 10, offset = 0): Promise<YouTubeVideo[]> {
+  async getChannelVideos(channelId: string, maxResults = 10, existingVideoIds: Set<string> = new Set()): Promise<YouTubeVideo[]> {
     try {
+      console.log(`🔍 Fetching up to ${maxResults} NEW videos for channel ${channelId}`);
+      console.log(`📊 Existing videos to skip: ${existingVideoIds.size}`);
+
       // First, get the uploads playlist ID for the channel
       const channelResponse = await this.makeRequest('channels', {
         part: 'contentDetails',
@@ -133,16 +136,20 @@ export class YouTubeService {
 
       const uploadsPlaylistId = channelResponse.items[0].contentDetails.relatedPlaylists.uploads;
 
-      // Calculate how many videos to skip and fetch
-      let videosToFetch = [];
+      let newVideos: any[] = [];
       let pageToken = '';
-      let currentOffset = 0;
-      let remainingToFetch = maxResults;
+      let totalFetched = 0;
+      let totalSkipped = 0;
+      const maxIterations = 10; // Safety limit to prevent infinite loops
+      let iterations = 0;
 
-      // If we need to skip videos (offset > 0), we need to paginate through results
-      while (remainingToFetch > 0) {
-        const batchSize = Math.min(50, offset - currentOffset + remainingToFetch); // YouTube API max is 50
+      // Keep fetching until we have enough NEW videos or run out of videos
+      while (newVideos.length < maxResults && iterations < maxIterations) {
+        iterations++;
+        const batchSize = 50; // YouTube API maximum
         
+        console.log(`📄 Iteration ${iterations}: Fetching batch of ${batchSize} videos...`);
+
         const requestParams: any = {
           part: 'snippet,contentDetails',
           playlistId: uploadsPlaylistId,
@@ -156,37 +163,54 @@ export class YouTubeService {
         const playlistResponse = await this.makeRequest('playlistItems', requestParams);
 
         if (!playlistResponse.items || playlistResponse.items.length === 0) {
+          console.log(`📄 No more videos found, stopping search`);
           break;
         }
 
-        // If we haven't reached our offset yet, continue to next page
-        if (currentOffset + playlistResponse.items.length <= offset) {
-          currentOffset += playlistResponse.items.length;
-          pageToken = playlistResponse.nextPageToken;
-          if (!pageToken) break; // No more pages
-          continue;
+        totalFetched += playlistResponse.items.length;
+        console.log(`📦 Retrieved ${playlistResponse.items.length} videos from YouTube API`);
+
+        // Filter out videos that already exist in the database
+        for (const item of playlistResponse.items) {
+          const videoId = item.contentDetails.videoId;
+          
+          if (existingVideoIds.has(videoId)) {
+            totalSkipped++;
+            console.log(`⏭️ Skipping existing video: ${videoId}`);
+            continue;
+          }
+
+          // This is a new video
+          newVideos.push(item);
+          console.log(`✅ Found NEW video: ${videoId} - ${item.snippet.title}`);
+
+          // Stop if we have enough new videos
+          if (newVideos.length >= maxResults) {
+            console.log(`🎯 Reached target of ${maxResults} new videos`);
+            break;
+          }
         }
 
-        // We're in the range we want to fetch
-        const startIndex = Math.max(0, offset - currentOffset);
-        const endIndex = Math.min(playlistResponse.items.length, startIndex + remainingToFetch);
-        
-        const batchVideos = playlistResponse.items.slice(startIndex, endIndex);
-        videosToFetch.push(...batchVideos);
-        
-        remainingToFetch -= batchVideos.length;
-        currentOffset += playlistResponse.items.length;
-        
         pageToken = playlistResponse.nextPageToken;
-        if (!pageToken) break; // No more pages
+        if (!pageToken) {
+          console.log(`📄 No more pages available, stopping search`);
+          break;
+        }
+
+        console.log(`📊 Progress: ${newVideos.length}/${maxResults} new videos found, ${totalSkipped} skipped`);
       }
 
-      if (videosToFetch.length === 0) {
+      console.log(`📊 Final Summary: Found ${newVideos.length} new videos out of ${totalFetched} total fetched (${totalSkipped} skipped)`);
+
+      if (newVideos.length === 0) {
+        console.log(`⚠️ No new videos found for channel ${channelId}`);
         return [];
       }
 
-      // Get the full video details for each video
-      const videoIds = videosToFetch.map((item: any) => item.contentDetails.videoId).join(',');
+      // Get the full video details for the new videos
+      const videoIds = newVideos.map((item: any) => item.contentDetails.videoId).join(',');
+      console.log(`🔍 Fetching detailed info for ${newVideos.length} videos: ${videoIds}`);
+      
       const videosResponse = await this.makeRequest('videos', {
         part: 'snippet,contentDetails,statistics',
         id: videoIds
@@ -196,17 +220,20 @@ export class YouTubeService {
         return [];
       }
 
-      return videosResponse.items.map((video: any) => ({
+      const detailedVideos = videosResponse.items.map((video: any) => ({
         id: video.id,
         title: video.snippet.title,
         description: video.snippet.description,
-        thumbnailUrl: video.snippet.thumbnails.high.url,
+        thumbnailUrl: video.snippet.thumbnails.high?.url || video.snippet.thumbnails.default?.url,
         publishedAt: new Date(video.snippet.publishedAt),
         channelId: video.snippet.channelId,
         channelTitle: video.snippet.channelTitle
       }));
+
+      console.log(`✅ Successfully prepared ${detailedVideos.length} new videos for import`);
+      return detailedVideos;
     } catch (error) {
-      console.error(`Error fetching YouTube videos for channel ${channelId}:`, error);
+      console.error(`❌ Error fetching YouTube videos for channel ${channelId}:`, error);
       throw error;
     }
   }

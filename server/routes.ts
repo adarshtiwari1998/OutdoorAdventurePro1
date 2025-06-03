@@ -1313,82 +1313,54 @@ app.get(`${apiPrefix}/admin/youtube/videos`, async (req, res) => {
       const desiredNewVideos = Math.min(Math.max(1, parseInt(limit) || 10), 50);
       console.log(`📊 Target: ${desiredNewVideos} NEW videos to import`);
 
-      // Get all existing video IDs for this channel to avoid duplicates
+      // Get ALL existing video IDs for this channel from database
       const existingVideos = await storage.getYoutubeVideosByChannel(channel.id.toString());
       const existingVideoIds = new Set(existingVideos.map((v: any) => v.videoId));
       console.log(`📊 Found ${existingVideoIds.size} existing videos in database for this channel`);
 
+      // Fetch new videos from YouTube (the service will handle filtering)
+      console.log(`🔍 Fetching ${desiredNewVideos} NEW videos from YouTube API...`);
+      const videos = await youtubeService.getChannelVideos(
+        channel.channelId, 
+        desiredNewVideos,
+        existingVideoIds // Pass existing IDs so the service can filter them out
+      );
+      
+      console.log(`📋 YouTube service returned ${videos.length} NEW videos to import`);
+
       let importedCount = 0;
       let skippedCount = 0;
-      let totalFetched = 0;
-      let batchSize = Math.min(desiredNewVideos * 2, 50); // Start with 2x the desired amount
-      const maxAttempts = 3; // Maximum number of batches to try
-      let attempt = 0;
 
-      while (importedCount < desiredNewVideos && attempt < maxAttempts) {
-        attempt++;
-        console.log(`🔍 Attempt ${attempt}: Fetching ${batchSize} videos from YouTube API for channel: ${channel.channelId}`);
-        
-        // Fetch videos from YouTube with pagination offset
-        const videos = await youtubeService.getChannelVideos(
-          channel.channelId, 
-          batchSize,
-          totalFetched // Use totalFetched as offset for pagination
-        );
-        
-        console.log(`📋 Found ${videos.length} videos from YouTube API (attempt ${attempt})`);
-        totalFetched += videos.length;
-
-        if (videos.length === 0) {
-          console.warn(`⚠️ No more videos found for channel ${channel.channelId}`);
-          break;
-        }
-
-        // Process videos in this batch
-        for (const video of videos) {
-          try {
-            // Check if video already exists
-            if (existingVideoIds.has(video.id)) {
-              console.log(`⏭️ Video already exists: ${video.title} (${video.id})`);
-              skippedCount++;
-              continue;
-            }
-
-            // Import the new video
-            await storage.createYoutubeVideo({
-              videoId: video.id,
-              title: video.title,
-              description: video.description,
-              thumbnail: video.thumbnailUrl,
-              publishedAt: video.publishedAt,
-              channelId: channel.id,
-              categoryId: categoryId ? parseInt(categoryId) : null
-            });
-
-            // Add to existing set to prevent duplicates within this import session
-            existingVideoIds.add(video.id);
-
-            importedCount++;
-            console.log(`✅ Imported video ${importedCount}/${desiredNewVideos}: ${video.title}`);
-
-            // Stop if we've reached our target
-            if (importedCount >= desiredNewVideos) {
-              break;
-            }
-          } catch (error) {
-            console.error(`❌ Error saving video ${video.id}:`, error);
+      // Import each new video
+      for (const video of videos) {
+        try {
+          // Double-check that video doesn't exist (safety check)
+          if (existingVideoIds.has(video.id)) {
+            console.log(`⏭️ Video already exists (safety check): ${video.title} (${video.id})`);
             skippedCount++;
+            continue;
           }
-        }
 
-        // If we didn't get enough new videos, increase batch size for next attempt
-        if (importedCount < desiredNewVideos && videos.length === batchSize) {
-          batchSize = Math.min(batchSize + 20, 50);
-          console.log(`📈 Increasing batch size to ${batchSize} for next attempt`);
-        } else if (videos.length < batchSize) {
-          // We've reached the end of available videos
-          console.log(`📄 Reached end of available videos for channel`);
-          break;
+          // Import the new video
+          await storage.createYoutubeVideo({
+            videoId: video.id,
+            title: video.title,
+            description: video.description,
+            thumbnail: video.thumbnailUrl,
+            publishedAt: video.publishedAt,
+            channelId: channel.id,
+            categoryId: categoryId ? parseInt(categoryId) : null
+          });
+
+          // Add to existing set to prevent duplicates within this import session
+          existingVideoIds.add(video.id);
+
+          importedCount++;
+          console.log(`✅ Imported video ${importedCount}/${videos.length}: ${video.title}`);
+
+        } catch (error) {
+          console.error(`❌ Error saving video ${video.id}:`, error);
+          skippedCount++;
         }
       }
 
@@ -1396,19 +1368,19 @@ app.get(`${apiPrefix}/admin/youtube/videos`, async (req, res) => {
       await storage.updateYoutubeChannelLastImport(parseInt(id));
       await storage.updateYoutubeChannelImportedCount(parseInt(id), importedCount);
 
-      console.log(`📊 Import complete: ${importedCount} imported, ${skippedCount} skipped, ${totalFetched} total fetched`);
+      console.log(`📊 Import complete: ${importedCount} imported, ${skippedCount} skipped`);
 
       const message = importedCount === desiredNewVideos 
         ? `Successfully imported ${importedCount} new videos.`
         : importedCount > 0 
           ? `Successfully imported ${importedCount} new videos. Only ${importedCount} new videos were available.`
-          : `No new videos found. All ${skippedCount} recent videos already exist in your database.`;
+          : `No new videos found. All recent videos already exist in your database.`;
 
       res.json({ 
         success: true, 
         count: importedCount,
         skipped: skippedCount,
-        total: totalFetched,
+        total: videos.length,
         message
       });
     } catch (error) {
