@@ -1777,8 +1777,6 @@ app.get(`${apiPrefix}/admin/youtube/videos`, async (req, res) => {
                         });
                       }
                     }
-                  }```text
-
                   }
                 }
               }
