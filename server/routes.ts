@@ -1362,16 +1362,9 @@ app.get(`${apiPrefix}/admin/youtube/videos`, async (req, res) => {
           importedCount++;
           console.log(`✅ Step 1/2: Video metadata imported (${i + 1}/${videosToImport.length})`);
 
-          // Step 2: Fetch transcript with progressive backoff
+          // Step 2: Fetch transcript (simple approach)
           try {
             console.log(`📄 Step 2/2: Fetching transcript for: ${video.title} (${video.id})`);
-            
-            // Progressive delay based on position to spread out requests
-            const progressiveDelay = Math.min(i * 2000, 10000); // Max 10 seconds
-            if (progressiveDelay > 0) {
-              console.log(`⏳ Progressive delay: ${progressiveDelay/1000}s to avoid rate limiting...`);
-              await new Promise(resolve => setTimeout(resolve, progressiveDelay));
-            }
             
             const transcript = await youtubeService.getVideoTranscript(video.id);
             
@@ -1430,14 +1423,11 @@ Status: Transcript extraction failed during import. Video may have captions that
             transcriptErrors.push(`${video.title}: ${transcriptError.message}`);
           }
 
-          // Smart delay between videos based on success/failure rate
+          // Simple delay between videos (like your working code)
           if (i < videosToImport.length - 1) {
-            const baseDelay = 8000; // Increased base to 8 seconds
-            const errorMultiplier = transcriptErrorCount > 1 ? 3 : 1; // Triple delay if any errors
-            const finalDelay = baseDelay * errorMultiplier;
-            
-            console.log(`⏳ Waiting ${finalDelay/1000} seconds before next video (error count: ${transcriptErrorCount})...`);
-            await new Promise(resolve => setTimeout(resolve, finalDelay));
+            const delay = 1000; // Just 1 second delay
+            console.log(`⏳ Waiting ${delay/1000} second before next video...`);
+            await new Promise(resolve => setTimeout(resolve, delay));
           }
 
         } catch (videoError) {

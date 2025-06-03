@@ -372,206 +372,49 @@ export class YouTubeService {
   async getVideoTranscript(videoId: string): Promise<string> {
     try {
       console.log(`📄 Fetching transcript for: ${videoId}`);
-
-      // Add random delay to prevent rate limiting (3-6 seconds)
-      const delay = Math.floor(Math.random() * 3000) + 3000;
-      await new Promise(resolve => setTimeout(resolve, delay));
-
-      // Primary method: Direct transcript fetch with retry logic
-      for (let attempt = 1; attempt <= 3; attempt++) {
-        try {
-          console.log(`🔄 Attempt ${attempt}/3: Direct transcript fetch for: ${videoId}`);
-          
-          const transcriptData = await YoutubeTranscript.fetchTranscript(videoId, {
-            lang: 'en'
-          });
-          
-          if (transcriptData && transcriptData.length > 0) {
-            console.log(`✅ Found transcript with ${transcriptData.length} segments for: ${videoId}`);
-            
-            // Clean and format the transcript
-            const cleanedTranscript = transcriptData
-              .map(item => {
-                if (!item.text) return '';
-                
-                return item.text
-                  .replace(/\[.*?\]/g, '') // Remove [Music], [Applause], etc.
-                  .replace(/\(.*?\)/g, '') // Remove (inaudible), (laughs), etc.
-                  .replace(/♪.*?♪/g, '') // Remove music notes
-                  .replace(/\s+/g, ' ') // Replace multiple spaces with single space
-                  .trim();
-              })
-              .filter(text => text.length > 0) // Filter out empty text
-              .join(' '); // Join all segments
-
-            if (cleanedTranscript.length > 50) {
-              const videoDetails = await this.getVideoDetails(videoId);
-              
-              console.log(`✅ Successfully extracted real transcript: ${cleanedTranscript.length} characters`);
-              
-              return `[REAL TRANSCRIPT for "${videoDetails.title}"]
-
-Channel: ${videoDetails.channelTitle}
-Published: ${new Date(videoDetails.publishedAt).toLocaleDateString()}
-Video ID: ${videoId}
-Duration: ${Math.floor(videoDetails.duration / 60)} minutes ${videoDetails.duration % 60} seconds
-Transcript Length: ${cleanedTranscript.length} characters
-
-${cleanedTranscript}
-
-[End of real transcript]`;
-            }
-          }
-        } catch (directError) {
-          console.warn(`⚠️ Attempt ${attempt} failed for ${videoId}:`, directError.message);
-          
-          // If rate limited, wait progressively longer
-          if (directError.message.includes('captcha') || directError.message.includes('too many requests')) {
-            const waitTime = attempt * 3000; // 3s, 6s, 9s
-            console.log(`⏳ Rate limited, waiting ${waitTime/1000} seconds before retry...`);
-            await new Promise(resolve => setTimeout(resolve, waitTime));
-            continue;
-          }
-          
-          // For other errors, break and try alternative methods
-          break;
-        }
-      }
-
-      // Alternative method: Try different language codes with delays
-      const languageOptions = [
-        { code: 'en-US', name: 'English (US)' },
-        { code: 'en-GB', name: 'English (UK)' },
-        { code: 'en', name: 'English' },
-        { code: 'auto', name: 'Auto-generated' }
-      ];
       
-      for (const lang of languageOptions) {
-        try {
-          console.log(`🔄 Trying transcript with ${lang.name} (${lang.code}) for ${videoId}`);
-          
-          // Progressive delay between language attempts
-          await new Promise(resolve => setTimeout(resolve, 5000));
-          
-          const transcriptData = await YoutubeTranscript.fetchTranscript(videoId, { 
-            lang: lang.code 
-          });
-          
-          if (transcriptData && transcriptData.length > 0) {
-            const cleanedTranscript = transcriptData
-              .map(item => item.text || '')
-              .filter(text => text.trim().length > 0)
-              .join(' ')
-              .replace(/\[.*?\]/g, '')
-              .replace(/\(.*?\)/g, '')
-              .replace(/♪.*?♪/g, '')
-              .replace(/\s+/g, ' ')
-              .trim();
+      // Simple transcript fetch like your working code
+      const transcriptData = await YoutubeTranscript.fetchTranscript(videoId);
+      
+      if (transcriptData && transcriptData.length > 0) {
+        // Clean and format the transcript (same as your working code)
+        const cleanedTranscript = transcriptData
+          .map(item => item.text.replace(/\$.*?\$/g, '').trim())
+          .filter(text => text.length > 0)
+          .join(' ');
 
-            if (cleanedTranscript.length > 30) {
-              const videoDetails = await this.getVideoDetails(videoId);
-              
-              console.log(`✅ Success with ${lang.name}: ${cleanedTranscript.length} characters`);
-              
-              return `[TRANSCRIPT for "${videoDetails.title}" - ${lang.name}]
-
-Channel: ${videoDetails.channelTitle}
-Published: ${new Date(videoDetails.publishedAt).toLocaleDateString()}
-Video ID: ${videoId}
-Duration: ${Math.floor(videoDetails.duration / 60)} minutes ${videoDetails.duration % 60} seconds
-
-${cleanedTranscript}
-
-[End of transcript - ${lang.name}]`;
-            }
-          }
-        } catch (langError) {
-          console.warn(`⚠️ Language ${lang.name} failed for ${videoId}:`, langError.message);
-          continue;
-        }
-      }
-
-      // Try YouTube Data API captions endpoint as fallback (requires OAuth)
-      try {
-        console.log(`🔄 Attempting YouTube Data API captions list for: ${videoId}`);
-        
-        const captionsResponse = await this.makeRequest('captions', {
-          part: 'snippet',
-          videoId: videoId
-        });
-
-        if (captionsResponse.items && captionsResponse.items.length > 0) {
-          console.log(`📋 Found ${captionsResponse.items.length} caption tracks via API`);
-          
-          // Note: Downloading caption content requires OAuth2, so we'll note availability
+        if (cleanedTranscript.length > 0) {
           const videoDetails = await this.getVideoDetails(videoId);
           
-          return `[CAPTIONS DETECTED for "${videoDetails.title}"]
+          console.log(`✅ Successfully extracted transcript: ${cleanedTranscript.length} characters`);
+          
+          return `[TRANSCRIPT for "${videoDetails.title}"]
 
-✅ This video has ${captionsResponse.items.length} caption track(s) available:
-${captionsResponse.items.map((item: any, index: number) => 
-  `${index + 1}. ${item.snippet.language} (${item.snippet.trackKind})`
-).join('\n')}
+Channel: ${videoDetails.channelTitle}
+Published: ${new Date(videoDetails.publishedAt).toLocaleDateString()}
+Video ID: ${videoId}
+Duration: ${Math.floor(videoDetails.duration / 60)} minutes ${videoDetails.duration % 60} seconds
 
-Video Information:
-- Title: ${videoDetails.title}
-- Channel: ${videoDetails.channelTitle}
-- Published: ${new Date(videoDetails.publishedAt).toLocaleDateString()}
-- Duration: ${Math.floor(videoDetails.duration / 60)} minutes ${videoDetails.duration % 60} seconds
-- Video ID: ${videoId}
+${cleanedTranscript}
 
-Description:
-${videoDetails.description.substring(0, 500)}...
-
-⚠️ Note: Caption content extraction was temporarily limited due to YouTube API restrictions.
-
-[End of caption detection]`;
+[End of transcript]`;
         }
-      } catch (apiError) {
-        console.warn(`⚠️ YouTube Data API captions failed:`, apiError.message);
       }
+      
+      // Simple fallback
+      console.log(`⚠️ No transcript available for: ${videoId}`);
+      return `[NO TRANSCRIPT AVAILABLE for video ${videoId}]
 
-      // Final fallback: Enhanced content-based extract
-      console.log(`📄 All transcript methods exhausted, creating enhanced content extract for: ${videoId}`);
-      const videoDetails = await this.getVideoDetails(videoId);
+This video does not have accessible captions or transcripts.
 
-      return `[ENHANCED CONTENT EXTRACT for "${videoDetails.title}"]
-
-⚠️ Subtitle/Caption Status: Video appears to have captions but extraction was rate-limited
-
-Video Information:
-- Title: ${videoDetails.title}
-- Channel: ${videoDetails.channelTitle}
-- Published: ${new Date(videoDetails.publishedAt).toLocaleDateString()}
-- Duration: ${Math.floor(videoDetails.duration / 60)} minutes ${videoDetails.duration % 60} seconds
-- Video ID: ${videoId}
-- Type: ${videoDetails.videoType.toUpperCase()}
-
-Full Description:
-${videoDetails.description}
-
-Possible Topics (based on title & description):
-${this.extractTopicsFromTitle(videoDetails.title, videoDetails.description)}
-
-[This is an enhanced content extract. Real captions may be available but temporarily inaccessible due to rate limiting.]
-
-[End of enhanced extract]`;
+[End of transcript check]`;
 
     } catch (error) {
-      console.error(`❌ All transcript methods failed for video ${videoId}:`, error);
-
+      console.error(`❌ Failed to fetch transcript for video ${videoId}:`, error.message);
+      
       return `[TRANSCRIPT EXTRACTION FAILED for video ${videoId}]
 
-Error Details: ${error.message}
-
-Possible reasons:
-- YouTube API rate limiting (most common)
-- Video has disabled captions/transcripts
-- Geographic restrictions
-- Video privacy settings
-- Temporary YouTube service issues
-
-Recommendation: Try again later or manually check if video has captions enabled.
+Error: ${error.message}
 
 [End of error report]`;
     }
