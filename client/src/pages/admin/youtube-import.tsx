@@ -934,8 +934,7 @@ const YoutubeImport = () => {
                       onClick={() => {
                         const videosWithoutCategory = filteredVideos?.filter(v => !v.category).map(v => v.id) || [];
                         if (videosWithoutCategory.length > 0 && bulkCategoryId) {
-                          bulkUpdateCategoryMutation.```python
-mutate({
+                          bulkUpdateCategoryMutation.mutate({
                             videoIds: videosWithoutCategory,
                             categoryId: bulkCategoryId
                           });
