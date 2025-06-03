@@ -327,24 +327,82 @@ header {
   /* Admin table container for consistent width and scrolling */
   .admin-table-container {
     width: 100%;
+    max-width: 100%;
     overflow-x: auto;
     border: 1px solid hsl(var(--border));
     border-radius: 0.375rem;
+    /* Consistent scrollbar styling */
+    scrollbar-width: thin;
+    scrollbar-color: hsl(var(--muted-foreground)) hsl(var(--muted));
+  }
+
+  .admin-table-container::-webkit-scrollbar {
+    height: 8px;
+  }
+
+  .admin-table-container::-webkit-scrollbar-track {
+    background: hsl(var(--muted));
+    border-radius: 4px;
+  }
+
+  .admin-table-container::-webkit-scrollbar-thumb {
+    background: hsl(var(--muted-foreground));
+    border-radius: 4px;
+  }
+
+  .admin-table-container::-webkit-scrollbar-thumb:hover {
+    background: hsl(var(--foreground));
   }
 
   .admin-table-container table {
     width: 100%;
-    min-width: 100%;
-    table-layout: fixed;
+    min-width: 1200px; /* Consistent minimum width for all admin tables */
+    table-layout: auto; /* Let content determine column widths naturally */
+    border-collapse: separate;
+    border-spacing: 0;
   }
 
-  /* Specific table sizing for different admin tables */
-  .admin-table-container.channels-table table {
-    min-width: 900px;
+  /* Ensure table headers and cells have proper spacing */
+  .admin-table-container th,
+  .admin-table-container td {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    padding: 0.75rem 1rem;
   }
 
-  .admin-table-container.videos-table table {
-    min-width: 1400px;
+  /* Specific column width controls for better content distribution */
+  .admin-table-container th:first-child,
+  .admin-table-container td:first-child {
+    min-width: 50px; /* Checkbox column */
+  }
+
+  .admin-table-container th:last-child,
+  .admin-table-container td:last-child {
+    min-width: 150px; /* Actions column */
+  }
+
+  /* For channels table - adjust specific columns */
+  .admin-table-container.channels-table th:nth-child(1),
+  .admin-table-container.channels-table td:nth-child(1) {
+    min-width: 200px; /* Channel Name */
+  }
+
+  .admin-table-container.channels-table th:nth-child(2),
+  .admin-table-container.channels-table td:nth-child(2) {
+    min-width: 180px; /* Channel ID */
+  }
+
+  /* For videos table - adjust specific columns */
+  .admin-table-container.videos-table th:nth-child(3),
+  .admin-table-container.videos-table td:nth-child(3) {
+    min-width: 250px; /* Title column */
+    max-width: 300px;
+  }
+
+  .admin-table-container.videos-table th:nth-child(4),
+  .admin-table-container.videos-table td:nth-child(4) {
+    min-width: 150px; /* Channel ID */
   }
 
   tbody td.sticky {
