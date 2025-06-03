@@ -959,27 +959,27 @@ const YoutubeImport = () => {
                   </div>
                 </div>
               )}
-              <div className="rounded-md border">
-                <Table>
+              <div className="rounded-md border overflow-x-auto">
+                <Table className="min-w-[1200px]">
                   <TableHeader>
                     <TableRow>
-                      <TableHead className="w-[50px]">
+                      <TableHead className="w-[50px] sticky left-0 bg-white dark:bg-gray-950 z-10 border-r">
                         <input
                           type="checkbox"
                           checked={filteredVideos?.length > 0 && selectedVideos.length === filteredVideos.length}onChange={toggleAllVideos}
                           className="rounded"
                         />
                       </TableHead>
-                      <TableHead className="w-[100px]">Thumbnail</TableHead>
-                      <TableHead>Title</TableHead>
-                      <TableHead>Channel ID</TableHead>
-                      <TableHead>Category</TableHead>
-                      <TableHead>Type</TableHead>
-                      <TableHead>Duration</TableHead>
-                      <TableHead>Published</TableHead>
-                      <TableHead>Status</TableHead>
-                      <TableHead>Blog Post Match</TableHead>
-                      <TableHead className="text-right">Actions</TableHead>
+                      <TableHead className="w-[100px] sticky left-[50px] bg-white dark:bg-gray-950 z-10 border-r">Thumbnail</TableHead>
+                      <TableHead className="sticky left-[150px] bg-white dark:bg-gray-950 z-10 border-r min-w-[300px]">Title</TableHead>
+                      <TableHead className="min-w-[200px]">Channel ID</TableHead>
+                      <TableHead className="min-w-[150px]">Category</TableHead>
+                      <TableHead className="min-w-[100px]">Type</TableHead>
+                      <TableHead className="min-w-[100px]">Duration</TableHead>
+                      <TableHead className="min-w-[120px]">Published</TableHead>
+                      <TableHead className="min-w-[100px]">Status</TableHead>
+                      <TableHead className="min-w-[180px]">Blog Post Match</TableHead>
+                      <TableHead className="text-right sticky right-0 bg-white dark:bg-gray-950 z-10 border-l min-w-[200px]">Actions</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
@@ -998,7 +998,7 @@ const YoutubeImport = () => {
                       filteredVideos?.map((video) => (
                         <>
                         <TableRow key={video.id} onClick={() => toggleExpandRow(video.id)}>
-                          <TableCell>
+                          <TableCell className="sticky left-0 bg-white dark:bg-gray-950 z-10 border-r">
                             <input
                               type="checkbox"
                               checked={selectedVideos.includes(video.id)}
@@ -1006,7 +1006,7 @@ const YoutubeImport = () => {
                               className="rounded"
                             />
                           </TableCell>
-                           <TableCell>
+                           <TableCell className="sticky left-[50px] bg-white dark:bg-gray-950 z-10 border-r">
                             <div className="relative w-20 h-12 overflow-hidden rounded">
                               <img 
                                 src={video.thumbnail} 
@@ -1024,7 +1024,7 @@ const YoutubeImport = () => {
                               </div>
                             </div>
                           </TableCell>
-                          <TableCell>
+                          <TableCell className="sticky left-[150px] bg-white dark:bg-gray-950 z-10 border-r">
                             <div className="font-medium">{video.title}</div>
                             <div className="text-sm text-muted-foreground">{video.videoId}</div>
                           </TableCell>
@@ -1118,7 +1118,7 @@ const YoutubeImport = () => {
                               </div>
                             )}
                           </TableCell>
-                          <TableCell className="text-right">
+                          <TableCell className="text-right sticky right-0 bg-white dark:bg-gray-950 z-10 border-l">
                             {video.importStatus === 'imported' && video.blogPostId ? (
                               <Button
                                 variant="outline"
@@ -1267,7 +1267,7 @@ const YoutubeImport = () => {
                         {/* Expandable row content */}
                         {expandedRows.has(video.id) && (
                           <TableRow>
-                            <TableCell colSpan={11} className="bg-gray-50 dark:bg-gray-900/50">
+                            <TableCell colSpan={11} className="bg-gray-50 dark:bg-gray-900/50 sticky left-0 right-0">
                               <div className="py-4 space-y-4">
                                 <div>
                                   <h4 className="font-semibold text-sm mb-2">Video Description:</h4>
