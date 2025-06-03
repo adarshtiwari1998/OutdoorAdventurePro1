@@ -397,16 +397,7 @@ export const storage = {
         updatedAt: new Date()
       })
       .where(eq(schema.youtubeVideos.id, videoId));
-  }
-
-  async updateYoutubeVideoTranscript(videoId: number, transcript: string): Promise<void> {
-    await db.update(schema.youtubeVideos)
-      .set({
-        transcript: transcript,
-        updatedAt: new Date()
-      })
-      .where(eq(schema.youtubeVideos.id, videoId));
-  }
+  },
 
   async deleteYoutubeVideo(id: number) {
     try {
