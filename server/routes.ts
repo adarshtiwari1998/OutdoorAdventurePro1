@@ -1380,11 +1380,15 @@ app.get(`${apiPrefix}/admin/youtube/videos`, async (req, res) => {
         }
       }
 
-      // Update channel's lastImport date and imported video count
+      // Update channel's lastImport date and recalculate actual imported video count
       await storage.updateYoutubeChannelLastImport(parseInt(id));
-      await storage.updateYoutubeChannelImportedCount(parseInt(id), importedCount);
+      
+      // Get the actual count of videos in database for this channel
+      const actualVideoCount = await storage.getYoutubeVideosByChannel(channel.id.toString());
+      await storage.setYoutubeChannelImportedCount(parseInt(id), actualVideoCount.length);
 
       console.log(`📊 Import complete: ${importedCount} imported, ${skippedCount} skipped`);
+      console.log(`📊 Total videos in database for this channel: ${actualVideoCount.length}`);
 
       const message = importedCount === desiredNewVideos 
         ? `Successfully imported ${importedCount} new videos.`
@@ -1397,6 +1401,7 @@ app.get(`${apiPrefix}/admin/youtube/videos`, async (req, res) => {
         count: importedCount,
         skipped: skippedCount,
         total: videos.length,
+        actualCount: actualVideoCount.length,
         message
       });
     } catch (error) {
@@ -2528,6 +2533,43 @@ app.get(`${apiPrefix}/admin/tips/:id`, async (req, res) => {
     } catch (error) {
       console.error("Error in bulk transcript fetch:", error);
       res.status(500).json({ message: "Failed to fetch transcripts" });
+    }
+  });
+
+  app.post(`${apiPrefix}/admin/youtube/channels/sync-counts`, async (req, res) => {
+    try {
+      console.log(`🔄 Starting sync of imported video counts for all channels`);
+      
+      const channels = await storage.getAdminYoutubeChannels();
+      let syncedCount = 0;
+
+      for (const channel of channels) {
+        try {
+          // Get actual video count for this channel
+          const videos = await storage.getYoutubeVideosByChannel(channel.id.toString());
+          const actualCount = videos.length;
+
+          // Update the channel's imported count to match actual count
+          await storage.setYoutubeChannelImportedCount(channel.id, actualCount);
+
+          console.log(`✅ Synced channel "${channel.name}": ${actualCount} videos`);
+          syncedCount++;
+        } catch (error) {
+          console.error(`❌ Error syncing channel ${channel.name}:`, error);
+        }
+      }
+
+      console.log(`📊 Sync complete: ${syncedCount} channels synced`);
+
+      res.json({
+        success: true,
+        syncedCount,
+        totalChannels: channels.length,
+        message: `Successfully synced ${syncedCount} channel counts.`
+      });
+    } catch (error) {
+      console.error("Error syncing channel counts:", error);
+      res.status(500).json({ message: "Failed to sync channel counts" });
     }
   });
 

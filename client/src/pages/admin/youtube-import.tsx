@@ -30,7 +30,7 @@ import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
-import { Play, Youtube, FileText, Upload, RefreshCw, CheckCircle, AlertTriangle, Trash2, ExternalLink } from "lucide-react";
+import { Play, Youtube, FileText, Upload, RefreshCw, CheckCircle, AlertTriangle, Trash2, ExternalLink, Plus, Eye, EyeOff, Download, PlayCircle, Loader2, AlertCircle, CheckCircle2, Clock, X, Filter, Search, ChevronDown, ChevronUp } from "lucide-react";
 import { format } from "date-fns";
 
 // Schemas
@@ -422,6 +422,66 @@ const YoutubeImport = () => {
     }
   });
 
+  const bulkFetchTranscriptsMutation = useMutation({
+    mutationFn: async (videoIds: string[]) => {
+      const response = await fetch('/api/admin/youtube/videos/bulk-fetch-transcripts', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ videoIds }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to fetch transcripts');
+      }
+
+      return response.json();
+    },
+    onSuccess: (data) => {
+      toast({
+        title: "Transcripts Fetched",
+        description: data.message || `Successfully fetched ${data.successCount} transcripts`,
+      });
+      queryClient.invalidateQueries({ queryKey: ['/api/admin/youtube/videos'] });
+      setSelectedVideos([]);
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Error",
+        description: error.message,
+        variant: "destructive",
+      });
+    },
+  });
+
+  const syncCountsMutation = useMutation({
+    mutationFn: async () => {
+      const response = await fetch('/api/admin/youtube/channels/sync-counts', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to sync channel counts');
+      }
+
+      return response.json();
+    },
+    onSuccess: (data) => {
+      toast({
+        title: "Counts Synced",
+        description: data.message || `Successfully synced ${data.syncedCount} channel counts`,
+      });
+      queryClient.invalidateQueries({ queryKey: ['/api/admin/youtube/channels'] });
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Error",
+        description: error.message,
+        variant: "destructive",
+      });
+    },
+  });
+
   // Event handlers
   const onAddChannelSubmit = (values: z.infer<typeof youtubeChannelSchema>) => {
     addChannelMutation.mutate(values);
@@ -526,6 +586,23 @@ const YoutubeImport = () => {
 
   const onConvertSubmit = (values: any) => {
     convertToBlogPostMutation.mutate(values);
+  };
+
+  const handleBulkFetchTranscripts = () => {
+    if (selectedVideos.length === 0) {
+      toast({
+        title: "No Videos Selected",
+        description: "Please select videos to fetch transcripts for",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    bulkFetchTranscriptsMutation.mutate(selectedVideos);
+  };
+
+  const handleSyncCounts = () => {
+    syncCountsMutation.mutate();
   };
 
   // Renderers
@@ -868,8 +945,7 @@ const YoutubeImport = () => {
                       <TableHead className="w-[50px]">
                         <input
                           type="checkbox"
-                          checked={filteredVideos?.length > 0 && selectedVideos.length === filteredVideos.length}
-                          onChange={toggleAllVideos}
+                          checked={filteredVideos?.length > 0 && selectedVideos.length === filteredVideos.length}onChange={toggleAllVideos}
                           className="rounded"
                         />
                       </TableHead>
@@ -1219,296 +1295,3 @@ const YoutubeImport = () => {
                 <CardDescription>
                   Connect a Youtube channel to import videos from.
                 </CardDescription>
-              ```text
-
-              </CardHeader>
-              <CardContent>
-                <Form {...channelForm}>
-                  <form onSubmit={channelForm.handleSubmit(onAddChannelSubmit)} className="space-y-4">
-                    <FormField
-                      control={channelForm.control}
-                      name="channelId"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Channel ID</FormLabel>
-                          <FormControl>
-                            <Input placeholder="UCxxxxxxxxxxxxxxx" {...field} />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                    <FormField
-                      control={channelForm.control}
-                      name="channelName"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Channel Name</FormLabel>
-                          <FormControl>
-                            <Input placeholder="Channel display name" {...field} />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                    <Button 
-                      type="submit" 
-                      className="w-full"
-                      disabled={addChannelMutation.isPending}
-                    >
-                      <Youtube className="h-4 w-4 mr-2" />
-                      {addChannelMutation.isPending ? "Adding Channel..." : "Add Channel"}
-                    </Button>
-                  </form>
-                </Form>
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardHeader>
-                <CardTitle>Add Individual Video</CardTitle>
-                <CardDescription>
-                  Add a specific Youtube video without adding the entire channel.
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <Form {...videoForm}>
-                  <form onSubmit={videoForm.handleSubmit(onAddVideoSubmit)} className="space-y-4">
-                    <FormField
-                      control={videoForm.control}
-                      name="videoId"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Video ID</FormLabel>
-                          <FormControl>
-                            <Input placeholder="dQw4w9WgXcQ" {...field} />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                    <FormField
-                      control={videoForm.control}
-                      name="title"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Title (optional)</FormLabel>
-                          <FormControl>
-                            <Input placeholder="Video title" {...field} />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                    <FormField
-                      control={videoForm.control}
-                      name="description"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Description (optional)</FormLabel>
-                          <FormControl>
-                            <Textarea placeholder="Video description" {...field} rows={3} />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                    <Button 
-                      type="submit" 
-                      className="w-full"
-                      disabled={addVideoMutation.isPending}
-                    >
-                      <Play className="h-4 w-4 mr-2" />
-                      {addVideoMutation.isPending ? "Adding Video..." : "Add Video"}
-                    </Button>
-                  </form>
-                </Form>
-              </CardContent>
-            </Card>
-          </div>
-        </TabsContent>
-      </Tabs>
-
-      {/* Import Configuration Dialog */}
-      <AlertDialog 
-        open={showImportDialog} 
-        onOpenChange={(open) => {
-          // Prevent closing during import unless canClose is true
-          if (!open && importProgress.isImporting && !importProgress.canClose) {
-            return;
-          }
-          setShowImportDialog(open);
-          if (!open) {
-            // Reset progress when dialog closes
-            setImportProgress({
-              isImporting: false,
-              currentStep: '',
-              progress: 0,
-              processedCount: 0,
-              totalCount: 0,
-              importedCount: 0,
-              skippedCount: 0,
-              logs: [],
-              canClose: false
-            });
-          }
-        }}
-      >
-        <AlertDialogContent className="max-w-md">
-          <AlertDialogHeader>
-            <AlertDialogTitle>Import Videos</AlertDialogTitle>
-            <AlertDialogDescription>
-              Import videos from the selected YouTube channel into your blog posts database.
-              {importChannelId && (
-                <div className="mt-2 p-2 bg-blue-50 dark:bg-blue-900/20 rounded text-sm">
-                  <strong>Channel:</strong> {channels?.find(c => c.id.toString() === importChannelId)?.name}
-                  <br />
-                  <strong>Channel ID:</strong> {channels?.find(c => c.id.toString() === importChannelId)?.channelId}
-                </div>
-              )}
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-
-          {!importProgress.isImporting ? (
-            <div className="space-y-4">
-              <div>
-                <label htmlFor="import-limit" className="text-sm font-medium mb-2 block">
-                  Number of videos to import:
-                </label>
-                <Select value={importLimit.toString()} onValueChange={(value) => setImportLimit(parseInt(value))}>
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="10">10 videos</SelectItem>
-                    <SelectItem value="20">20 videos</SelectItem>
-                    <SelectItem value="30">30 videos</SelectItem>
-                    <SelectItem value="40">40 videos</SelectItem>
-                    <SelectItem value="50">50 videos</SelectItem>
-                  </SelectContent>
-                </Select>
-                <p className="text-xs text-muted-foreground mt-1">
-                  Videos already in your database will be skipped automatically.
-                </p>
-              </div>
-
-              <div>
-                <label htmlFor="import-category" className="text-sm font-medium mb-2 block">
-                  Assign Category (Optional):
-                </label>
-                <Select value={selectedCategoryForImport} onValueChange={setSelectedCategoryForImport}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select a category (optional)" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="no-category">No Category</SelectItem>
-                    {blogCategories?.map(category => (
-                      <SelectItem key={category.id} value={category.id}>
-                        {category.name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-                <p className="text-xs text-muted-foreground mt-1">
-                  You can assign categories later using bulk operations.
-                </p>
-              </div>
-            </div>
-          ) : (
-            <div className="space-y-4">
-              <div className="space-y-2">
-                <div className="flex items-center justify-between">
-                  <span className="text-sm font-medium">{importProgress.currentStep}</span>
-                  <span className="text-sm text-muted-foreground">
-                    {Math.round(importProgress.progress)}%
-                  </span>
-                </div>
-                <Progress value={importProgress.progress} className="h-2" />
-              </div>
-
-              {importProgress.processedCount > 0 && (
-                <div className="grid grid-cols-3 gap-4 text-center">
-                  <div>
-                    <div className="text-lg font-semibold text-green-600">
-                      {importProgress.importedCount}
-                    </div>
-                    <div className="text-xs text-muted-foreground">Imported</div>
-                  </div>
-                  <div>
-                    <div className="text-lg font-semibold text-orange-600">
-                      {importProgress.skippedCount}
-                    </div>
-                    <div className="text-xs text-muted-foreground">Skipped</div>
-                  </div>
-                  <div>
-                    <div className="text-lg font-semibold text-blue-600">
-                      {importProgress.processedCount}
-                    </div>
-                    <div className="text-xs text-muted-foreground">Total</div>
-                  </div>
-                </div>
-              )}
-
-              <div className="max-h-32 overflow-y-auto space-y-1 bg-slate-50 dark:bg-slate-900 rounded p-2">
-                {importProgress.logs.slice(-5).map((log, index) => (
-                  <div key={index} className="text-xs font-mono text-slate-600 dark:text-slate-400">
-                    {log}
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
-
-          <AlertDialogFooter>
-            {!importProgress.isImporting ? (
-              <>
-                <AlertDialogCancel>Cancel</AlertDialogCancel>
-                <AlertDialogAction 
-                  onClick={handleStartImport}
-                  disabled={!importChannelId}
-                >
-                  Start Import
-                </AlertDialogAction>
-              </>
-            ) : (
-              <div className="flex justify-between w-full items-center">
-                <span className="text-sm text-muted-foreground">
-                  {importProgress.progress === 100 ? 'Import completed!' : 'Import in progress...'}
-                </span>
-                {(importProgress.progress === 100 && importProgress.canClose) || (!importProgress.isImporting && importProgress.canClose) ? (
-                  <Button 
-                    variant="outline" 
-                    size="sm"
-                    onClick={() => {
-                      setShowImportDialog(false);
-                      setImportProgress({
-                        isImporting: false,
-                        currentStep: '',
-                        progress: 0,
-                        processedCount: 0,
-                        totalCount: 0,
-                        importedCount: 0,
-                        skippedCount: 0,
-                        logs: [],
-                        canClose: false
-                      });
-                    }}
-                  >
-                    Close
-                  </Button>
-                ) : (
-                  <div className="flex items-center gap-2">
-                    <RefreshCw className="h-4 w-4 animate-spin" />
-                    <span className="text-sm">Please wait...</span>
-                  </div>
-                )}
-              </div>
-            )}
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
-    </div>
-  );
-};
-
-export default YoutubeImport;

@@ -216,17 +216,44 @@ export const storage = {
       .where(eq(schema.youtubeChannels.id, channelId));
   },
 
-  async updateYoutubeChannelImportedCount(channelId: number, newlyImportedCount: number): Promise<void> {
-    // Get current imported count
-    const channel = await db.query.youtubeChannels.findFirst({
-      where: eq(schema.youtubeChannels.id, channelId)
-    });
+  async updateYoutubeChannelImportedCount(channelId: number, additionalCount: number) {
+    try {
+      // Get current count and add the new imports
+      const currentChannel = await db.query.youtubeChannels.findFirst({
+        where: eq(youtubeChannels.id, channelId),
+      });
 
-    if (channel) {
-      const newTotal = (channel.importedVideoCount || 0) + newlyImportedCount;
-      await db.update(schema.youtubeChannels)
-        .set({ importedVideoCount: newTotal })
-        .where(eq(schema.youtubeChannels.id, channelId));
+      if (!currentChannel) {
+        throw new Error(`Channel with ID ${channelId} not found`);
+      }
+
+      const newCount = (currentChannel.importedVideoCount || 0) + additionalCount;
+
+      return await db.update(youtubeChannels)
+        .set({ 
+          importedVideoCount: newCount,
+          updatedAt: new Date() 
+        })
+        .where(eq(youtubeChannels.id, channelId))
+        .returning();
+    } catch (error) {
+      console.error(`Error updating YouTube channel imported count for ${channelId}:`, error);
+      throw error;
+    }
+  },
+
+  async setYoutubeChannelImportedCount(channelId: number, actualCount: number) {
+    try {
+      return await db.update(youtubeChannels)
+        .set({ 
+          importedVideoCount: actualCount,
+          updatedAt: new Date() 
+        })
+        .where(eq(youtubeChannels.id, channelId))
+        .returning();
+    } catch (error) {
+      console.error(`Error setting YouTube channel imported count for ${channelId}:`, error);
+      throw error;
     }
   },
 
