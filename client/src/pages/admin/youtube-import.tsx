@@ -95,7 +95,8 @@ const YoutubeImport = () => {
     totalCount: 0,
     importedCount: 0,
     skippedCount: 0,
-    logs: [] as string[]
+    logs: [] as string[],
+    canClose: false
   });
 
   // Queries
@@ -213,11 +214,11 @@ const YoutubeImport = () => {
     mutationFn: async ({ channelId, limit, categoryId }: { channelId: string, limit: number, categoryId?: string }) => {
       console.log(`🎬 Importing ${limit} videos for channel: ${channelId}`);
 
-      // Reset progress
+      // Reset progress and start immediately
       setImportProgress({
         isImporting: true,
-        currentStep: 'Fetching videos from YouTube...',
-        progress: 0,
+        currentStep: 'Initializing import...',
+        progress: 5,
         processedCount: 0,
         totalCount: 0,
         importedCount: 0,
@@ -225,12 +226,15 @@ const YoutubeImport = () => {
         logs: [`🚀 Starting import of ${limit} videos...`]
       });
 
+      // Small delay to show initial progress
+      await new Promise(resolve => setTimeout(resolve, 500));
+
       try {
         // Step 1: Fetch videos
         setImportProgress(prev => ({
           ...prev,
           currentStep: 'Fetching videos from YouTube API...',
-          progress: 10,
+          progress: 20,
           logs: [...prev.logs, '📡 Connecting to YouTube API...']
         }));
 
@@ -251,7 +255,7 @@ const YoutubeImport = () => {
         setImportProgress(prev => ({
           ...prev,
           currentStep: 'Processing videos...',
-          progress: 50,
+          progress: 70,
           logs: [...prev.logs, '⚙️ Processing video data...']
         }));
 
@@ -278,6 +282,7 @@ const YoutubeImport = () => {
         setImportProgress(prev => ({
           ...prev,
           currentStep: 'Import failed',
+          progress: 0,
           logs: [...prev.logs, `❌ Error: ${error instanceof Error ? error.message : String(error)}`]
         }));
         throw error;
@@ -286,31 +291,23 @@ const YoutubeImport = () => {
     onSuccess: (data) => {
       const { count = 0, skipped = 0, message } = data || {};
 
-      // Show success message after a brief delay
-      setTimeout(() => {
-        toast({
-          title: "Import Complete",
-          description: message || `Successfully imported ${count} videos${skipped ? `, ${skipped} skipped` : ''}`,
-        });
+      // Show success toast
+      toast({
+        title: "Import Complete",
+        description: message || `Successfully imported ${count} videos${skipped ? `, ${skipped} skipped` : ''}`,
+      });
 
-        // Close dialog after showing success
-        setTimeout(() => {
-          setShowImportDialog(false);
-          setImportProgress({
-            isImporting: false,
-            currentStep: '',
-            progress: 0,
-            processedCount: 0,
-            totalCount: 0,
-            importedCount: 0,
-            skippedCount: 0,
-            logs: []
-          });
-        }, 2000);
-      }, 1000);
-
+      // Invalidate queries to refresh data
       queryClient.invalidateQueries({ queryKey: ['/api/admin/youtube/videos'] });
       queryClient.invalidateQueries({ queryKey: ['/api/admin/youtube/channels'] });
+
+      // Keep showing completion status for 3 seconds before enabling close
+      setTimeout(() => {
+        setImportProgress(prev => ({
+          ...prev,
+          canClose: true
+        }));
+      }, 3000);
     },
     onError: (error: any) => {
       console.error('Import error:', error);
@@ -328,18 +325,12 @@ const YoutubeImport = () => {
         variant: "destructive",
       });
 
-      // Reset progress state on error
+      // Show error for 3 seconds before allowing close
       setTimeout(() => {
-        setImportProgress({
-          isImporting: false,
-          currentStep: '',
-          progress: 0,
-          processedCount: 0,
-          totalCount: 0,
-          importedCount: 0,
-          skippedCount: 0,
-          logs: []
-        });
+        setImportProgress(prev => ({
+          ...prev,
+          canClose: true
+        }));
       }, 3000);
     }
   });
@@ -458,7 +449,8 @@ const YoutubeImport = () => {
       totalCount: 0,
       importedCount: 0,
       skippedCount: 0,
-      logs: []
+      logs: [],
+      canClose: false
     });
 
     setShowImportDialog(true);
@@ -1263,7 +1255,30 @@ const YoutubeImport = () => {
       </Tabs>
 
       {/* Import Configuration Dialog */}
-      <AlertDialog open={showImportDialog} onOpenChange={setShowImportDialog}>
+      <AlertDialog 
+        open={showImportDialog} 
+        onOpenChange={(open) => {
+          // Prevent closing during import unless canClose is true
+          if (!open && importProgress.isImporting && !importProgress.canClose) {
+            return;
+          }
+          setShowImportDialog(open);
+          if (!open) {
+            // Reset progress when dialog closes
+            setImportProgress({
+              isImporting: false,
+              currentStep: '',
+              progress: 0,
+              processedCount: 0,
+              totalCount: 0,
+              importedCount: 0,
+              skippedCount: 0,
+              logs: [],
+              canClose: false
+            });
+          }
+        }}
+      >
         <AlertDialogContent className="max-w-md">
           <AlertDialogHeader>
             <AlertDialogTitle>Import Videos</AlertDialogTitle>
@@ -1381,18 +1396,36 @@ const YoutubeImport = () => {
                 </AlertDialogAction>
               </>
             ) : (
-              <div className="flex justify-between w-full">
+              <div className="flex justify-between w-full items-center">
                 <span className="text-sm text-muted-foreground">
-                  Import in progress...
+                  {importProgress.progress === 100 ? 'Import completed!' : 'Import in progress...'}
                 </span>
-                {importProgress.progress === 100 && (
+                {(importProgress.progress === 100 && importProgress.canClose) || (!importProgress.isImporting && importProgress.canClose) ? (
                   <Button 
                     variant="outline" 
                     size="sm"
-                    onClick={() => setShowImportDialog(false)}
+                    onClick={() => {
+                      setShowImportDialog(false);
+                      setImportProgress({
+                        isImporting: false,
+                        currentStep: '',
+                        progress: 0,
+                        processedCount: 0,
+                        totalCount: 0,
+                        importedCount: 0,
+                        skippedCount: 0,
+                        logs: [],
+                        canClose: false
+                      });
+                    }}
                   >
                     Close
                   </Button>
+                ) : (
+                  <div className="flex items-center gap-2">
+                    <RefreshCw className="h-4 w-4 animate-spin" />
+                    <span className="text-sm">Please wait...</span>
+                  </div>
                 )}
               </div>
             )}
