@@ -710,6 +710,55 @@ const YoutubeImport = () => {
                   </div>
                 </div>
               )}
+
+              {/* Quick action for videos without categories */}
+              {videos && videos.filter(v => !v.category).length > 0 && (
+                <div className="mb-4 p-4 bg-orange-50 dark:bg-orange-900/20 rounded-lg">
+                  <div className="flex items-center gap-4">
+                    <span className="text-sm font-medium text-orange-700 dark:text-orange-300">
+                      {videos.filter(v => !v.category).length} videos without category
+                    </span>
+                    <Select value={bulkCategoryId} onValueChange={setBulkCategoryId}>
+                      <SelectTrigger className="w-48">
+                        <SelectValue placeholder="Select category" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {blogCategories?.map(category => (
+                          <SelectItem key={category.id} value={category.id}>
+                            {category.name}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <Button 
+                      onClick={() => {
+                        const videosWithoutCategory = videos?.filter(v => !v.category).map(v => v.id) || [];
+                        if (videosWithoutCategory.length > 0 && bulkCategoryId) {
+                          bulkUpdateCategoryMutation.mutate({
+                            videoIds: videosWithoutCategory,
+                            categoryId: bulkCategoryId
+                          });
+                        }
+                      }}
+                      disabled={!bulkCategoryId || bulkUpdateCategoryMutation.isPending}
+                      size="sm"
+                      variant="outline"
+                    >
+                      {bulkUpdateCategoryMutation.isPending ? "Assigning..." : "Assign to All"}
+                    </Button>
+                    <Button 
+                      variant="ghost" 
+                      onClick={() => {
+                        const videosWithoutCategory = videos?.filter(v => !v.category).map(v => v.id) || [];
+                        setSelectedVideos(videosWithoutCategory);
+                      }}
+                      size="sm"
+                    >
+                      Select All
+                    </Button>
+                  </div>
+                </div>
+              )}
               <div className="rounded-md border">
                 <Table>
                   <TableHeader>
@@ -785,7 +834,31 @@ const YoutubeImport = () => {
                                 {video.category.name}
                               </Badge>
                             ) : (
-                              <span className="text-muted-foreground text-sm">No Category</span>
+                              <div className="flex items-center gap-2">
+                                <span className="text-muted-foreground text-sm">No Category</span>
+                                <Select 
+                                  value="" 
+                                  onValueChange={(categoryId) => {
+                                    if (categoryId) {
+                                      bulkUpdateCategoryMutation.mutate({
+                                        videoIds: [video.id],
+                                        categoryId: categoryId
+                                      });
+                                    }
+                                  }}
+                                >
+                                  <SelectTrigger className="w-32 h-7 text-xs">
+                                    <SelectValue placeholder="Assign" />
+                                  </SelectTrigger>
+                                  <SelectContent>
+                                    {blogCategories?.map(category => (
+                                      <SelectItem key={category.id} value={category.id}>
+                                        {category.name}
+                                      </SelectItem>
+                                    ))}
+                                  </SelectContent>
+                                </Select>
+                              </div>
                             )}
                           </TableCell>
                           <TableCell>
