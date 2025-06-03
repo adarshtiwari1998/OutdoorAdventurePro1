@@ -875,7 +875,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       if (!name || !slug) {
         return res.status(400).json({ message: "Name and slug are required" });
-      }
+            }
 
       const newCategory = await storage.createBlogCategory({
         name,
@@ -1205,20 +1205,20 @@ app.delete(`${apiPrefix}/admin/wordpress/credentials`, async (req, res) => {
       res.status(500).json({ message: "Failed to fetch YouTube channels" });
     }
   });
-
-  app.get(`${apiPrefix}/admin/youtube/videos`, async (req, res) => {
+app.get(`${apiPrefix}/admin/youtube/videos`, async (req, res) => {
     try {
-      const { channelId } = req.query;
+      const videos = await db.query.youtubeVideos.findMany({
+        orderBy: desc(schema.youtubeVideos.publishedAt),
+        with: {
+          category: true,
+          channel: true, // Include channel information
+        },
+      });
 
-      if (!channelId) {
-        return res.status(400).json({ message: "Channel ID is required" });
-      }
-
-      const videos = await storage.getYoutubeVideosByChannel(channelId as string);
       res.json(videos);
     } catch (error) {
-      console.error("Error fetching YouTube videos:", error);
-      res.status(500).json({ message: "Failed to fetch YouTube videos" });
+      console.error('Error fetching YouTube videos:', error);
+      res.status(500).json({ message: 'Failed to fetch videos' });
     }
   });
 
@@ -1283,7 +1283,7 @@ app.delete(`${apiPrefix}/admin/wordpress/credentials`, async (req, res) => {
       const { id } = req.params;
       const { limit = 10, categoryId } = req.body;
       console.log(`🎬 Starting video import for channel ID: ${id} (limit: ${limit})`);
-      
+
       const channel = await storage.getYoutubeChannelById(parseInt(id));
 
       if (!channel) {
@@ -1325,7 +1325,7 @@ app.delete(`${apiPrefix}/admin/wordpress/credentials`, async (req, res) => {
       // Get all existing video IDs for this channel to avoid duplicates
       const existingVideos = await storage.getYoutubeVideosByChannel(channel.id.toString());
       const existingVideoIds = new Set(existingVideos.map((v: any) => v.videoId));
-      
+
       console.log(`📊 Found ${existingVideoIds.size} existing videos in database for this channel`);
 
       // Save videos to database
@@ -1347,7 +1347,7 @@ app.delete(`${apiPrefix}/admin/wordpress/credentials`, async (req, res) => {
             channelId: channel.id,
             categoryId: categoryId ? parseInt(categoryId) : null
           });
-          
+
           console.log(`✅ Imported video ${importedCount + 1}/${maxResults}: ${video.title}`);
           importedCount++;
         } catch (error) {
@@ -1361,7 +1361,7 @@ app.delete(`${apiPrefix}/admin/wordpress/credentials`, async (req, res) => {
       await storage.updateYoutubeChannelImportedCount(parseInt(id), importedCount);
 
       console.log(`📊 Import complete: ${importedCount} imported, ${skippedCount} skipped`);
-      
+
       res.json({ 
         success: true, 
         count: importedCount,
@@ -1371,7 +1371,7 @@ app.delete(`${apiPrefix}/admin/wordpress/credentials`, async (req, res) => {
       });
     } catch (error) {
       console.error(`❌ Error importing videos for channel ${req.params.id}:`, error);
-      
+
       // Provide more specific error messages
       let errorMessage = "Failed to import videos from channel";
       if (error.message.includes("YouTube API error")) {
@@ -1381,7 +1381,7 @@ app.delete(`${apiPrefix}/admin/wordpress/credentials`, async (req, res) => {
       } else if (error.message.includes("quota")) {
         errorMessage = "YouTube API quota exceeded. Please try again later.";
       }
-      
+
       res.status(500).json({ message: errorMessage, error: error.message });
     }
   });

@@ -299,7 +299,7 @@ export const storage = {
         description: videoData.description,
         thumbnail: videoData.thumbnail,
         publishedAt: videoData.publishedAt,
-        channelId: videoData.channelId,
+        channelId: videoData.channelId, // Foreign key to youtube_channels table
         categoryId: videoData.categoryId || null,
         hasBlogPostMatch,
         matchingBlogPostTitle,

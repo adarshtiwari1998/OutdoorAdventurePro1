@@ -432,7 +432,7 @@ const YoutubeImport = () => {
   const handleImportFromChannel = (channelId: string) => {
     console.log(`🚀 Starting import for channel: ${channelId}`);
     setImportChannelId(channelId);
-    
+
     // Reset import progress state
     setImportProgress({
       isImporting: false,
@@ -444,7 +444,7 @@ const YoutubeImport = () => {
       skippedCount: 0,
       logs: []
     });
-    
+
     setShowImportDialog(true);
   };
 
@@ -959,6 +959,8 @@ const YoutubeImport = () => {
                 <CardDescription>
                   Connect a Youtube channel to import videos from.
                 </CardDescription>
+              ```text
+
               </CardHeader>
               <CardContent>
                 <Form {...channelForm}>
@@ -1071,9 +1073,16 @@ const YoutubeImport = () => {
       <AlertDialog open={showImportDialog} onOpenChange={setShowImportDialog}>
         <AlertDialogContent className="max-w-md">
           <AlertDialogHeader>
-            <AlertDialogTitle>Import YouTube Videos</AlertDialogTitle>
+            <AlertDialogTitle>Import Videos</AlertDialogTitle>
             <AlertDialogDescription>
-              This will import the latest videos from the selected YouTube channel. Choose how many videos to import to avoid overloading the API.
+              Import videos from the selected YouTube channel into your blog posts database.
+              {importChannelId && (
+                <div className="mt-2 p-2 bg-blue-50 dark:bg-blue-900/20 rounded text-sm">
+                  <strong>Channel:</strong> {channels?.find(c => c.id === importChannelId)?.name}
+                  <br />
+                  <strong>Channel ID:</strong> {channels?.find(c => c.id === importChannelId)?.channelId}
+                </div>
+              )}
             </AlertDialogDescription>
           </AlertDialogHeader>
 
@@ -1099,12 +1108,12 @@ const YoutubeImport = () => {
                   Videos already in your database will be skipped automatically.
                 </p>
               </div>
-              
+
               <div>
                 <label htmlFor="import-category" className="text-sm font-medium mb-2 block">
                   Assign Category (Optional):
                 </label>
-                <Select value={selectedCategoryForImport} onValueChange={setSelectedCategoryForImport}>
+                <Select value={selectedCategoryForImport || ""} onValueChange={setSelectedCategoryForImport}>
                   <SelectTrigger>
                     <SelectValue placeholder="Select a category (optional)" />
                   </SelectTrigger>
