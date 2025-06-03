@@ -4,7 +4,7 @@ import { storage } from "./storage";
 import { db } from "@db";
 import * as schema from "@shared/schema";
 import { blogPosts } from "@shared/schema";
-import { eq, asc, inArray, desc } from "drizzle-orm";
+import { eq, asc, inArray, desc, and } from "drizzle-orm";
 import { z } from "zod";
 import { setupAuth } from "./auth";
 
