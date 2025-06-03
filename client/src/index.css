@@ -324,15 +324,6 @@ header {
     z-index: 20;
   }
 
-  /* Specific sticky column widths for videos table */
-  .admin-table-container.videos-table .sticky.left-\[50px\] {
-    left: 40px; /* Adjust based on checkbox column width */
-  }
-
-  .admin-table-container.videos-table .sticky.left-\[150px\] {
-    left: 140px; /* Adjust based on checkbox + thumbnail width */
-  }
-
   /* Admin table container for consistent width and scrolling */
   .admin-table-container {
     width: 100%;
@@ -365,128 +356,53 @@ header {
 
   .admin-table-container table {
     width: 100%;
-    table-layout: fixed; /* Fixed layout for consistent column widths */
+    min-width: 1200px; /* Consistent minimum width for all admin tables */
+    table-layout: auto; /* Let content determine column widths naturally */
     border-collapse: separate;
     border-spacing: 0;
-  }
-
-  /* Default table sizing for channels table */
-  .admin-table-container.channels-table table {
-    min-width: 1000px; /* Smaller minimum width for channels table */
-  }
-
-  /* Larger table sizing for videos table */
-  .admin-table-container.videos-table table {
-    min-width: 1400px; /* Larger minimum width for videos table */
   }
 
   /* Ensure table headers and cells have proper spacing */
   .admin-table-container th,
   .admin-table-container td {
+    white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
-    padding: 0.75rem 0.5rem;
-    word-wrap: break-word;
+    padding: 0.75rem 1rem;
   }
 
-  /* Channels table specific column widths */
+  /* Specific column width controls for better content distribution */
+  .admin-table-container th:first-child,
+  .admin-table-container td:first-child {
+    min-width: 50px; /* Checkbox column */
+  }
+
+  .admin-table-container th:last-child,
+  .admin-table-container td:last-child {
+    min-width: 150px; /* Actions column */
+  }
+
+  /* For channels table - adjust specific columns */
   .admin-table-container.channels-table th:nth-child(1),
   .admin-table-container.channels-table td:nth-child(1) {
-    width: 25%; /* Channel Name */
+    min-width: 200px; /* Channel Name */
   }
 
   .admin-table-container.channels-table th:nth-child(2),
   .admin-table-container.channels-table td:nth-child(2) {
-    width: 20%; /* Channel ID */
+    min-width: 180px; /* Channel ID */
   }
 
-  .admin-table-container.channels-table th:nth-child(3),
-  .admin-table-container.channels-table td:nth-child(3) {
-    width: 12%; /* Subscribers */
-  }
-
-  .admin-table-container.channels-table th:nth-child(4),
-  .admin-table-container.channels-table td:nth-child(4) {
-    width: 12%; /* Total Videos */
-  }
-
-  .admin-table-container.channels-table th:nth-child(5),
-  .admin-table-container.channels-table td:nth-child(5) {
-    width: 12%; /* Imported Videos */
-  }
-
-  .admin-table-container.channels-table th:nth-child(6),
-  .admin-table-container.channels-table td:nth-child(6) {
-    width: 12%; /* Last Import */
-  }
-
-  .admin-table-container.channels-table th:nth-child(7),
-  .admin-table-container.channels-table td:nth-child(7) {
-    width: 17%; /* Actions */
-  }
-
-  /* Videos table specific column widths */
-  .admin-table-container.videos-table th:nth-child(1),
-  .admin-table-container.videos-table td:nth-child(1) {
-    width: 40px; /* Checkbox - fixed width */
-  }
-
-  .admin-table-container.videos-table th:nth-child(2),
-  .admin-table-container.videos-table td:nth-child(2) {
-    width: 100px; /* Thumbnail - fixed width */
-  }
-
+  /* For videos table - adjust specific columns */
   .admin-table-container.videos-table th:nth-child(3),
   .admin-table-container.videos-table td:nth-child(3) {
-    width: 250px; /* Title column - fixed width */
+    min-width: 250px; /* Title column */
+    max-width: 300px;
   }
 
   .admin-table-container.videos-table th:nth-child(4),
   .admin-table-container.videos-table td:nth-child(4) {
-    width: 150px; /* Channel ID */
-  }
-
-  .admin-table-container.videos-table th:nth-child(5),
-  .admin-table-container.videos-table td:nth-child(5) {
-    width: 120px; /* Category */
-  }
-
-  .admin-table-container.videos-table th:nth-child(6),
-  .admin-table-container.videos-table td:nth-child(6) {
-    width: 80px; /* Type */
-  }
-
-  .admin-table-container.videos-table th:nth-child(7),
-  .admin-table-container.videos-table td:nth-child(7) {
-    width: 80px; /* Duration */
-  }
-
-  .admin-table-container.videos-table th:nth-child(8),
-  .admin-table-container.videos-table td:nth-child(8) {
-    width: 100px; /* Published */
-  }
-
-  .admin-table-container.videos-table th:nth-child(9),
-  .admin-table-container.videos-table td:nth-child(9) {
-    width: 100px; /* Status */
-  }
-
-  .admin-table-container.videos-table th:nth-child(10),
-  .admin-table-container.videos-table td:nth-child(10) {
-    width: 150px; /* Blog Post Match */
-  }
-
-  .admin-table-container.videos-table th:nth-child(11),
-  .admin-table-container.videos-table td:nth-child(11) {
-    width: 180px; /* Actions */
-  }
-
-  /* Allow text wrapping for title and description columns */
-  .admin-table-container.videos-table th:nth-child(3),
-  .admin-table-container.videos-table td:nth-child(3) {
-    white-space: normal;
-    word-wrap: break-word;
-    line-height: 1.3;
+    min-width: 150px; /* Channel ID */
   }
 
   tbody td.sticky {
