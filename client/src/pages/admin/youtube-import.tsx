@@ -73,6 +73,7 @@ type YoutubeVideo = {
   errorMessage?: string;
   videoType?: "video" | "short";
   duration?: number;
+  transcript?: string;
 };
 
 const YoutubeImport = () => {
@@ -229,11 +230,15 @@ const YoutubeImport = () => {
         totalCount: 0,
         importedCount: 0,
         skippedCount: 0,
-        logs: [`🚀 Starting import of ${limit} videos...`]
+        logs: [`🚀 Starting import of ${limit} videos...`],
+        canClose: false
       });
 
       // Small delay to show initial progress
       await new Promise(resolve => setTimeout(resolve, 500));
+
+      // Array to hold video IDs for transcript fetching
+      let videoIdsForTranscripts: string[] = [];
 
       try {
         // Step 1: Fetch videos
@@ -266,8 +271,45 @@ const YoutubeImport = () => {
         }));
 
         const data = await response.json();
+        const importedVideos = data.videos; // Assuming the imported videos are returned in a "videos" array
 
-        // Step 3: Complete
+        // Collect video IDs of successfully imported videos
+        videoIdsForTranscripts = importedVideos.map((video: YoutubeVideo) => video.id);
+        
+        setImportProgress(prev => ({
+          ...prev,
+          currentStep: 'Fetching Transcripts...',
+          progress: 80,
+          logs: [...prev.logs, '⚙️ Fetching transcripts']
+        }));
+
+        // Step 3: Fetch Transcripts individually after videos are imported
+        for (const videoId of videoIdsForTranscripts) {
+          try {
+             setImportProgress(prev => ({
+              ...prev,
+              currentStep: `Fetching transcript for ${videoId}...`,
+              progress: 80 + (20 * (videoIdsForTranscripts.indexOf(videoId) + 1) / videoIdsForTranscripts.length),
+              logs: [...prev.logs, `🎬 Fetching transcript for video: ${videoId}`]
+            }));
+            const transcriptResponse = await fetch(`/api/admin/youtube/videos/${videoId}/transcript`, {method: 'POST'});
+
+            if (!transcriptResponse.ok) {
+              const errorData = await transcriptResponse.json().catch(() => ({ message: 'Unknown error' }));
+              throw new Error(errorData.message || `HTTP ${transcriptResponse.status}`);
+            }
+
+            const transcriptData = await transcriptResponse.json();
+
+          } catch (transcriptError) {
+             setImportProgress(prev => ({
+              ...prev,
+              logs: [...prev.logs, `❌ Transcript Error for video ${videoId}: ${transcriptError instanceof Error ? transcriptError.message : String(transcriptError)}`]
+            }));
+          }
+        }
+
+        // Step 4: Complete
         setImportProgress(prev => ({
           ...prev,
           currentStep: 'Import completed!',
@@ -280,7 +322,8 @@ const YoutubeImport = () => {
             ...prev.logs,
             `✅ Import completed!`,
             `📊 Summary: ${data.count || 0} imported, ${data.skipped || 0} skipped`
-          ]
+          ],
+          canClose: true
         }));
 
         return data;
@@ -289,7 +332,8 @@ const YoutubeImport = () => {
           ...prev,
           currentStep: 'Import failed',
           progress: 0,
-          logs: [...prev.logs, `❌ Error: ${error instanceof Error ? error.message : String(error)}`]
+          logs: [...prev.logs, `❌ Error: ${error instanceof Error ? error.message : String(error)}`],
+          canClose: true
         }));
         throw error;
       }
@@ -1499,50 +1543,23 @@ const YoutubeImport = () => {
           </AlertDialogHeader>
 
           <div className="space-y-4">
-            {/* Progress Bar */}
-            <div className="space-y-2">
-              <div className="flex justify-between text-sm">
-                <span>{importProgress.currentStep}</span>
-                <span>{importProgress.progress}%</span>
-              </div>
-              <Progress value={importProgress.progress} className="w-full" />
-            </div>
-
-            {/* Stats */}
-            {importProgress.totalCount > 0 && (
-              <div className="grid grid-cols-3 gap-4 text-center">
-                <div className="bg-blue-50 dark:bg-blue-900/20 p-3 rounded">
-                  <div className="text-2xl font-bold text-blue-600">
-                    {importProgress.processedCount}
+            {importProgress.isImporting && (
+              <div className="space-y-4">
+                <div className="flex items-center justify-between">
+                  <span className="text-sm font-medium">{importProgress.currentStep}</span>
+                  <span className="text-sm text-muted-foreground">{importProgress.progress}%</span>
+                </div>
+                <Progress value={importProgress.progress} className="h-2" />
+                {importProgress.processedCount > 0 && (
+                  <div className="text-sm text-muted-foreground">
+                    Videos: {importProgress.importedCount} imported, {importProgress.skippedCount} skipped
                   </div>
-                  <div className="text-sm text-blue-600">Processed</div>
-                </div>
-                <div className="bg-green-50 dark:bg-green-900/20 p-3 rounded">
-                  <div className="text-2xl font-bold text-green-600">
-                    {importProgress.importedCount}
+                )}
+                {importProgress.currentStep.includes('transcript') && (
+                  <div className="text-sm text-blue-600">
+                    🎯 Fetching transcripts individually to avoid rate limits...
                   </div>
-                  <div className="text-sm text-green-600">Imported</div>
-                </div>
-                <div className="bg-yellow-50 dark:bg-yellow-900/20 p-3 rounded">
-                  <div className="text-2xl font-bold text-yellow-600">
-                    {importProgress.skippedCount}
-                  </div>
-                  <div className="text-sm text-yellow-600">Skipped</div>
-                </div>
-              </div>
-            )}
-
-            {/* Logs */}
-            {importProgress.logs.length > 0 && (
-              <div className="space-y-2">
-                <h4 className="font-medium">Import Log:</h4>
-                <div className="bg-gray-50 dark:bg-gray-800 p-3 rounded max-h-40 overflow-y-auto text-sm font-mono">
-                  {importProgress.logs.map((log, index) => (
-                    <div key={index} className="mb-1">
-                      {log}
-                    </div>
-                  ))}
-                </div>
+                )}
               </div>
             )}
           </div>
