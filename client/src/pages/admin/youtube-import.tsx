@@ -652,7 +652,11 @@ const YoutubeImport = () => {
                             </Button>
                             <AlertDialog>
                               <AlertDialogTrigger asChild>
-                                <Button variant="destructive" size="sm">
+                                <Button 
+                                  variant="destructive" 
+                                  size="sm"
+                                  onClick={(e) => e.stopPropagation()}
+                                >
                                   <Trash2 className="h-4 w-4 mr-1" />
                                   Delete
                                 </Button>
@@ -894,7 +898,7 @@ const YoutubeImport = () => {
                     ) : (
                       filteredVideos?.map((video) => (
                         <>
-                        <TableRow key={video.id}>
+                        <TableRow key={video.id} onClick={() => toggleExpandRow(video.id)}>
                           <TableCell>
                             <input
                               type="checkbox"
@@ -926,7 +930,7 @@ const YoutubeImport = () => {
                             <div className="text-sm text-muted-foreground">{video.videoId}</div>
                           </TableCell>
                           <TableCell>
-                            <code className="bg-gray-100 px-2 py-1 rounded text-xs font-mono">
+                            <code className="bg-gray-100 px-2 py-1rounded text-xs font-mono">
                               {video.channel?.channelId || 'N/A'}
                             </code>
                                                     </TableCell>
@@ -1117,7 +1121,11 @@ const YoutubeImport = () => {
 
                             <AlertDialog>
                               <AlertDialogTrigger asChild>
-                                <Button variant="destructive" size="sm">
+                                <Button 
+                                  variant="destructive" 
+                                  size="sm"
+                                  onClick={(e) => e.stopPropagation()}
+                                >
                                   <Trash2 className="h-4 w-4 mr-1" />
                                   Delete
                                 </Button>
