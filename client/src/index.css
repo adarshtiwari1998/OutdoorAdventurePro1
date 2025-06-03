@@ -456,6 +456,12 @@ header {
     max-width: 1200px;
   }
 
+  /* Constrain the tabs container width for YouTube import page */
+  .admin-table-container.channels-table,
+  .admin-table-container.videos-table {
+    max-width: 1200px;
+  }
+
   /* Fix for wide content in admin cards */
   .admin-card-content {
     overflow-x: auto;
