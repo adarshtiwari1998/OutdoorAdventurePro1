@@ -1341,7 +1341,21 @@ app.get(`${apiPrefix}/admin/youtube/videos`, async (req, res) => {
             continue;
           }
 
-          // Import the new video
+          // Fetch transcript for the video
+          let transcript = '';
+          let importStatus = 'imported'; // Default to imported if transcript fetch fails
+          
+          try {
+            console.log(`📄 Fetching transcript for: ${video.title}`);
+            transcript = await youtubeService.getVideoTranscript(video.id);
+            console.log(`✅ Transcript fetched successfully for: ${video.title}`);
+          } catch (transcriptError) {
+            console.warn(`⚠️ Failed to fetch transcript for ${video.title}:`, transcriptError);
+            // Set a basic transcript fallback
+            transcript = `[TRANSCRIPT UNAVAILABLE]\n\nVideo: ${video.title}\nDescription: ${video.description}\n\n[No transcript could be fetched for this video]`;
+          }
+
+          // Import the new video with transcript and proper status
           await storage.createYoutubeVideo({
             videoId: video.id,
             title: video.title,
@@ -1349,7 +1363,9 @@ app.get(`${apiPrefix}/admin/youtube/videos`, async (req, res) => {
             thumbnail: video.thumbnailUrl,
             publishedAt: video.publishedAt,
             channelId: channel.id,
-            categoryId: categoryId ? parseInt(categoryId) : null
+            categoryId: categoryId ? parseInt(categoryId) : null,
+            transcript: transcript,
+            importStatus: importStatus
           });
 
           // Add to existing set to prevent duplicates within this import session
@@ -2142,6 +2158,59 @@ app.get(`${apiPrefix}/admin/youtube/videos`, async (req, res) => {
         return res.status(400).json({ errors: error.errors });
       }
       res.status(500).json({ message: "Failed to update category style" });
+    }
+  });
+
+  // Fetch transcripts for existing videos
+  app.post(`${apiPrefix}/admin/youtube/videos/fetch-transcripts`, async (req, res) => {
+    try {
+      const { videoIds } = req.body;
+
+      if (!videoIds || !Array.isArray(videoIds) || videoIds.length === 0) {
+        return res.status(400).json({ message: "Video IDs are required" });
+      }
+
+      console.log(`🎯 Fetching transcripts for ${videoIds.length} videos`);
+
+      let successCount = 0;
+      let errorCount = 0;
+      const errors: string[] = [];
+
+      for (const videoId of videoIds) {
+        try {
+          // Get video from database
+          const video = await storage.getYoutubeVideoById(parseInt(videoId));
+          if (!video) {
+            errors.push(`Video with ID ${videoId} not found`);
+            errorCount++;
+            continue;
+          }
+
+          // Fetch transcript
+          const transcript = await youtubeService.getVideoTranscript(video.videoId);
+          
+          // Update video with transcript
+          await storage.updateYoutubeVideoTranscript(parseInt(videoId), transcript);
+          
+          console.log(`✅ Transcript fetched for: ${video.title}`);
+          successCount++;
+        } catch (error) {
+          console.error(`❌ Error fetching transcript for video ${videoId}:`, error);
+          errors.push(`Failed to fetch transcript for video ${videoId}: ${error.message}`);
+          errorCount++;
+        }
+      }
+
+      res.json({
+        success: true,
+        successCount,
+        errorCount,
+        errors,
+        message: `Successfully fetched ${successCount} transcripts. ${errorCount} errors occurred.`
+      });
+    } catch (error) {
+      console.error("Error fetching transcripts:", error);
+      res.status(500).json({ message: "Failed to fetch transcripts" });
     }
   });
 

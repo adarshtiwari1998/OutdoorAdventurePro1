@@ -267,7 +267,17 @@ export const storage = {
     }
   },
 
-  async createYoutubeVideo(videoData: any) {
+  async createYoutubeVideo(videoData: {
+    videoId: string;
+    title: string;
+    description: string;
+    thumbnail: string;
+    publishedAt: Date | string;
+    channelId: number;
+    categoryId?: number | null;
+    transcript?: string;
+    importStatus?: string;
+  }): Promise<any> {
     try {
       // Check for existing blog posts with similar titles
       const existingBlogPosts = await db.query.blogPosts.findMany({
@@ -293,16 +303,18 @@ export const storage = {
         }
       }
 
-      const [video] = await db.insert(youtubeVideos).values({
+      const [video] = await db.insert(schema.youtubeVideos).values({
         videoId: videoData.videoId,
         title: videoData.title,
         description: videoData.description,
         thumbnail: videoData.thumbnail,
-        publishedAt: videoData.publishedAt,
-        channelId: videoData.channelId, // Foreign key to youtube_channels table
-        categoryId: videoData.categoryId || null,
-        hasBlogPostMatch,
-        matchingBlogPostTitle,
+        publishedAt: new Date(videoData.publishedAt),
+        channelId: videoData.channelId,
+        categoryId: videoData.categoryId,
+        transcript: videoData.transcript || null,
+        importStatus: videoData.importStatus || 'imported',
+        createdAt: new Date(),
+        updatedAt: new Date()
       }).returning();
 
       return video;
@@ -377,19 +389,24 @@ export const storage = {
     }
   },
 
-  async linkYoutubeVideoToBlogPost(videoId: number, blogPostId: number) {
-    try {
-      await db.update(youtubeVideos)
-        .set({ 
-          blogPostId, 
-          importStatus: 'imported' 
-        })
-        .where(eq(youtubeVideos.id, videoId));
-    } catch (error) {
-      console.error(`Error linking YouTube video ${videoId} to blog post ${blogPostId}:`, error);
-      throw error;
-    }
-  },
+  async linkYoutubeVideoToBlogPost(videoId: number, blogPostId: number): Promise<void> {
+    await db.update(schema.youtubeVideos)
+      .set({
+        blogPostId: blogPostId,
+        importStatus: 'imported',
+        updatedAt: new Date()
+      })
+      .where(eq(schema.youtubeVideos.id, videoId));
+  }
+
+  async updateYoutubeVideoTranscript(videoId: number, transcript: string): Promise<void> {
+    await db.update(schema.youtubeVideos)
+      .set({
+        transcript: transcript,
+        updatedAt: new Date()
+      })
+      .where(eq(schema.youtubeVideos.id, videoId));
+  }
 
   async deleteYoutubeVideo(id: number) {
     try {

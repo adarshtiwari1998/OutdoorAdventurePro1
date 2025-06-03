@@ -98,6 +98,7 @@ const YoutubeImport = () => {
     logs: [] as string[],
     canClose: false
   });
+   const [expandedRows, setExpandedRows] = useState<Set<string>>(new Set());
 
   // Queries
   const { data: channels, isLoading: channelsLoading } = useQuery<YoutubeChannel[]>({
@@ -131,11 +132,11 @@ const YoutubeImport = () => {
     const categoryMatch = filterCategory === "all" || 
                          (filterCategory === "no-category" && !video.categoryId) ||
                          (video.categoryId && video.categoryId === filterCategory);
-    
+
     const channelMatch = filterChannel === "all" || video.channelId === filterChannel;
-    
+
     const statusMatch = filterStatus === "all" || video.importStatus === filterStatus;
-    
+
     return categoryMatch && channelMatch && statusMatch;
   }) || [];
 
@@ -483,6 +484,18 @@ const YoutubeImport = () => {
     );
   };
 
+   const toggleExpandRow = (videoId: string) => {
+    setExpandedRows(prev => {
+      const newExpandedRows = new Set(prev);
+      if (newExpandedRows.has(videoId)) {
+        newExpandedRows.delete(videoId);
+      } else {
+        newExpandedRows.add(videoId);
+      }
+      return newExpandedRows;
+    });
+  };
+
   const toggleAllVideos = () => {
     if (filteredVideos && filteredVideos.length > 0) {
       if (selectedVideos.length === filteredVideos.length) {
@@ -703,7 +716,7 @@ const YoutubeImport = () => {
                       </SelectContent>
                     </Select>
                   </div>
-                  
+
                   <div>
                     <label className="text-sm font-medium mb-1 block">Filter by Channel</label>
                     <Select value={filterChannel} onValueChange={setFilterChannel}>
@@ -720,7 +733,7 @@ const YoutubeImport = () => {
                       </SelectContent>
                     </Select>
                   </div>
-                  
+
                   <div>
                     <label className="text-sm font-medium mb-1 block">Filter by Status</label>
                     <Select value={filterStatus} onValueChange={setFilterStatus}>
@@ -735,7 +748,7 @@ const YoutubeImport = () => {
                       </SelectContent>
                     </Select>
                   </div>
-                  
+
                   <div className="flex items-end">
                     <Button 
                       variant="outline" 
@@ -751,7 +764,7 @@ const YoutubeImport = () => {
                     </Button>
                   </div>
                 </div>
-                
+
                 <div className="mt-3 text-sm text-muted-foreground">
                   Showing {filteredVideos.length} of {videos?.length || 0} videos
                   {filterCategory !== "all" && ` • Category: ${filterCategory === "no-category" ? "No Category" : blogCategories?.find(c => c.id === filterCategory)?.name}`}
@@ -880,6 +893,7 @@ const YoutubeImport = () => {
                       </TableRow>
                     ) : (
                       filteredVideos?.map((video) => (
+                        <>
                         <TableRow key={video.id}>
                           <TableCell>
                             <input
@@ -889,7 +903,7 @@ const YoutubeImport = () => {
                               className="rounded"
                             />
                           </TableCell>
-                          <TableCell>
+                           <TableCell>
                             <div className="relative w-20 h-12 overflow-hidden rounded">
                               <img 
                                 src={video.thumbnail} 
@@ -915,7 +929,7 @@ const YoutubeImport = () => {
                             <code className="bg-gray-100 px-2 py-1 rounded text-xs font-mono">
                               {video.channel?.channelId || 'N/A'}
                             </code>
-                          </TableCell>
+                                                    </TableCell>
                           <TableCell>
                             {video.category ? (
                               <Badge variant="outline">
@@ -1127,7 +1141,60 @@ const YoutubeImport = () => {
                             </AlertDialog>
                           </TableCell>
                         </TableRow>
-                      ))
+
+                        {/* Expandable row content */}
+                        {expandedRows.has(video.id) && (
+                          <TableRow>
+                            <TableCell colSpan={9} className="bg-gray-50 dark:bg-gray-900/50">
+                              <div className="py-4 space-y-4">
+                                <div>
+                                  <h4 className="font-semibold text-sm mb-2">Video Description:</h4>
+                                  <div className="text-sm text-muted-foreground whitespace-pre-wrap bg-white dark:bg-gray-800 p-3 rounded border max-h-40 overflow-y-auto">
+                                    {video.description || 'No description available'}
+                                  </div>
+                                </div>
+
+                                {video.transcript && (
+                                  <div>
+                                    <h4 className="font-semibold text-sm mb-2">Transcript:</h4>
+                                    <div className="text-sm text-muted-foreground whitespace-pre-wrap bg-white dark:bg-gray-800 p-3 rounded border max-h-40 overflow-y-auto">
+                                      {video.transcript}
+                                    </div>
+                                  </div>
+                                )}
+
+                                <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
+                                  <div>
+                                    <span className="font-semibold">Video ID:</span>
+                                    <div className="text-muted-foreground font-mono">{video.videoId}</div>
+                                  </div>
+                                  <div>
+                                    <span className="font-semibold">Published:</span>
+                                    <div className="text-muted-foreground">{format(new Date(video.publishedAt), 'PPP')}</div>
+                                  </div>
+                                  <div>
+                                    <span className="font-semibold">Channel:</span>
+                                    <div className="text-muted-foreground">{video.channelName || 'Unknown'}</div>
+                                  </div>
+                                  <div>
+                                    <span className="font-semibold">Import Status:</span>
+                                    <div className="text-muted-foreground capitalize">{video.importStatus}</div>
+                                  </div>
+                                </div>
+
+                                {video.errorMessage && (
+                                  <div>
+                                    <h4 className="font-semibold text-sm mb-2 text-red-600">Error Message:</h4>
+                                    <div className="text-sm text-red-600 bg-red-50 dark:bg-red-900/20 p-3 rounded border">
+                                      {video.errorMessage}
+                                    </div>
+                                  </div>
+                                )}
+                              </div>
+                            </TableCell>
+                          </TableRow>
+                        )}
+                      </>))
                     )}
                   </TableBody>
                 </Table>
