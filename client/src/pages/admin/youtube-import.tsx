@@ -84,6 +84,9 @@ const YoutubeImport = () => {
   const [selectedCategoryForImport, setSelectedCategoryForImport] = useState<string | undefined>(undefined);
   const [selectedVideos, setSelectedVideos] = useState<string[]>([]);
   const [bulkCategoryId, setBulkCategoryId] = useState<string>("");
+  const [filterCategory, setFilterCategory] = useState<string>("all");
+  const [filterChannel, setFilterChannel] = useState<string>("all");
+  const [filterStatus, setFilterStatus] = useState<string>("all");
   const [importProgress, setImportProgress] = useState({
     isImporting: false,
     currentStep: '',
@@ -121,6 +124,19 @@ const YoutubeImport = () => {
   const { data: blogCategories } = useQuery<{id: string, name: string}[]>({
     queryKey: ['/api/admin/blog/categories'],
   });
+
+  // Filter videos based on selected filters
+  const filteredVideos = videos?.filter(video => {
+    const categoryMatch = filterCategory === "all" || 
+                         (filterCategory === "no-category" && !video.categoryId) ||
+                         (video.categoryId && video.categoryId === filterCategory);
+    
+    const channelMatch = filterChannel === "all" || video.channelId === filterChannel;
+    
+    const statusMatch = filterStatus === "all" || video.importStatus === filterStatus;
+    
+    return categoryMatch && channelMatch && statusMatch;
+  }) || [];
 
   // Forms
   const channelForm = useForm<z.infer<typeof youtubeChannelSchema>>({
@@ -476,11 +492,11 @@ const YoutubeImport = () => {
   };
 
   const toggleAllVideos = () => {
-    if (videos && videos.length > 0) {
-      if (selectedVideos.length === videos.length) {
+    if (filteredVideos && filteredVideos.length > 0) {
+      if (selectedVideos.length === filteredVideos.length) {
         setSelectedVideos([]);
       } else {
-        setSelectedVideos(videos.map(video => video.id));
+        setSelectedVideos(filteredVideos.map(video => video.id));
       }
     }
   };
@@ -675,6 +691,83 @@ const YoutubeImport = () => {
               </CardDescription>
             </CardHeader>
             <CardContent>
+              {/* Filter Controls */}
+              <div className="mb-4 p-4 bg-gray-50 dark:bg-gray-900/20 rounded-lg">
+                <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                  <div>
+                    <label className="text-sm font-medium mb-1 block">Filter by Category</label>
+                    <Select value={filterCategory} onValueChange={setFilterCategory}>
+                      <SelectTrigger>
+                        <SelectValue placeholder="All categories" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="all">All Categories</SelectItem>
+                        <SelectItem value="no-category">No Category</SelectItem>
+                        {blogCategories?.map(category => (
+                          <SelectItem key={category.id} value={category.id}>
+                            {category.name}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  
+                  <div>
+                    <label className="text-sm font-medium mb-1 block">Filter by Channel</label>
+                    <Select value={filterChannel} onValueChange={setFilterChannel}>
+                      <SelectTrigger>
+                        <SelectValue placeholder="All channels" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="all">All Channels</SelectItem>
+                        {channels?.map(channel => (
+                          <SelectItem key={channel.id} value={channel.id.toString()}>
+                            {channel.name}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  
+                  <div>
+                    <label className="text-sm font-medium mb-1 block">Filter by Status</label>
+                    <Select value={filterStatus} onValueChange={setFilterStatus}>
+                      <SelectTrigger>
+                        <SelectValue placeholder="All statuses" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="all">All Statuses</SelectItem>
+                        <SelectItem value="pending">Pending</SelectItem>
+                        <SelectItem value="imported">Imported</SelectItem>
+                        <SelectItem value="failed">Failed</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  
+                  <div className="flex items-end">
+                    <Button 
+                      variant="outline" 
+                      onClick={() => {
+                        setFilterCategory("all");
+                        setFilterChannel("all");
+                        setFilterStatus("all");
+                      }}
+                      size="sm"
+                      className="w-full"
+                    >
+                      Clear Filters
+                    </Button>
+                  </div>
+                </div>
+                
+                <div className="mt-3 text-sm text-muted-foreground">
+                  Showing {filteredVideos.length} of {videos?.length || 0} videos
+                  {filterCategory !== "all" && ` • Category: ${filterCategory === "no-category" ? "No Category" : blogCategories?.find(c => c.id === filterCategory)?.name}`}
+                  {filterChannel !== "all" && ` • Channel: ${channels?.find(c => c.id.toString() === filterChannel)?.name}`}
+                  {filterStatus !== "all" && ` • Status: ${filterStatus}`}
+                </div>
+              </div>
+
               {selectedVideos.length > 0 && (
                 <div className="mb-4 p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
                   <div className="flex items-center gap-4">
@@ -712,11 +805,11 @@ const YoutubeImport = () => {
               )}
 
               {/* Quick action for videos without categories */}
-              {videos && videos.filter(v => !v.category).length > 0 && (
+              {filteredVideos && filteredVideos.filter(v => !v.category).length > 0 && (
                 <div className="mb-4 p-4 bg-orange-50 dark:bg-orange-900/20 rounded-lg">
                   <div className="flex items-center gap-4">
                     <span className="text-sm font-medium text-orange-700 dark:text-orange-300">
-                      {videos.filter(v => !v.category).length} videos without category
+                      {filteredVideos.filter(v => !v.category).length} videos without category (in current filter)
                     </span>
                     <Select value={bulkCategoryId} onValueChange={setBulkCategoryId}>
                       <SelectTrigger className="w-48">
@@ -732,7 +825,7 @@ const YoutubeImport = () => {
                     </Select>
                     <Button 
                       onClick={() => {
-                        const videosWithoutCategory = videos?.filter(v => !v.category).map(v => v.id) || [];
+                        const videosWithoutCategory = filteredVideos?.filter(v => !v.category).map(v => v.id) || [];
                         if (videosWithoutCategory.length > 0 && bulkCategoryId) {
                           bulkUpdateCategoryMutation.mutate({
                             videoIds: videosWithoutCategory,
@@ -749,7 +842,7 @@ const YoutubeImport = () => {
                     <Button 
                       variant="ghost" 
                       onClick={() => {
-                        const videosWithoutCategory = videos?.filter(v => !v.category).map(v => v.id) || [];
+                        const videosWithoutCategory = filteredVideos?.filter(v => !v.category).map(v => v.id) || [];
                         setSelectedVideos(videosWithoutCategory);
                       }}
                       size="sm"
@@ -766,7 +859,7 @@ const YoutubeImport = () => {
                       <TableHead className="w-[50px]">
                         <input
                           type="checkbox"
-                          checked={videos?.length > 0 && selectedVideos.length === videos.length}
+                          checked={filteredVideos?.length > 0 && selectedVideos.length === filteredVideos.length}
                           onChange={toggleAllVideos}
                           className="rounded"
                         />
@@ -784,14 +877,17 @@ const YoutubeImport = () => {
                   <TableBody>
                     {videosLoading ? (
                       renderVideoSkeleton()
-                    ) : videos?.length === 0 ? (
+                    ) : filteredVideos?.length === 0 ? (
                       <TableRow>
-                        <TableCell colSpan={8} className="text-center py-8">
-                          No videos found for this channel. Import videos or add them manually.
+                        <TableCell colSpan={9} className="text-center py-8">
+                          {videos?.length === 0 
+                            ? "No videos found for this channel. Import videos or add them manually."
+                            : "No videos match the current filters. Try adjusting your filter criteria."
+                          }
                         </TableCell>
                       </TableRow>
                     ) : (
-                      videos?.map((video) => (
+                      filteredVideos?.map((video) => (
                         <TableRow key={video.id}>
                           <TableCell>
                             <input
