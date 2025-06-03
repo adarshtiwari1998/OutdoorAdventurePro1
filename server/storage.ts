@@ -228,7 +228,7 @@ export const storage = {
         .set({ importedVideoCount: newTotal })
         .where(eq(schema.youtubeChannels.id, channelId));
     }
-  }
+  },
 
   async deleteYoutubeChannel(id: number) {
     try {
