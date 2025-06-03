@@ -1334,6 +1334,7 @@ const YoutubeImport = () => {
                     )}
                   </TableBody>
                 </Table>
+                </div>
               </div>
             </CardContent>
           </Card>

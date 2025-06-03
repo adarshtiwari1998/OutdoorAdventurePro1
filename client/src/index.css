@@ -327,6 +327,19 @@ header {
     z-index: 10;
   }
 
+  /* Table overflow container styling */
+  .table-scroll-container {
+    overflow-x: auto;
+    max-width: 100%;
+    position: relative;
+  }
+
+  /* Prevent body overflow from tables */
+  .admin-content-container {
+    overflow-x: hidden;
+    max-width: 100%;
+  }
+
   /* Blog section specific styles */
   .blog-section-container {
     display: flex;
