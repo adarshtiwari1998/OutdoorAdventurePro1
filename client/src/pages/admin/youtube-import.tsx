@@ -513,6 +513,8 @@ const YoutubeImport = () => {
       {Array(3).fill(0).map((_, i) => (
         <TableRow key={i}>
           <TableCell><Skeleton className="h-5 w-48" /></TableCell>
+          <TableCell><Skeleton className="h-5 w-32" /></TableCell>
+          <TableCell><Skeleton className="h-5 w-16" /></TableCell>
           <TableCell><Skeleton className="h-5 w-16" /></TableCell>
           <TableCell><Skeleton className="h-5 w-16" /></TableCell>
           <TableCell><Skeleton className="h-5 w-24" /></TableCell>
@@ -566,6 +568,7 @@ const YoutubeImport = () => {
                   <TableHeader>
                     <TableRow>
                       <TableHead>Channel Name</TableHead>
+                      <TableHead>Channel ID</TableHead>
                       <TableHead>Subscribers</TableHead>
                       <TableHead>Total Videos</TableHead>
                       <TableHead>Imported Videos</TableHead>
@@ -592,6 +595,11 @@ const YoutubeImport = () => {
                             >
                               {channel.name}
                             </div>
+                          </TableCell>
+                          <TableCell>
+                            <code className="bg-gray-100 px-2 py-1 rounded text-xs font-mono">
+                              {channel.channelId}
+                            </code>
                           </TableCell>
                           <TableCell>{channel.subscribers.toLocaleString()}</TableCell>
                           <TableCell>{channel.videoCount}</TableCell>
