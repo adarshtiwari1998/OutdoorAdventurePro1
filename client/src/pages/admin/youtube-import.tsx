@@ -1006,10 +1006,15 @@ const YoutubeImport = () => {
                             <div className="text-sm text-muted-foreground">{video.videoId}</div>
                           </TableCell>
                           <TableCell>
-                            <code className="bg-gray-100 px-2 py-1rounded text-xs font-mono">
-                              {video.channel?.channelId || 'N/A'}
-                            </code>
-                                                    </TableCell>
+                            <div>
+                              <div className="font-medium text-sm">
+                                {video.channelName || video.channel?.name || 'Unknown Channel'}
+                              </div>
+                              <code className="bg-gray-100 dark:bg-gray-800 px-2 py-1 rounded text-xs font-mono">
+                                {video.channel?.channelId || channels?.find(c => c.id.toString() === video.channelId)?.channelId || 'N/A'}
+                              </code>
+                            </div>
+                          </TableCell>
                           <TableCell>
                             {video.category ? (
                               <Badge variant="outline">
@@ -1258,7 +1263,9 @@ const YoutubeImport = () => {
                                   </div>
                                   <div>
                                     <span className="font-semibold">Channel:</span>
-                                    <div className="text-muted-foreground">{video.channelName || 'Unknown'}</div>
+                                    <div className="text-muted-foreground">
+                                      {video.channelName || video.channel?.name || channels?.find(c => c.id.toString() === video.channelId)?.name || 'Unknown'}
+                                    </div>
                                   </div>
                                   <div>
                                     <span className="font-semibold">Import Status:</span>
@@ -1528,6 +1535,27 @@ const YoutubeImport = () => {
               Configure the import settings for this channel's videos.
             </AlertDialogDescription>
           </AlertDialogHeader>
+
+          {/* Channel Information */}
+          {importChannelId && (
+            <div className="bg-blue-50 dark:bg-blue-900/20 p-4 rounded-lg mb-4">
+              <h4 className="font-semibold text-sm mb-2">Channel Information:</h4>
+              <div className="space-y-1 text-sm">
+                <div>
+                  <span className="font-medium">Name:</span>{" "}
+                  <span className="text-muted-foreground">
+                    {channels?.find(c => c.id.toString() === importChannelId)?.name || 'Unknown'}
+                  </span>
+                </div>
+                <div>
+                  <span className="font-medium">Channel ID:</span>{" "}
+                  <code className="bg-gray-100 dark:bg-gray-800 px-2 py-1 rounded text-xs font-mono">
+                    {channels?.find(c => c.id.toString() === importChannelId)?.channelId || 'Unknown'}
+                  </code>
+                </div>
+              </div>
+            </div>
+          )}
 
           <div className="space-y-4">
             <div>
