@@ -874,9 +874,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const { name, slug, description } = req.body;
 
       if (!name || !slug) {
-        return res.status(400).json({ message: "Name and slug are required" });      }
+        return res.status(400).json({ message: "Name and slug are required" });
+      }
 
-```python
       const newCategory = await storage.createBlogCategory({
         name,
         slug,
