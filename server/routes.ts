@@ -883,8 +883,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const { id } = req.params;
       const { order } = req.body;
 
-      if (order === undefined) {
-        return res.status(400).json({ message: "Order is required" });
+      if (order === undefined) {        return res.status(400).json({ message: "Order is required" });
       }
 
       await storage.updateSliderOrder(parseInt(id), parseInt(order));
@@ -986,10 +985,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
         type: 'header'
       }));
 
-      // Combine both types of categories
-      const allCategories = [...blogCategories, ...headerCategories];
+      // Combine both types of categories and deduplicate by name
+    const allCategories = [...blogCategories, ...headerCategories];
 
-      res.json(allCategories);
+    // Remove duplicates based on category name (case-insensitive)
+    const uniqueCategories = allCategories.filter((category, index, self) => 
+      index === self.findIndex(c => c.name.toLowerCase() === category.name.toLowerCase())
+    );
+
+    res.json(uniqueCategories);
     } catch (error) {
       console.error("Error fetching blog categories:", error);
       res.status(500).json({ message: "Failed to fetch blog categories" });
@@ -2671,6 +2675,7 @@ Status: Transcript extraction failed during import. Video may have captions that
       console.error("Error deleting favorite destination:", error);
       res.status(500).json({ message: "Failed to delete favorite destination" });
     }
+```text
   });
 
   // Reorder favorite destination
