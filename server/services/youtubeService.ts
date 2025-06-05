@@ -99,7 +99,7 @@ export class YouTubeService {
 
       // Try to search by channel handle/username
       console.log(`🔍 Resolving channel identifier: ${channelIdentifier}`);
-      
+
       // First try searching by channel name/handle
       const searchResponse = await this.makeRequest('search', {
         part: 'snippet',
@@ -141,7 +141,7 @@ export class YouTubeService {
     try {
       // First resolve the channel ID if needed
       const resolvedChannelId = await this.resolveChannelId(channelId);
-      
+
       const response = await this.makeRequest('channels', {
         part: 'snippet,statistics',
         id: resolvedChannelId
@@ -178,10 +178,10 @@ export class YouTubeService {
       }
 
       const video = response.items[0];
-      
+
       // Parse duration from ISO 8601 format (PT4M13S) to seconds
       const duration = this.parseDuration(video.contentDetails.duration);
-      
+
       // Determine if it's a short (typically <= 60 seconds and vertical format)
       const videoType = this.determineVideoType(duration, video);
 
@@ -238,10 +238,10 @@ export class YouTubeService {
     commentCount: number;
   }>> {
     const results = new Map();
-    
+
     // YouTube API allows up to 50 video IDs per request
     const chunks = this.chunkArray(videoIds, 50);
-    
+
     for (const chunk of chunks) {
       try {
         const response = await this.makeRequest('videos', {
@@ -379,7 +379,7 @@ export class YouTubeService {
         // Parse duration and determine video type
         const duration = this.parseDuration(video.contentDetails.duration);
         const videoType = this.determineVideoType(duration, video);
-        
+
         return {
           id: video.id,
           title: video.snippet.title,
@@ -406,16 +406,16 @@ export class YouTubeService {
    */
   private parseDuration(isoDuration: string): number {
     if (!isoDuration) return 0;
-    
+
     const regex = /PT(?:(\d+)H)?(?:(\d+)M)?(?:(\d+)S)?/;
     const matches = isoDuration.match(regex);
-    
+
     if (!matches) return 0;
-    
+
     const hours = parseInt(matches[1] || '0', 10);
     const minutes = parseInt(matches[2] || '0', 10);
     const seconds = parseInt(matches[3] || '0', 10);
-    
+
     return (hours * 3600) + (minutes * 60) + seconds;
   }
 
@@ -427,25 +427,25 @@ export class YouTubeService {
     // 1. 60 seconds or less in duration
     // 2. Vertical format (9:16 aspect ratio)
     // 3. Often have #Shorts in title or description
-    
+
     const title = video.snippet.title?.toLowerCase() || '';
     const description = video.snippet.description?.toLowerCase() || '';
-    
+
     // Check for explicit Short indicators
     const hasShortIndicator = title.includes('#shorts') || 
                              title.includes('#short') ||
                              description.includes('#shorts') ||
                              description.includes('#short');
-    
+
     // Duration-based detection (primary factor)
     const isShortDuration = duration > 0 && duration <= 60;
-    
+
     // If duration is <= 60 seconds OR has explicit Short indicators, classify as Short
     if (isShortDuration || hasShortIndicator) {
       console.log(`🎬 Detected SHORT: ${video.snippet.title} (${duration}s, hasIndicator: ${hasShortIndicator})`);
       return 'short';
     }
-    
+
     console.log(`🎥 Detected VIDEO: ${video.snippet.title} (${duration}s)`);
     return 'video';
   }
@@ -477,7 +477,7 @@ export class YouTubeService {
         // Parse duration and determine video type
         const duration = this.parseDuration(video.contentDetails.duration);
         const videoType = this.determineVideoType(duration, video);
-        
+
         return {
           id: video.id,
           title: video.snippet.title,
@@ -535,9 +535,9 @@ export class YouTubeService {
 
       try {
         // Strategy 1: Direct transcript fetch
-        console.log(`🔄 Strategy 1/3: Direct extraction for video: ${videoId}`);
+        console.log(`🔄 Strategy 1/4: Direct extraction for video: ${videoId}`);
         transcriptData = await YoutubeTranscript.fetchTranscript(videoId);
-        
+
         if (!transcriptData || transcriptData.length === 0) {
           lastError = 'No transcript data from direct method';
           throw new Error(lastError);
@@ -546,7 +546,7 @@ export class YouTubeService {
       } catch (directError) {
         lastError = directError.message;
         console.log(`❌ Strategy Direct failed: ${directError.message}`);
-        
+
         // Check for specific error types
         if (directError.message.includes('Transcript is disabled') || 
             directError.message.includes('No transcript found')) {
@@ -557,7 +557,7 @@ export class YouTubeService {
             errorType: 'NO_CAPTIONS'
           };
         }
-        
+
         if (directError.message.includes('captcha') || 
             directError.message.includes('too many requests') ||
             directError.message.includes('429')) {
@@ -568,15 +568,16 @@ export class YouTubeService {
             errorType: 'RATE_LIMITED'
           };
         }
-        
+
         try {
           // Strategy 2: Try with language specification
-          console.log(`🔄 Strategy 2/3: Language-specific (en) for video: ${videoId}`);
-          await new Promise(resolve => setTimeout(resolve, 5000)); // 5s delay
-          
+          console.log(`🔄 Strategy 2/4: Language-specific (en) for video: ${videoId}`);
+          const langDelay = videoDetails.duration > 1800 ? 15000 : 8000; // Longer delay for long videos
+          await new Promise(resolve => setTimeout(resolve, langDelay));
+
           transcriptData = await YoutubeTranscript.fetchTranscript(videoId, { lang: 'en' });
           extractionMethod = 'Language-Specific (en)';
-          
+
           if (!transcriptData || transcriptData.length === 0) {
             throw new Error('No transcript data from language method');
           }
@@ -584,45 +585,67 @@ export class YouTubeService {
         } catch (langError) {
           lastError = langError.message;
           console.log(`❌ Strategy Language failed: ${langError.message}`);
-          
+
           try {
             // Strategy 3: Try with auto-generated captions
-            console.log(`🔄 Strategy 3/3: Auto-generated captions for video: ${videoId}`);
-            await new Promise(resolve => setTimeout(resolve, 8000)); // 8s delay
-            
+            console.log(`🔄 Strategy 3/4: Auto-generated captions for video: ${videoId}`);
+            const autoDelay = videoDetails.duration > 1800 ? 20000 : 12000; // Even longer delay for long videos
+            await new Promise(resolve => setTimeout(resolve, autoDelay));
+
             transcriptData = await YoutubeTranscript.fetchTranscript(videoId, { lang: 'en', country: 'US' });
             extractionMethod = 'Auto-Generated';
-            
+
             if (!transcriptData || transcriptData.length === 0) {
               throw new Error('No transcript data from auto-generated method');
             }
             console.log(`✅ Auto-generated extraction successful: ${transcriptData.length} segments`);
           } catch (autoError) {
             lastError = autoError.message;
-            console.log(`❌ All extraction strategies failed for video ${videoId}`);
-            
-            // Determine error type based on final error
-            let errorType: any = 'UNKNOWN';
-            if (lastError.includes('Transcript is disabled') || lastError.includes('No transcript found')) {
-              errorType = 'NO_CAPTIONS';
-            } else if (lastError.includes('captcha') || lastError.includes('429')) {
-              errorType = 'RATE_LIMITED';
-            } else if (lastError.includes('restricted') || lastError.includes('private')) {
-              errorType = 'RESTRICTED';
-            } else if (lastError.includes('network') || lastError.includes('timeout')) {
-              errorType = 'NETWORK_ERROR';
+            console.log(`❌ Strategy Auto failed: ${autoError.message}`);
+
+            try {
+              // Strategy 4: Final attempt with maximum delay (for very long videos)
+              if (videoDetails.duration > 1200) { // Only for videos > 20 minutes
+                console.log(`🔄 Strategy 4/4: Final attempt with extended timeout for video: ${videoId}`);
+                await new Promise(resolve => setTimeout(resolve, 25000)); // 25s delay
+
+                transcriptData = await YoutubeTranscript.fetchTranscript(videoId);
+                extractionMethod = 'Extended Timeout';
+
+                if (!transcriptData || transcriptData.length === 0) {
+                  throw new Error('No transcript data from extended timeout method');
+                }
+                console.log(`✅ Extended timeout extraction successful: ${transcriptData.length} segments`);
+              } else {
+                throw autoError; // Skip strategy 4 for shorter videos
+              }
+            } catch (finalError) {
+              lastError = finalError.message;
+              console.log(`❌ All extraction strategies failed for video ${videoId}`);
+
+              // Determine error type based on final error
+              let errorType: any = 'UNKNOWN';
+              if (lastError.includes('Transcript is disabled') || lastError.includes('No transcript found')) {
+                errorType = 'NO_CAPTIONS';
+              } else if (lastError.includes('captcha') || lastError.includes('429')) {
+                errorType = 'RATE_LIMITED';
+              } else if (lastError.includes('restricted') || lastError.includes('private')) {
+                errorType = 'RESTRICTED';
+              } else if (lastError.includes('network') || lastError.includes('timeout')) {
+                errorType = 'NETWORK_ERROR';
+              }
+
+              return {
+                success: false,
+                transcript: '',
+                error: `All extraction strategies failed: ${lastError}`,
+                errorType
+              };
             }
-            
-            return {
-              success: false,
-              transcript: '',
-              error: `All extraction strategies failed: ${lastError}`,
-              errorType
-            };
           }
         }
       }
-      
+
       if (transcriptData && transcriptData.length > 0) {
         // Clean and format the transcript
         const cleanedTranscript = transcriptData
@@ -652,9 +675,9 @@ Type: ${videoDetails.videoType}
 Extraction Method: ${extractionMethod}
 
 ${cleanedTranscript}`;
-          
+
           console.log(`✅ Successfully extracted transcript: ${cleanedTranscript.length} characters using ${extractionMethod}`);
-          
+
           return {
             success: true,
             transcript: formattedTranscript,
@@ -670,7 +693,7 @@ ${cleanedTranscript}`;
           };
         }
       }
-      
+
       return {
         success: false,
         transcript: '',
@@ -680,7 +703,7 @@ ${cleanedTranscript}`;
 
     } catch (error) {
       console.error(`❌ Error fetching transcript for video ${videoId}:`, error.message);
-      
+
       let errorType: any = 'UNKNOWN';
       if (error.message.includes('captcha') || error.message.includes('too many requests')) {
         errorType = 'RATE_LIMITED';
@@ -689,7 +712,7 @@ ${cleanedTranscript}`;
       } else if (error.message.includes('restricted') || error.message.includes('private')) {
         errorType = 'RESTRICTED';
       }
-      
+
       return {
         success: false,
         transcript: '',
@@ -705,7 +728,7 @@ ${cleanedTranscript}`;
   private extractTopicsFromTitle(title: string, description: string): string {
     const text = `${title} ${description}`.toLowerCase();
     const topics = [];
-    
+
     // Common outdoor/travel topics
     if (text.includes('beach') || text.includes('coast')) topics.push('Beach/Coastal Activities');
     if (text.includes('hik') || text.includes('trail')) topics.push('Hiking/Trails');
@@ -717,7 +740,7 @@ ${cleanedTranscript}`;
     if (text.includes('resort') || text.includes('hotel')) topics.push('Accommodations');
     if (text.includes('food') || text.includes('restaurant')) topics.push('Dining');
     if (text.includes('snorkel') || text.includes('dive')) topics.push('Water Sports');
-    
+
     return topics.length > 0 ? topics.join(', ') : 'General outdoor/travel content';
   }
 
@@ -737,12 +760,12 @@ ${cleanedTranscript}`;
     }
   }
 
-  
 
-  
 
-  
 
-  
+
+
+
+
 }
 //The code has been modified to implement real YouTube caption track fetching and formatting.

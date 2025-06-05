@@ -342,7 +342,7 @@ export const storage = {
           const { YouTubeService } = await import('../services/youtubeService');
           const youtubeService = new YouTubeService();
           const stats = await youtubeService.updateVideoStatistics(videoData.videoId);
-          
+
           if (stats) {
             await this.updateYoutubeVideoStatistics(video.id, stats);
             console.log(`✅ Auto-updated stats for ${videoData.videoId}: ${stats.viewCount} views`);
@@ -924,7 +924,7 @@ export const storage = {
               name: "Fishing",
               slug: "fishing",
             },
-            author: {
+            author:{
               name: "Robert Streams",
               avatar: "https://ui-avatars.com/api/?name=Robert+Streams&background=random",
             },

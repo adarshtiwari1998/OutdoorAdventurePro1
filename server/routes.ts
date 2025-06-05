@@ -15,7 +15,7 @@ import { YouTubeService } from "./services/youtubeService";
 import { GeminiService } from "./services/geminiService";
 import videoService from "./services/videoService";
 
-export async function registerRoutes(app: Express): Promise<Server> {
+export async function registerRoutes(app: Express): Promise {
   // Set up authentication
   setupAuth(app);
 
@@ -1730,7 +1730,7 @@ app.get(`${apiPrefix}/admin/youtube/videos`, async (req, res) => {
 
           console.log(`📁 Final category ID for video "${video.title}": ${parsedCategoryId}`);
 
-          // Step 1: Import video metadata first
+          // Save video to database with initial statistics
           const savedVideo = await storage.createYoutubeVideo({
             videoId: video.id,
             title: video.title,
@@ -1742,7 +1742,10 @@ app.get(`${apiPrefix}/admin/youtube/videos`, async (req, res) => {
             transcript: null,
             importStatus: 'processing',
             videoType: video.videoType,
-            duration: video.duration
+            duration: video.duration,
+            viewCount: video.viewCount || 0,
+            likeCount: video.likeCount || 0,
+            commentCount: video.commentCount || 0
           });
 
           importedCount++;
@@ -2656,7 +2659,7 @@ Status: Transcript extraction failed during import. Video may have captions that
     } catch (error) {
       console.error("Error creating category style:", error);
       if (error instanceof z.ZodError) {
-        return res.status(400).json({ errors: error.errors });
+        returnres.status(400).json({ errors: error.errors });
       }
       res.status(500).json({ message: "Failed to create category style" });
     }
