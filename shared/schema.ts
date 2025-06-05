@@ -124,6 +124,10 @@ export const youtubeVideos = pgTable("youtube_videos", {
   errorMessage: text("error_message"),
   videoType: text("video_type").default("video").notNull(), // 'video' or 'short'
   duration: integer("duration"), // Duration in seconds
+  viewCount: integer("view_count").default(0),
+  likeCount: integer("like_count").default(0),
+  commentCount: integer("comment_count").default(0),
+  lastStatsUpdate: timestamp("last_stats_update"),
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
 });

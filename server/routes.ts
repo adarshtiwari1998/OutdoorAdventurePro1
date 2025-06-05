@@ -1403,6 +1403,94 @@ app.delete(`${apiPrefix}/admin/wordpress/credentials`, async (req, res) => {
   }
 });
 
+  // Video statistics update routes
+  app.post(`${apiPrefix}/admin/youtube/videos/update-stats`, async (req, res) => {
+    try {
+      const { videoIds, forceUpdate = false } = req.body;
+
+      if (videoIds && Array.isArray(videoIds) && videoIds.length > 0) {
+        // Update specific videos
+        const videos = await Promise.all(
+          videoIds.map(id => storage.getYoutubeVideoById(parseInt(id)))
+        );
+        
+        const validVideos = videos.filter(v => v !== null);
+        const youtubeVideoIds = validVideos.map(v => v.videoId);
+        
+        const statsMap = await youtubeService.batchUpdateVideoStatistics(youtubeVideoIds);
+        
+        const updates = validVideos
+          .map(video => {
+            const stats = statsMap.get(video.videoId);
+            return stats ? { id: video.id, ...stats } : null;
+          })
+          .filter(Boolean);
+
+        if (updates.length > 0) {
+          await storage.batchUpdateVideoStatistics(updates);
+        }
+
+        res.json({ 
+          success: true, 
+          updated: updates.length,
+          message: `Updated statistics for ${updates.length} videos` 
+        });
+      } else {
+        // Update videos that need refreshing
+        const videosToUpdate = await storage.getVideosForStatsUpdate(50);
+        
+        if (videosToUpdate.length === 0) {
+          return res.json({ 
+            success: true, 
+            updated: 0,
+            message: 'All videos are up to date' 
+          });
+        }
+
+        const youtubeVideoIds = videosToUpdate.map(v => v.videoId);
+        const statsMap = await youtubeService.batchUpdateVideoStatistics(youtubeVideoIds);
+        
+        const updates = videosToUpdate
+          .map(video => {
+            const stats = statsMap.get(video.videoId);
+            return stats ? { id: video.id, ...stats } : null;
+          })
+          .filter(Boolean);
+
+        if (updates.length > 0) {
+          await storage.batchUpdateVideoStatistics(updates);
+        }
+
+        res.json({ 
+          success: true, 
+          updated: updates.length,
+          message: `Updated statistics for ${updates.length} videos` 
+        });
+      }
+    } catch (error) {
+      console.error("Error updating video statistics:", error);
+      res.status(500).json({ message: "Failed to update video statistics" });
+    }
+  });
+
+  app.get(`${apiPrefix}/admin/youtube/stats-status`, async (req, res) => {
+    try {
+      const videosToUpdate = await storage.getVideosForStatsUpdate(1000);
+      const totalVideos = await db.query.youtubeVideos.findMany({
+        columns: { id: true }
+      });
+
+      res.json({
+        totalVideos: totalVideos.length,
+        videosNeedingUpdate: videosToUpdate.length,
+        lastUpdate: videosToUpdate.length > 0 ? videosToUpdate[0].lastStatsUpdate : null
+      });
+    } catch (error) {
+      console.error("Error getting stats status:", error);
+      res.status(500).json({ message: "Failed to get stats status" });
+    }
+  });
+
   // YouTube management
   app.get(`${apiPrefix}/admin/youtube/channels`, async (req, res) => {
     try {

@@ -25,6 +25,9 @@ interface YouTubeVideo {
   channelTitle: string;
   duration: number; // Duration in seconds
   videoType: 'video' | 'short';
+  viewCount?: number;
+  likeCount?: number;
+  commentCount?: number;
 }
 
 interface YouTubeChannel {
@@ -191,12 +194,84 @@ export class YouTubeService {
         channelId: video.snippet.channelId,
         channelTitle: video.snippet.channelTitle,
         duration,
-        videoType
+        videoType,
+        viewCount: parseInt(video.statistics.viewCount) || 0,
+        likeCount: parseInt(video.statistics.likeCount) || 0,
+        commentCount: parseInt(video.statistics.commentCount) || 0
       };
     } catch (error) {
       console.error(`Error fetching YouTube video details for ${videoId}:`, error);
       throw error;
     }
+  }
+
+  async updateVideoStatistics(videoId: string): Promise<{
+    viewCount: number;
+    likeCount: number;
+    commentCount: number;
+  } | null> {
+    try {
+      const response = await this.makeRequest('videos', {
+        part: 'statistics',
+        id: videoId
+      });
+
+      if (!response.items || response.items.length === 0) {
+        return null;
+      }
+
+      const stats = response.items[0].statistics;
+      return {
+        viewCount: parseInt(stats.viewCount) || 0,
+        likeCount: parseInt(stats.likeCount) || 0,
+        commentCount: parseInt(stats.commentCount) || 0
+      };
+    } catch (error) {
+      console.error(`Error fetching statistics for video ${videoId}:`, error);
+      return null;
+    }
+  }
+
+  async batchUpdateVideoStatistics(videoIds: string[]): Promise<Map<string, {
+    viewCount: number;
+    likeCount: number;
+    commentCount: number;
+  }>> {
+    const results = new Map();
+    
+    // YouTube API allows up to 50 video IDs per request
+    const chunks = this.chunkArray(videoIds, 50);
+    
+    for (const chunk of chunks) {
+      try {
+        const response = await this.makeRequest('videos', {
+          part: 'statistics',
+          id: chunk.join(',')
+        });
+
+        if (response.items) {
+          response.items.forEach((item: any) => {
+            results.set(item.id, {
+              viewCount: parseInt(item.statistics.viewCount) || 0,
+              likeCount: parseInt(item.statistics.likeCount) || 0,
+              commentCount: parseInt(item.statistics.commentCount) || 0
+            });
+          });
+        }
+      } catch (error) {
+        console.error(`Error fetching batch statistics:`, error);
+      }
+    }
+
+    return results;
+  }
+
+  private chunkArray<T>(array: T[], size: number): T[][] {
+    const chunks: T[][] = [];
+    for (let i = 0; i < array.length; i += size) {
+      chunks.push(array.slice(i, i + size));
+    }
+    return chunks;
   }
 
   async getChannelVideos(channelId: string, maxResults = 10, existingVideoIds: Set<string> = new Set()): Promise<YouTubeVideo[]> {

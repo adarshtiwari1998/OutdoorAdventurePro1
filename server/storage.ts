@@ -21,7 +21,7 @@ import {
   dashboardAssets
 } from '@shared/schema';
 import * as schema from '@shared/schema';
-import { eq, and, like, desc, sql, asc, not, isNull, inArray } from 'drizzle-orm';
+import { eq, and, like, desc, sql, asc, not, isNull, inArray, or, lt } from 'drizzle-orm';
 import { format, subDays } from 'date-fns';
 import { createSlug } from './utils/slugify';
 import videoService from './services/videoService';
@@ -294,97 +294,48 @@ export const storage = {
     }
   },
 
-  async createYoutubeVideo(video: {
+  async createYoutubeVideo(videoData: {
     videoId: string;
     title: string;
-    description?: string;
-    thumbnail?: string;
-    publishedAt: Date | string;
-    channelId?: string | number;
+    description: string;
+    thumbnail: string;
+    publishedAt: string | Date;
+    channelId: number;
     categoryId?: number | null;
-    transcript?: string;
+    transcript?: string | null;
     importStatus?: string;
     videoType?: string;
     duration?: number;
+    viewCount?: number;
+    likeCount?: number;
+    commentCount?: number;
   }) {
     try {
-      // Check for existing blog posts with similar titles using advanced matching
-      const existingBlogPosts = await db.query.blogPosts.findMany({
-        columns: {
-          id: true,
-          title: true,
-        },
-      });
+      const publishedDate = typeof videoData.publishedAt === 'string' 
+        ? new Date(videoData.publishedAt) 
+        : videoData.publishedAt;
 
-      let hasBlogPostMatch = false;
-      let matchingBlogPostTitle = null;
-      let bestMatchScore = 0;
-
-      // Advanced title matching with multiple algorithms
-      for (const blogPost of existingBlogPosts) {
-        const matchScore = this.calculateAdvancedTitleSimilarity(video.title, blogPost.title);
-
-        console.log(`🔍 Matching "${video.title}" vs "${blogPost.title}" - Score: ${matchScore}`);
-
-        // Use a threshold of 0.6 for matches (60% similarity)
-        if (matchScore > 0.6 && matchScore > bestMatchScore) {
-          hasBlogPostMatch = true;
-          matchingBlogPostTitle = blogPost.title;
-          bestMatchScore = matchScore;
-        }
-      }
-
-      if (hasBlogPostMatch) {
-        console.log(`✅ Found blog post match: "${matchingBlogPostTitle}" (Score: ${bestMatchScore})`);
-      } else {
-        console.log(`❌ No blog post match found for: "${video.title}"`);
-      }
-
-      // Safely convert channelId to integer or null
-      let parsedChannelId: number | null = null;
-      if (video.channelId !== undefined && video.channelId !== null) {
-        if (typeof video.channelId === 'number') {
-          parsedChannelId = video.channelId;
-        } else if (typeof video.channelId === 'string') {
-          const parsed = parseInt(video.channelId);
-          if (!isNaN(parsed)) {
-            parsedChannelId = parsed;
-          }
-        }
-      }
-
-      // Safely convert categoryId to integer or null
-      let parsedCategoryId: number | null = null;
-      if (video.categoryId !== undefined && video.categoryId !== null) {
-        if (typeof video.categoryId === 'number' && !isNaN(video.categoryId)) {
-          parsedCategoryId = video.categoryId;
-        } else if (typeof video.categoryId === 'string') {
-          const parsed = parseInt(video.categoryId);
-          if (!isNaN(parsed)) {
-            parsedCategoryId = parsed;
-          }
-        }
-      }
-
-      const [newVideo] = await db.insert(schema.youtubeVideos).values({
-        videoId: video.videoId,
-        title: video.title,
-        description: video.description,
-        thumbnail: video.thumbnail,
-        publishedAt: new Date(video.publishedAt),
-        channelId: parsedChannelId,
-        categoryId: parsedCategoryId,
-        transcript: video.transcript || null,
-        importStatus: video.importStatus || 'imported',
-        hasBlogPostMatch,
-        matchingBlogPostTitle,
-        videoType: video.videoType || 'video',
-        duration: video.duration || null,
+      const [video] = await db.insert(youtubeVideos).values({
+        videoId: videoData.videoId,
+        title: videoData.title,
+        description: videoData.description,
+        thumbnail: videoData.thumbnail,
+        publishedAt: publishedDate,
+        channelId: videoData.channelId,
+        categoryId: videoData.categoryId,
+        transcript: videoData.transcript,
+        importStatus: videoData.importStatus || 'pending',
+        videoType: videoData.videoType || 'video',
+        duration: videoData.duration,
+        viewCount: videoData.viewCount || 0,
+        likeCount: videoData.likeCount || 0,
+        commentCount: videoData.commentCount || 0,
+        lastStatsUpdate: videoData.viewCount ? new Date() : null,
         createdAt: new Date(),
-        updatedAt: new Date()
+        updatedAt: new Date(),
       }).returning();
 
-      return newVideo;
+      return video;
     } catch (error) {
       console.error('Error creating YouTube video:', error);
       throw error;
@@ -577,13 +528,94 @@ export const storage = {
     }
   },
 
-  async updateYoutubeVideoTranscript(id: number, transcript: string) {
+  async updateYoutubeVideoTranscript(videoId: number, transcript: string) {
     try {
-      await db.update(youtubeVideos)
-        .set({ transcript })
-        .where(eq(youtubeVideos.id, id));
+      return await db.update(youtubeVideos)
+        .set({ 
+          transcript,
+          updatedAt: new Date() 
+        })
+        .where(eq(youtubeVideos.id, videoId))
+        .returning();
     } catch (error) {
-      console.error(`Error updating YouTube video transcript for ID ${id}:`, error);
+      console.error(`Error updating YouTube video transcript for ${videoId}:`, error);
+      throw error;
+    }
+  },
+
+  async updateYoutubeVideoStatistics(videoId: number, stats: {
+    viewCount: number;
+    likeCount: number;
+    commentCount: number;
+  }) {
+    try {
+      return await db.update(youtubeVideos)
+        .set({ 
+          viewCount: stats.viewCount,
+          likeCount: stats.likeCount,
+          commentCount: stats.commentCount,
+          lastStatsUpdate: new Date(),
+          updatedAt: new Date() 
+        })
+        .where(eq(youtubeVideos.id, videoId))
+        .returning();
+    } catch (error) {
+      console.error(`Error updating YouTube video statistics for ${videoId}:`, error);
+      throw error;
+    }
+  },
+
+  async batchUpdateVideoStatistics(updates: Array<{
+    id: number;
+    viewCount: number;
+    likeCount: number;
+    commentCount: number;
+  }>) {
+    try {
+      const promises = updates.map(update => 
+        db.update(youtubeVideos)
+          .set({
+            viewCount: update.viewCount,
+            likeCount: update.likeCount,
+            commentCount: update.commentCount,
+            lastStatsUpdate: new Date(),
+            updatedAt: new Date()
+          })
+          .where(eq(youtubeVideos.id, update.id))
+      );
+
+      await Promise.all(promises);
+      console.log(`✅ Updated statistics for ${updates.length} videos`);
+    } catch (error) {
+      console.error('Error batch updating video statistics:', error);
+      throw error;
+    }
+  },
+
+  async getVideosForStatsUpdate(limit = 100): Promise<Array<{
+    id: number;
+    videoId: string;
+    lastStatsUpdate: Date | null;
+  }>> {
+    try {
+      // Get videos that haven't been updated in the last 24 hours or never updated
+      const oneDayAgo = new Date(Date.now() - 24 * 60 * 60 * 1000);
+
+      return await db.query.youtubeVideos.findMany({
+        columns: {
+          id: true,
+          videoId: true,
+          lastStatsUpdate: true
+        },
+        where: or(
+          isNull(schema.youtubeVideos.lastStatsUpdate),
+          lt(schema.youtubeVideos.lastStatsUpdate, oneDayAgo)
+        ),
+        orderBy: asc(schema.youtubeVideos.lastStatsUpdate),
+        limit
+      });
+    } catch (error) {
+      console.error('Error getting videos for stats update:', error);
       throw error;
     }
   },
@@ -823,8 +855,8 @@ export const storage = {
         },
         author: {
           name: post.author?.fullName || post.author?.username || 'Unknown',
-          avatar: post.author?.fullName 
-            ? `https://ui-avatars.com/api/?name=${encodeURIComponent(post.author.fullName)}&background=random`
+          avatar: featuredPost.author?.fullName 
+            ? `https://ui-avatars.com/api/?name=${encodeURIComponent(featuredPost.author.fullName)}&background=random`
             : `https://ui-avatars.com/api/?name=Unknown&background=random`,
         },
         publishedAt: post.publishedAt || new Date().toISOString(),
@@ -1880,8 +1912,7 @@ export const storage = {
 
       console.log(`Sample of available videos:`, await db.query.youtubeVideos.findMany({
         columns: { 
-          id: true, 
-          title: true, 
+          id: true,          title: true, 
           categoryId: true,
           videoType: true
         },

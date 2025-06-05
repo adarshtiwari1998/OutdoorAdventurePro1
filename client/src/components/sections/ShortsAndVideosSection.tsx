@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useRef } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent } from "@/components/ui/card";
@@ -18,6 +17,8 @@ interface Video {
   videoType: "video" | "short";
   duration?: number;
   channelName?: string;
+  viewCount?: number;
+  likeCount?: number;
 }
 
 interface ShortsAndVideosSectionProps {
@@ -42,13 +43,13 @@ const ShortsAndVideosSection = ({ className = "" }: ShortsAndVideosSectionProps)
       if (!settings?.isActive || !settings?.categoryId) {
         return [];
       }
-      
+
       const params = new URLSearchParams({
         categoryId: settings.categoryId.toString(),
         videoCount: (settings.videoCount || 8).toString(),
         videoType: 'all'
       });
-      
+
       const response = await fetch(`/api/home-videos?${params}`);
       if (!response.ok) {
         throw new Error('Failed to fetch videos');
@@ -89,11 +90,20 @@ const ShortsAndVideosSection = ({ className = "" }: ShortsAndVideosSectionProps)
     setTimeout(() => setIsAutoScrolling(true), 10000);
   };
 
-  const formatDuration = (seconds?: number) => {
-    if (!seconds) return "N/A";
+  const formatDuration = (seconds: number) => {
+    if (!seconds) return '0:00';
     const minutes = Math.floor(seconds / 60);
-    const secs = seconds % 60;
-    return `${minutes}:${secs.toString().padStart(2, '0')}`;
+    const remainingSeconds = seconds % 60;
+    return `${minutes}:${remainingSeconds.toString().padStart(2, '0')}`;
+  };
+
+  const formatNumber = (num: number) => {
+    if (num >= 1000000) {
+      return (num / 1000000).toFixed(1) + 'M';
+    } else if (num >= 1000) {
+      return (num / 1000).toFixed(1) + 'K';
+    }
+    return num.toString();
   };
 
   const handleVideoClick = (video: Video) => {
@@ -160,7 +170,7 @@ const ShortsAndVideosSection = ({ className = "" }: ShortsAndVideosSectionProps)
                         alt={shorts[currentShortIndex]?.title}
                         className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
                       />
-                      
+
                       {/* Play Button */}
                       <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300">
                         <div className="bg-white/90 backdrop-blur-sm rounded-full p-6 transform scale-75 group-hover:scale-100 transition-transform duration-300">
@@ -176,23 +186,31 @@ const ShortsAndVideosSection = ({ className = "" }: ShortsAndVideosSectionProps)
                       </div>
 
                       {/* Content Info */}
-                      <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/80 to-transparent p-6">
-                        <h4 className="text-lg font-semibold mb-2 line-clamp-2 text-white">
-                          {shorts[currentShortIndex]?.title}
-                        </h4>
-                        <div className="flex items-center gap-4 text-sm text-gray-200">
-                          <div className="flex items-center gap-1">
-                            <Calendar className="h-3 w-3" />
-                            <span>{format(new Date(shorts[currentShortIndex]?.publishedAt), 'MMM d')}</span>
-                          </div>
-                          {shorts[currentShortIndex]?.duration && (
-                            <div className="flex items-center gap-1">
-                              <Clock className="h-3 w-3" />
-                              <span>{formatDuration(shorts[currentShortIndex]?.duration)}</span>
-                            </div>
-                          )}
+                      
+                    <div className="absolute bottom-4 left-4 right-4">
+                      <h3 className="text-white font-bold text-lg mb-2 line-clamp-2">
+                        {shorts[currentShortIndex]?.title}
+                      </h3>
+                      <div className="flex items-center justify-between text-white/80 text-sm mb-2">
+                        <span className="truncate">{shorts[currentShortIndex]?.channelName}</span>
+                        <span>{formatDuration(shorts[currentShortIndex]?.duration || 0)}</span>
+                      </div>
+                      <div className="flex items-center gap-4 text-white/70 text-xs">
+                        <div className="flex items-center gap-1">
+                          <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
+                            <path d="M10 12a2 2 0 100-4 2 2 0 000 4z"/>
+                            <path fillRule="evenodd" d="M.458 10C1.732 5.943 5.522 3 10 3s8.268 2.943 9.542 7c-1.274 4.057-5.064 7-9.542 7S1.732 14.057.458 10zM14 10a4 4 0 11-8 0 4 4 0 018 0z" clipRule="evenodd"/>
+                          </svg>
+                          <span>{formatNumber(shorts[currentShortIndex]?.viewCount || 0)}</span>
+                        </div>
+                        <div className="flex items-center gap-1">
+                          <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
+                            <path fillRule="evenodd" d="M3.172 5.172a4 4 0 015.656 0L10 6.343l1.172-1.171a4 4 0 115.656 5.656L10 17.657l-6.828-6.829a4 4 0 010-5.656z" clipRule="evenodd"/>
+                          </svg>
+                          <span>{formatNumber(shorts[currentShortIndex]?.likeCount || 0)}</span>
                         </div>
                       </div>
+                    </div>
 
                       {/* Navigation Arrows */}
                       <div className="absolute right-4 top-1/2 -translate-y-1/2 flex flex-col gap-2">
@@ -272,7 +290,7 @@ const ShortsAndVideosSection = ({ className = "" }: ShortsAndVideosSectionProps)
                             alt={video.title}
                             className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
                           />
-                          
+
                           {/* Play Overlay */}
                           <div className="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center">
                             <div className="bg-white/20 backdrop-blur-md rounded-full p-2">
@@ -295,7 +313,7 @@ const ShortsAndVideosSection = ({ className = "" }: ShortsAndVideosSectionProps)
                           <h4 className="font-semibold text-sm line-clamp-2 mb-2 group-hover:text-blue-600 transition-colors text-gray-900">
                             {video.title}
                           </h4>
-                          
+
                           <div className="flex items-center gap-3 text-xs text-gray-500">
                             <div className="flex items-center gap-1">
                               <Calendar className="h-3 w-3" />
@@ -315,6 +333,30 @@ const ShortsAndVideosSection = ({ className = "" }: ShortsAndVideosSectionProps)
                         </div>
                       </div>
                     </CardContent>
+                     <div className="absolute bottom-4 left-4 right-4">
+                      <h3 className="text-white font-bold text-lg mb-2 line-clamp-2">
+                        {video.title}
+                      </h3>
+                      <div className="flex items-center justify-between text-white/80 text-sm mb-2">
+                        <span className="truncate">{video.channelName}</span>
+                        <span>{formatDuration(video.duration || 0)}</span>
+                      </div>
+                      <div className="flex items-center gap-4 text-white/70 text-xs">
+                        <div className="flex items-center gap-1">
+                          <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
+                            <path d="M10 12a2 2 0 100-4 2 2 0 000 4z"/>
+                            <path fillRule="evenodd" d="M.458 10C1.732 5.943 5.522 3 10 3s8.268 2.943 9.542 7c-1.274 4.057-5.064 7-9.542 7S1.732 14.057.458 10zM14 10a4 4 0 11-8 0 4 4 0 018 0z" clipRule="evenodd"/>
+                          </svg>
+                          <span>{formatNumber(video.viewCount || 0)}</span>
+                        </div>
+                        <div className="flex items-center gap-1">
+                          <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
+                            <path fillRule="evenodd" d="M3.172 5.172a4 4 0 015.656 0L10 6.343l1.172-1.171a4 4 0 115.656 5.656L10 17.657l-6.828-6.829a4 4 0 010-5.656z" clipRule="evenodd"/>
+                          </svg>
+                          <span>{formatNumber(video.likeCount || 0)}</span>
+                        </div>
+                      </div>
+                    </div>
                   </Card>
                 ))}
               </div>
