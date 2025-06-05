@@ -380,17 +380,88 @@ export class YouTubeService {
       console.log(`⏳ Waiting ${baseDelay/1000}s before transcript request...`);
       await new Promise(resolve => setTimeout(resolve, baseDelay));
 
-      // Use the simple approach that works
-      const transcriptData = await YoutubeTranscript.fetchTranscript(videoId);
+      // Use multiple strategies to extract transcript
+      let transcriptData;
+      let extractionMethod = 'Direct';
+
+      try {
+        // Strategy 1: Direct transcript fetch
+        console.log(`🔄 Strategy 1/4: Direct for video: ${videoId}`);
+        transcriptData = await YoutubeTranscript.fetchTranscript(videoId);
+        
+        if (!transcriptData || transcriptData.length === 0) {
+          console.log(`⚠️ Strategy Direct found no usable transcript for: ${videoId}`);
+          throw new Error('No transcript data from direct method');
+        }
+      } catch (directError) {
+        console.log(`❌ Strategy Direct failed for video ${videoId}: ${directError.message}`);
+        
+        try {
+          // Strategy 2: Try with language specification
+          console.log(`🔄 Strategy 2/4: With Language for video: ${videoId}`);
+          console.log(`⏳ Strategy delay: 60s...`);
+          await new Promise(resolve => setTimeout(resolve, 60000));
+          
+          transcriptData = await YoutubeTranscript.fetchTranscript(videoId, { lang: 'en' });
+          extractionMethod = 'Language-Specific';
+          
+          if (!transcriptData || transcriptData.length === 0) {
+            throw new Error('No transcript data from language method');
+          }
+        } catch (langError) {
+          console.log(`❌ Strategy Language failed for video ${videoId}: ${langError.message}`);
+          
+          try {
+            // Strategy 3: Try with auto-generated captions
+            console.log(`🔄 Strategy 3/4: Auto-generated for video: ${videoId}`);
+            console.log(`⏳ Strategy delay: 90s...`);
+            await new Promise(resolve => setTimeout(resolve, 90000));
+            
+            transcriptData = await YoutubeTranscript.fetchTranscript(videoId, { lang: 'en', country: 'US' });
+            extractionMethod = 'Auto-Generated';
+            
+            if (!transcriptData || transcriptData.length === 0) {
+              throw new Error('No transcript data from auto-generated method');
+            }
+          } catch (autoError) {
+            console.log(`❌ Strategy Auto-generated failed for video ${videoId}: ${autoError.message}`);
+            
+            // Strategy 4: Final attempt with different parameters
+            console.log(`🔄 Strategy 4/4: Final attempt for video: ${videoId}`);
+            console.log(`⏳ Strategy delay: 120s...`);
+            await new Promise(resolve => setTimeout(resolve, 120000));
+            
+            try {
+              transcriptData = await YoutubeTranscript.fetchTranscript(videoId, {});
+              extractionMethod = 'Fallback';
+            } catch (finalError) {
+              console.log(`❌ All strategies failed for video ${videoId}`);
+              throw new Error(`All extraction strategies failed: ${finalError.message}`);
+            }
+          }
+        }
+      }
       
       if (transcriptData && transcriptData.length > 0) {
-        // Clean and format the transcript using your working approach
+        // Clean and format the transcript - improved cleaning
         const cleanedTranscript = transcriptData
-          .map(item => item.text.replace(/\$.*?\$/g, '').trim())
-          .filter(text => text.length > 0)
-          .join(' ');
+          .map(item => {
+            let text = item.text || '';
+            // Remove music notation, sound effects, and timestamps
+            text = text.replace(/\[.*?\]/g, ''); // Remove [Music], [Applause], etc.
+            text = text.replace(/\(.*?\)/g, ''); // Remove (Music), (Applause), etc.
+            text = text.replace(/\$.*?\$/g, ''); // Remove dollar sign notation
+            text = text.replace(/♪.*?♪/g, ''); // Remove music notes
+            text = text.replace(/\s+/g, ' '); // Normalize whitespace
+            return text.trim();
+          })
+          .filter(text => text.length > 0 && !text.match(/^[^\w]*$/)) // Remove empty or non-word content
+          .join(' ')
+          .replace(/\s+/g, ' ') // Final whitespace cleanup
+          .trim();
 
-        if (cleanedTranscript.length > 10) { // Ensure we have some content
+        // Ensure we have substantial content (not just descriptions)
+        if (cleanedTranscript.length > 50) { // Minimum 50 characters for real transcript
           let videoDetails;
           try {
             videoDetails = await this.getVideoDetails(videoId);
@@ -404,95 +475,39 @@ export class YouTubeService {
             };
           }
           
-          console.log(`✅ Successfully extracted transcript: ${cleanedTranscript.length} characters`);
+          console.log(`✅ Successfully extracted transcript: ${cleanedTranscript.length} characters using ${extractionMethod}`);
           
-          return `[REAL TRANSCRIPT for "${videoDetails.title}"]
-
-Channel: ${videoDetails.channelTitle}
+          // Return clean transcript without dummy ending text
+          return `Channel: ${videoDetails.channelTitle}
 Published: ${new Date(videoDetails.publishedAt).toLocaleDateString()}
 Video ID: ${videoId}
 Duration: ${Math.floor(videoDetails.duration / 60)} minutes ${videoDetails.duration % 60} seconds
+Extraction Method: ${extractionMethod}
 
-${cleanedTranscript}
-
-[End of real transcript]`;
+${cleanedTranscript}`;
         }
       }
       
-      console.log(`⚠️ No transcript found for: ${videoId}`);
-      
-      // If transcript failed, try to get video details for content extraction
-      try {
-        const videoDetails = await this.getVideoDetails(videoId);
-        
-        console.log(`⚠️ Creating content extract for: ${videoId}`);
-        
-        return `[CAPTIONS DETECTED - Content extract for "${videoDetails.title}"]
-
-Channel: ${videoDetails.channelTitle}
-Published: ${new Date(videoDetails.publishedAt).toLocaleDateString()}
-Video ID: ${videoId}
-Duration: ${Math.floor(videoDetails.duration / 60)} minutes ${videoDetails.duration % 60} seconds
-
-Video Description:
-${videoDetails.description || 'No description available'}
-
-Content Topics: ${this.extractTopicsFromTitle(videoDetails.title, videoDetails.description || '')}
-
-Note: This video likely has captions but they are not accessible via automated extraction. 
-Manual review may be required for full transcript access.
-
-[End of content extract]`;
-        
-      } catch (detailError) {
-        console.error(`❌ Could not fetch video details for fallback: ${detailError.message}`);
-        
-        return `[TRANSCRIPT EXTRACTION FAILED for video ${videoId}]
-
-Error: Failed to fetch transcript and video details
-
-🚫 POSSIBLE ISSUES:
-1. Video may not have captions/subtitles
-2. Video may be private or restricted
-3. Rate limiting from YouTube
-4. Network connectivity issues
-
-SOLUTIONS:
-1. Wait 1-2 hours and try again
-2. Check if video has captions manually on YouTube
-3. Ensure video is public and accessible
-
-[End of error report]`;
-      }
+      console.log(`⚠️ No usable transcript content found for: ${videoId}`);
+      throw new Error('No usable transcript content found');
 
     } catch (error) {
       console.error(`❌ Error fetching transcript for video ${videoId}:`, error.message);
       
-      // Check if it's a rate limiting error
+      // For failed transcripts, return a simple error message without video description
       if (error.message.includes('captcha') || error.message.includes('too many requests')) {
-        return `[TRANSCRIPT EXTRACTION FAILED for video ${videoId}]
+        return `TRANSCRIPT UNAVAILABLE: YouTube captcha/rate limit detected for video ${videoId}. 
 
 Error: ${error.message}
 
-🚫 CAPTCHA REQUIRED: YouTube is blocking transcript requests from this IP address.
-
-SOLUTIONS TO BYPASS CAPTCHA:
-1. 🌐 Change IP Address (use VPN)
-2. ⏰ Wait 2-4 hours before retrying
-3. 📦 Process fewer videos at once
-
-Current Status: BLOCKED - Manual intervention required
-
-[End of error report]`;
+This video may have captions that require manual extraction or waiting for rate limits to reset.`;
       }
       
-      return `[TRANSCRIPT EXTRACTION FAILED for video ${videoId}]
+      return `TRANSCRIPT UNAVAILABLE: Failed to extract captions for video ${videoId}.
 
 Error: ${error.message}
 
-This may indicate a network connectivity issue or the video doesn't have captions.
-
-[End of error report]`;
+This video may not have captions or they may not be accessible via automated extraction.`;
     }
   }
 
