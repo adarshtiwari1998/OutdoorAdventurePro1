@@ -645,25 +645,39 @@ header {
   /* Enhanced preview container styling */
   .preview-container-left,
   .preview-container-right {
-    backdrop-filter: blur(8px);
-    background: rgba(0, 0, 0, 0.2);
-    border-radius: 1rem;
-    padding: 0.75rem;
-    border: 1px solid rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(12px);
+    background: rgba(0, 0, 0, 0.85);
+    border-radius: 0.75rem;
+    border: 2px solid rgba(255, 255, 255, 0.2);
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+  }
+
+  .preview-container-left:hover,
+  .preview-container-right:hover {
+    border-color: rgba(255, 255, 255, 0.6);
+    box-shadow: 0 12px 48px rgba(0, 0, 0, 0.4);
+    transform: scale(1.05);
   }
 
   /* Video modal overlay enhancement */
   .video-modal-overlay {
-    background: rgba(0, 0, 0, 0.8);
-    backdrop-filter: blur(4px);
+    background: rgba(0, 0, 0, 0.85);
+    backdrop-filter: blur(6px);
   }
 
   /* Dialog overlay enhancements for video modal */
   [data-radix-dialog-overlay] {
-    background: rgba(0, 0, 0, 0.85);
-    backdrop-filter: blur(4px);
+    background: rgba(0, 0, 0, 0.9) !important;
+    backdrop-filter: blur(6px);
     pointer-events: auto;
     z-index: 40;
+  }
+
+  /* Ensure preview cards have proper pointer events and are clickable */
+  .preview-container-left,
+  .preview-container-right {
+    pointer-events: auto;
+    user-select: none;
   }
 
   /* Dialog content enhancements */

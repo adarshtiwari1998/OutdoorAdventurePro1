@@ -579,26 +579,18 @@ const ShortsAndVideosSection = ({ className = "" }: ShortsAndVideosSectionProps)
 
       {/* External Preview Boxes - Left Side */}
       {selectedVideoIndex !== null && selectedVideoIndex > 0 && (
-        <div className="fixed left-[calc(50vw-32rem-2rem)] top-1/2 -translate-y-1/2 z-[45] hidden xl:flex flex-col gap-2 max-h-[70vh] overflow-y-auto custom-scrollbar">
+        <div className="fixed left-4 top-1/2 -translate-y-1/2 z-[45] hidden lg:flex flex-col gap-3 max-h-[60vh] overflow-y-auto custom-scrollbar pr-2">
           {combinedVideos.slice(Math.max(0, selectedVideoIndex - 3), selectedVideoIndex).map((video, index) => {
             const actualIndex = Math.max(0, selectedVideoIndex - 3) + index;
             return (
               <div
                 key={video.id}
-                className="video-preview-thumbnail w-28 h-20 bg-gray-900 rounded-lg overflow-hidden cursor-pointer border-2 border-white/30 hover:border-white/70 transition-all duration-300 hover:scale-105 shadow-xl backdrop-blur-lg"
+                className="preview-container-left group relative w-32 h-24 bg-black/80 rounded-xl overflow-hidden cursor-pointer border-2 border-white/20 hover:border-white/60 transition-all duration-300 hover:scale-105 shadow-2xl backdrop-blur-md"
                 onClick={(e) => {
                   e.preventDefault();
                   e.stopPropagation();
                   setSelectedVideoIndex(actualIndex);
                   setShowFullDescription(false);
-                }}
-                onMouseDown={(e) => {
-                  e.preventDefault();
-                  e.stopPropagation();
-                }}
-                onPointerDown={(e) => {
-                  e.preventDefault();
-                  e.stopPropagation();
                 }}
                 title={video.title}
               >
@@ -609,14 +601,20 @@ const ShortsAndVideosSection = ({ className = "" }: ShortsAndVideosSectionProps)
                     className="w-full h-full object-cover"
                     draggable={false}
                   />
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 hover:opacity-100 transition-opacity duration-300 flex items-center justify-center">
-                    <div className="bg-white/20 backdrop-blur-sm rounded-full p-1.5">
-                      <Play className="h-3 w-3 text-white fill-current" />
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-black/20 opacity-80 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center">
+                    <div className="bg-white/30 backdrop-blur-sm rounded-full p-2 transform scale-75 group-hover:scale-100 transition-transform duration-300">
+                      <Play className="h-4 w-4 text-white fill-current" />
                     </div>
                   </div>
                   {/* Video index indicator */}
-                  <div className="absolute top-1 left-1 bg-black/80 text-white text-xs px-1.5 py-0.5 rounded">
+                  <div className="absolute top-2 left-2 bg-black/90 text-white text-xs px-2 py-1 rounded-md font-medium">
                     {actualIndex + 1}
+                  </div>
+                  {/* Title overlay */}
+                  <div className="absolute bottom-0 left-0 right-0 p-2 bg-gradient-to-t from-black/90 to-transparent">
+                    <div className="text-white text-xs font-medium line-clamp-2 leading-tight">
+                      {video.title}
+                    </div>
                   </div>
                 </div>
               </div>
@@ -627,26 +625,18 @@ const ShortsAndVideosSection = ({ className = "" }: ShortsAndVideosSectionProps)
 
       {/* External Preview Boxes - Right Side */}
       {selectedVideoIndex !== null && selectedVideoIndex < combinedVideos.length - 1 && (
-        <div className="fixed right-[calc(50vw-32rem-2rem)] top-1/2 -translate-y-1/2 z-[45] hidden xl:flex flex-col gap-2 max-h-[70vh] overflow-y-auto custom-scrollbar">
+        <div className="fixed right-4 top-1/2 -translate-y-1/2 z-[45] hidden lg:flex flex-col gap-3 max-h-[60vh] overflow-y-auto custom-scrollbar pl-2">
           {combinedVideos.slice(selectedVideoIndex + 1, Math.min(combinedVideos.length, selectedVideoIndex + 4)).map((video, index) => {
             const actualIndex = selectedVideoIndex + 1 + index;
             return (
               <div
                 key={video.id}
-                className="video-preview-thumbnail w-28 h-20 bg-gray-900 rounded-lg overflow-hidden cursor-pointer border-2 border-white/30 hover:border-white/70 transition-all duration-300 hover:scale-105 shadow-xl backdrop-blur-lg"
+                className="preview-container-right group relative w-32 h-24 bg-black/80 rounded-xl overflow-hidden cursor-pointer border-2 border-white/20 hover:border-white/60 transition-all duration-300 hover:scale-105 shadow-2xl backdrop-blur-md"
                 onClick={(e) => {
                   e.preventDefault();
                   e.stopPropagation();
                   setSelectedVideoIndex(actualIndex);
                   setShowFullDescription(false);
-                }}
-                onMouseDown={(e) => {
-                  e.preventDefault();
-                  e.stopPropagation();
-                }}
-                onPointerDown={(e) => {
-                  e.preventDefault();
-                  e.stopPropagation();
                 }}
                 title={video.title}
               >
@@ -657,14 +647,20 @@ const ShortsAndVideosSection = ({ className = "" }: ShortsAndVideosSectionProps)
                     className="w-full h-full object-cover"
                     draggable={false}
                   />
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 hover:opacity-100 transition-opacity duration-300 flex items-center justify-center">
-                    <div className="bg-white/20 backdrop-blur-sm rounded-full p-1.5">
-                      <Play className="h-3 w-3 text-white fill-current" />
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-black/20 opacity-80 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center">
+                    <div className="bg-white/30 backdrop-blur-sm rounded-full p-2 transform scale-75 group-hover:scale-100 transition-transform duration-300">
+                      <Play className="h-4 w-4 text-white fill-current" />
                     </div>
                   </div>
                   {/* Video index indicator */}
-                  <div className="absolute top-1 left-1 bg-black/80 text-white text-xs px-1.5 py-0.5 rounded">
+                  <div className="absolute top-2 left-2 bg-black/90 text-white text-xs px-2 py-1 rounded-md font-medium">
                     {actualIndex + 1}
+                  </div>
+                  {/* Title overlay */}
+                  <div className="absolute bottom-0 left-0 right-0 p-2 bg-gradient-to-t from-black/90 to-transparent">
+                    <div className="text-white text-xs font-medium line-clamp-2 leading-tight">
+                      {video.title}
+                    </div>
                   </div>
                 </div>
               </div>
