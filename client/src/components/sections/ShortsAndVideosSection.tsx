@@ -1,10 +1,11 @@
+
 import { useState, useEffect, useRef } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { ChevronUp, ChevronDown, Play, Calendar, Clock, X } from "lucide-react";
+import { Dialog, DialogContent } from "@/components/ui/dialog";
+import { ChevronUp, ChevronDown, Play, Calendar, Clock, X, ChevronLeft, ChevronRight } from "lucide-react";
 import { format } from "date-fns";
 
 interface Video {
@@ -29,8 +30,10 @@ interface ShortsAndVideosSectionProps {
 const ShortsAndVideosSection = ({ className = "" }: ShortsAndVideosSectionProps) => {
   const [currentShortIndex, setCurrentShortIndex] = useState(0);
   const [isAutoScrolling, setIsAutoScrolling] = useState(true);
-  const [selectedVideo, setSelectedVideo] = useState<Video | null>(null);
+  const [selectedVideoIndex, setSelectedVideoIndex] = useState<number | null>(null);
   const [showFullDescription, setShowFullDescription] = useState(false);
+  const [touchStart, setTouchStart] = useState<number | null>(null);
+  const [touchEnd, setTouchEnd] = useState<number | null>(null);
   const autoScrollRef = useRef<NodeJS.Timeout>();
 
   // Fetch home video settings and videos
@@ -63,6 +66,7 @@ const ShortsAndVideosSection = ({ className = "" }: ShortsAndVideosSectionProps)
   // Separate shorts and regular videos
   const shorts = allVideos?.filter(video => video.videoType === 'short') || [];
   const videos = allVideos?.filter(video => video.videoType === 'video') || [];
+  const combinedVideos = [...shorts, ...videos];
 
   // Auto scroll for shorts
   useEffect(() => {
@@ -107,20 +111,61 @@ const ShortsAndVideosSection = ({ className = "" }: ShortsAndVideosSectionProps)
     return num.toString();
   };
 
-  const handleVideoClick = (video: Video) => {
-    setSelectedVideo(video);
+  const handleVideoClick = (videoIndex: number) => {
+    setSelectedVideoIndex(videoIndex);
     setShowFullDescription(false);
   };
 
   const closeModal = () => {
-    setSelectedVideo(null);
+    setSelectedVideoIndex(null);
     setShowFullDescription(false);
+  };
+
+  const handlePreviousVideo = () => {
+    if (selectedVideoIndex !== null && selectedVideoIndex > 0) {
+      setSelectedVideoIndex(selectedVideoIndex - 1);
+      setShowFullDescription(false);
+    }
+  };
+
+  const handleNextVideo = () => {
+    if (selectedVideoIndex !== null && selectedVideoIndex < combinedVideos.length - 1) {
+      setSelectedVideoIndex(selectedVideoIndex + 1);
+      setShowFullDescription(false);
+    }
+  };
+
+  // Touch handlers for mobile swipe
+  const handleTouchStart = (e: React.TouchEvent) => {
+    setTouchEnd(null);
+    setTouchStart(e.targetTouches[0].clientY);
+  };
+
+  const handleTouchMove = (e: React.TouchEvent) => {
+    setTouchEnd(e.targetTouches[0].clientY);
+  };
+
+  const handleTouchEnd = () => {
+    if (!touchStart || !touchEnd) return;
+    
+    const distance = touchStart - touchEnd;
+    const isUpSwipe = distance > 50;
+    const isDownSwipe = distance < -50;
+
+    if (isUpSwipe && selectedVideoIndex !== null && selectedVideoIndex < combinedVideos.length - 1) {
+      handleNextVideo();
+    }
+    if (isDownSwipe && selectedVideoIndex !== null && selectedVideoIndex > 0) {
+      handlePreviousVideo();
+    }
   };
 
   const truncateDescription = (text: string, limit: number = 100) => {
     if (text.length <= limit) return text;
     return text.substring(0, limit) + "...";
   };
+
+  const selectedVideo = selectedVideoIndex !== null ? combinedVideos[selectedVideoIndex] : null;
 
   // Don't render if settings are not active or no videos
   if (!settings?.isActive || (!shorts.length && !videos.length) || isLoading) {
@@ -165,7 +210,7 @@ const ShortsAndVideosSection = ({ className = "" }: ShortsAndVideosSectionProps)
                     onMouseLeave={() => setIsAutoScrolling(true)}
                   >
                     {/* Current Short */}
-                    <div className="relative w-full h-full group cursor-pointer" onClick={() => handleVideoClick(shorts[currentShortIndex])}>
+                    <div className="relative w-full h-full group cursor-pointer" onClick={() => handleVideoClick(currentShortIndex)}>
                       <img
                         src={shorts[currentShortIndex]?.thumbnail}
                         alt={shorts[currentShortIndex]?.title}
@@ -187,17 +232,17 @@ const ShortsAndVideosSection = ({ className = "" }: ShortsAndVideosSectionProps)
                       </div>
 
                       {/* Content Info */}
-
-                    <div className="absolute bottom-4 left-4 right-4">
-                      <div className="flex items-center gap-4 text-white/70 text-xs">
-                        <div className="flex items-center gap-1">
-                          <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
-                            <path d="M10 12a2 2 0 100-4 2 2 0 000 4z"/>
-                            <path fillRule="evenodd" d="M.458 10C1.732 5.943 5.522 3 10 3s8.268 2.943 9.542 7c-1.274 4.057-5.064 7-9.542 7S1.732 14.057.458 10zM14 10a4 4 0 11-8 0 4 4 0 018 0z" clipRule="evenodd"/>
-                          </svg>
-                          <span>{formatNumber(shorts[currentShortIndex]?.viewCount || 0)}</span></div>
+                      <div className="absolute bottom-4 left-4 right-4">
+                        <div className="flex items-center gap-4 text-white/70 text-xs">
+                          <div className="flex items-center gap-1">
+                            <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
+                              <path d="M10 12a2 2 0 100-4 2 2 0 000 4z"/>
+                              <path fillRule="evenodd" d="M.458 10C1.732 5.943 5.522 3 10 3s8.268 2.943 9.542 7c-1.274 4.057-5.064 7-9.542 7S1.732 14.057.458 10zM14 10a4 4 0 11-8 0 4 4 0 018 0z" clipRule="evenodd"/>
+                            </svg>
+                            <span>{formatNumber(shorts[currentShortIndex]?.viewCount || 0)}</span>
+                          </div>
+                        </div>
                       </div>
-                    </div>
 
                       {/* Navigation Arrows */}
                       <div className="absolute right-4 top-1/2 -translate-y-1/2 flex flex-col gap-2">
@@ -262,11 +307,11 @@ const ShortsAndVideosSection = ({ className = "" }: ShortsAndVideosSectionProps)
               </div>
 
               <div className="space-y-4 max-h-[600px] overflow-y-auto">
-                {videos.map((video) => (
+                {videos.map((video, index) => (
                   <Card 
                     key={video.id}
                     className="group cursor-pointer transition-all duration-300 hover:shadow-lg hover:-translate-y-1 bg-white border border-gray-200 hover:border-gray-300"
-                    onClick={() => handleVideoClick(video)}
+                    onClick={() => handleVideoClick(shorts.length + index)}
                   >
                     <CardContent className="p-0">
                       <div className="flex gap-4 p-4">
@@ -326,16 +371,6 @@ const ShortsAndVideosSection = ({ className = "" }: ShortsAndVideosSectionProps)
                         </div>
                       </div>
                     </CardContent>
-                     <div className="absolute bottom-4 left-4 right-4">
-                      <div className="flex items-center gap-4 text-white/70 text-xs">
-                        <div className="flex items-center gap-1">
-                          <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
-                            <path d="M10 12a2 2 0 100-4 2 2 0 000 4z"/>
-                            <path fillRule="evenodd" d="M.458 10C1.732 5.943 5.522 3 10 3s8.268 2.943 9.542 7c-1.274 4.057-5.064 7-9.542 7S1.732 14.057.458 10zM14 10a4 4 0 11-8 0 4 4 0 018 0z" clipRule="evenodd"/>
-                          </svg>
-                          <span>{formatNumber(video.viewCount || 0)}</span></div>
-                      </div>
-                    </div>
                   </Card>
                 ))}
               </div>
@@ -352,11 +387,44 @@ const ShortsAndVideosSection = ({ className = "" }: ShortsAndVideosSectionProps)
       </section>
 
       {/* Video Modal */}
-      <Dialog open={!!selectedVideo} onOpenChange={closeModal}>
-        <DialogContent className="max-w-6xl w-full h-[90vh] p-0 gap-0">
-          <div className="flex h-full">
+      <Dialog open={selectedVideoIndex !== null} onOpenChange={closeModal}>
+        <DialogContent className="max-w-6xl w-full h-[90vh] p-0 gap-0 md:max-w-6xl sm:max-w-full sm:h-full sm:m-0 sm:rounded-none">
+          <div className="flex h-full md:flex-row flex-col"
+               onTouchStart={handleTouchStart}
+               onTouchMove={handleTouchMove}
+               onTouchEnd={handleTouchEnd}>
+            
+            {/* Custom Close Button */}
+            <button
+              onClick={closeModal}
+              className="absolute top-4 right-4 z-50 bg-black/50 hover:bg-black/70 text-white rounded-full p-2 transition-colors"
+            >
+              <X className="h-4 w-4" />
+            </button>
+
+            {/* Navigation Arrows - Desktop */}
+            <div className="hidden md:block">
+              {selectedVideoIndex !== null && selectedVideoIndex > 0 && (
+                <button
+                  onClick={handlePreviousVideo}
+                  className="absolute left-4 top-1/2 -translate-y-1/2 z-40 bg-black/50 hover:bg-black/70 text-white rounded-full p-3 transition-colors"
+                >
+                  <ChevronLeft className="h-6 w-6" />
+                </button>
+              )}
+              
+              {selectedVideoIndex !== null && selectedVideoIndex < combinedVideos.length - 1 && (
+                <button
+                  onClick={handleNextVideo}
+                  className="absolute right-4 top-1/2 -translate-y-1/2 z-40 bg-black/50 hover:bg-black/70 text-white rounded-full p-3 transition-colors"
+                >
+                  <ChevronRight className="h-6 w-6" />
+                </button>
+              )}
+            </div>
+
             {/* Left side - Video Player */}
-            <div className="flex-1 bg-black flex items-center justify-center">
+            <div className="flex-1 bg-black flex items-center justify-center md:h-full h-[60vh]">
               {selectedVideo && (
                 <div className="w-full h-full flex items-center justify-center">
                   <iframe
@@ -370,25 +438,20 @@ const ShortsAndVideosSection = ({ className = "" }: ShortsAndVideosSectionProps)
               )}
             </div>
 
-            {/* Right side - Video Info */}
-            <div className="w-96 bg-white flex flex-col">
-              <DialogHeader className="p-4 border-b">
-                <div className="flex items-center justify-between">
-                  <DialogTitle className="text-lg font-semibold text-gray-900">
-                    Description
-                  </DialogTitle>
-                  <Button variant="ghost" size="icon" onClick={closeModal}>
-                    <X className="h-4 w-4" />
-                  </Button>
-                </div>
-              </DialogHeader>
+            {/* Right side - Video Info (Desktop) / Bottom section (Mobile) */}
+            <div className="md:w-96 w-full bg-white flex flex-col md:h-full h-[40vh]">
+              <div className="p-4 border-b md:block hidden">
+                <h3 className="text-lg font-semibold text-gray-900">
+                  Video Details
+                </h3>
+              </div>
 
               <div className="flex-1 overflow-y-auto p-4 space-y-4">
                 {selectedVideo && (
                   <>
                     {/* Video Title */}
                     <div>
-                      <h3 className="font-semibold text-gray-900 mb-2">
+                      <h3 className="font-semibold text-gray-900 mb-2 text-sm md:text-base">
                         {selectedVideo.title}
                       </h3>
                     </div>
@@ -413,6 +476,22 @@ const ShortsAndVideosSection = ({ className = "" }: ShortsAndVideosSectionProps)
                         </div>
                         <div className="text-xs text-gray-500">Comments</div>
                       </div>
+                    </div>
+
+                    {/* Mobile Navigation Indicators */}
+                    <div className="md:hidden flex justify-center items-center space-x-4 py-2">
+                      {selectedVideoIndex !== null && selectedVideoIndex > 0 && (
+                        <div className="flex items-center text-gray-500 text-sm">
+                          <ChevronUp className="h-4 w-4 mr-1" />
+                          <span>Swipe up for previous</span>
+                        </div>
+                      )}
+                      {selectedVideoIndex !== null && selectedVideoIndex < combinedVideos.length - 1 && (
+                        <div className="flex items-center text-gray-500 text-sm">
+                          <ChevronDown className="h-4 w-4 mr-1" />
+                          <span>Swipe down for next</span>
+                        </div>
+                      )}
                     </div>
 
                     {/* Video Description */}
