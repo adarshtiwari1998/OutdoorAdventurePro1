@@ -460,7 +460,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       console.log('Preview request - categoryId:', categoryId, 'videoCount:', videoCount);
 
-      if (!categoryId || categoryId === "undefined" || categoryId === "null" || categoryId === "") {
+      if (!categoryId || categoryId === "undefined" || categoryId === "null" || categoryId === "" || categoryId === undefined) {
         console.log('No valid categoryId provided, returning empty array');
         return res.json([]);
       }

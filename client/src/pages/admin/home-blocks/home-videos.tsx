@@ -68,19 +68,23 @@ const HomeVideos = () => {
 
   const { data: previewVideos, isLoading: previewLoading } = useQuery({
     queryKey: ['/api/admin/home-video-preview', watchedCategoryId, watchedVideoCount],
-    enabled: !!(watchedCategoryId && watchedCategoryId !== "" && !watchedCategoryId.startsWith('header_')),
+    enabled: !!(watchedCategoryId && watchedCategoryId !== "" && watchedCategoryId !== "undefined" && !watchedCategoryId.startsWith('header_')),
+    refetchOnMount: true,
   });
 
   // Update form when settings load
   useEffect(() => {
     if (settings) {
-      form.reset({
+      console.log('Updating form with settings:', settings);
+      const newValues = {
         categoryId: settings.categoryId?.toString() || "",
         videoCount: settings.videoCount || 8,
         isActive: settings.isActive ?? true,
         title: settings.title || "Latest Videos",
         description: settings.description || "Check out our latest outdoor adventure videos",
-      });
+      };
+      console.log('Setting form values:', newValues);
+      form.reset(newValues);
     }
   }, [settings, form]);
 
@@ -283,10 +287,11 @@ const HomeVideos = () => {
             </CardDescription>
           </CardHeader>
           <CardContent>
-            {!form.watch('categoryId') ? (
+            {!form.watch('categoryId') || form.watch('categoryId') === "" ? (
               <div className="text-center py-8 text-muted-foreground">
                 <Video className="h-12 w-12 mx-auto mb-4 opacity-50" />
                 <p>Select a category to see video preview</p>
+                <p className="text-xs mt-2">Current categoryId: {form.watch('categoryId') || 'undefined'}</p>
               </div>
             ) : previewLoading ? (
               <div className="space-y-4">
