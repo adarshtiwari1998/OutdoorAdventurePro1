@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useRef } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent } from "@/components/ui/card";
@@ -147,7 +146,7 @@ const ShortsAndVideosSection = ({ className = "" }: ShortsAndVideosSectionProps)
 
   const handleTouchEnd = () => {
     if (!touchStart || !touchEnd) return;
-    
+
     const distance = touchStart - touchEnd;
     const isUpSwipe = distance > 50;
     const isDownSwipe = distance < -50;
@@ -393,7 +392,7 @@ const ShortsAndVideosSection = ({ className = "" }: ShortsAndVideosSectionProps)
                onTouchStart={handleTouchStart}
                onTouchMove={handleTouchMove}
                onTouchEnd={handleTouchEnd}>
-            
+
             {/* Custom Close Button */}
             <button
               onClick={closeModal}
@@ -412,7 +411,7 @@ const ShortsAndVideosSection = ({ className = "" }: ShortsAndVideosSectionProps)
                   <ChevronLeft className="h-6 w-6" />
                 </button>
               )}
-              
+
               {selectedVideoIndex !== null && selectedVideoIndex < combinedVideos.length - 1 && (
                 <button
                   onClick={handleNextVideo}
@@ -422,6 +421,27 @@ const ShortsAndVideosSection = ({ className = "" }: ShortsAndVideosSectionProps)
                 </button>
               )}
             </div>
+
+             {/* Left Side - Video Preview Thumbnails */}
+             <div className="hidden md:flex flex-col w-20 bg-gray-700 overflow-y-auto">
+              {combinedVideos.slice(0, selectedVideoIndex).map((video, index) => {
+                const actualIndex = index;
+                  return (
+                    
+                    <div
+                      key={video.id}
+                      className="video-preview-thumbnail w-16 h-12 bg-gray-800 rounded overflow-hidden cursor-pointer border-2 border-transparent hover:border-white/50"
+                      onClick={() => setSelectedVideoIndex(actualIndex)}
+                    >
+                      <img
+                        src={video.thumbnail}
+                        alt={video.title}
+                        className="w-full h-full object-cover"
+                      />
+                    </div>
+                  );
+                })}
+              </div>
 
             {/* Left side - Video Player */}
             <div className="flex-1 bg-black flex items-center justify-center md:h-full h-[60vh]">
@@ -437,6 +457,27 @@ const ShortsAndVideosSection = ({ className = "" }: ShortsAndVideosSectionProps)
                 </div>
               )}
             </div>
+
+            {/* Right Side - Video Preview Thumbnails */}
+            <div className="hidden md:flex flex-col w-20 bg-gray-700 overflow-y-auto">
+              {combinedVideos.slice(selectedVideoIndex != null ? selectedVideoIndex + 1 : 0).map((video, index) => {
+                  const actualIndex = selectedVideoIndex != null ? selectedVideoIndex + 1 + index : index;
+                  return (
+                    
+                    <div
+                      key={video.id}
+                      className="video-preview-thumbnail w-16 h-12 bg-gray-800 rounded overflow-hidden cursor-pointer border-2 border-transparent hover:border-white/50"
+                      onClick={() => setSelectedVideoIndex(actualIndex)}
+                    >
+                      <img
+                        src={video.thumbnail}
+                        alt={video.title}
+                        className="w-full h-full object-cover"
+                      />
+                    </div>
+                  );
+                })}
+              </div>
 
             {/* Right side - Video Info (Desktop) / Bottom section (Mobile) */}
             <div className="md:w-96 w-full bg-white flex flex-col md:h-full h-[40vh]">

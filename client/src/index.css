@@ -560,4 +560,49 @@ header {
       background-position: 100% 50%;
     }
   }
+
+  /* Video preview thumbnails */
+  .video-preview-thumbnail {
+    position: relative;
+    transition: all 0.3s ease;
+  }
+
+  .video-preview-thumbnail:hover {
+    transform: scale(1.05);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+  }
+
+  .video-preview-thumbnail::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(45deg, transparent 49%, rgba(255, 255, 255, 0.1) 50%, transparent 51%);
+    opacity: 0;
+    transition: opacity 0.3s ease;
+  }
+
+  .video-preview-thumbnail:hover::after {
+    opacity: 1;
+  }
+
+  /* Video navigation indicator */
+  .video-nav-indicator {
+    backdrop-filter: blur(8px);
+    background: rgba(0, 0, 0, 0.7);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+  }
+
+  /* Mobile preview dots scroll */
+  .mobile-preview-scroll::-webkit-scrollbar {
+    height: 2px;
+  }
+
+  .mobile-preview-scroll::-webkit-scrollbar-track {
+    background: rgba(0, 0, 0, 0.1);
+  }
+
+  .mobile-preview-scroll::-webkit-scrollbar-thumb {
+    background: rgba(0, 0, 0, 0.3);
+    border-radius: 1px;
+  }
 }
