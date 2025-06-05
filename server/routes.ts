@@ -408,6 +408,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         } else if (typeof categoryId === 'string') {
           // Check if it's a header category (format: "header_X")
           if (categoryId.startsWith('header_')) {
+            console.log(`⚠️ WARNING: Received header category ID "${categoryId}" - this should use regular category IDs`);
             const headerIdStr = categoryId.replace('header_', '');
             const headerConfigId = parseInt(headerIdStr);
 
@@ -421,7 +422,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
                 // Ensure there's a corresponding blog category
                 const blogCategory = await storage.ensureBlogCategoryFromHeader(headerConfig.category);
                 parsedCategoryId = blogCategory.id;
-                console.log(`Mapped header category "${categoryId}" to blog category ID: ${parsedCategoryId}`);
+                console.log(`🔄 Mapped header category "${categoryId}" to blog category ID: ${parsedCategoryId}`);
               }
             }
           } else {
@@ -429,6 +430,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
             const parsed = parseInt(categoryId);
             if (!isNaN(parsed)) {
               parsedCategoryId = parsed;
+              console.log(`✅ Using regular category ID: ${parsedCategoryId}`);
             }
           }
         }
@@ -499,12 +501,27 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       console.log(`Looking for videos with category_id: ${parsedCategoryId}`);
 
+      // First check how many videos exist with this category ID
+      const allVideosInCategory = await db.query.youtubeVideos.findMany({
+        where: eq(schema.youtubeVideos.categoryId, parsedCategoryId),
+        columns: { id: true, title: true, categoryId: true }
+      });
+      
+      console.log(`Database check: Found ${allVideosInCategory.length} videos with categoryId ${parsedCategoryId}`);
+      if (allVideosInCategory.length > 0) {
+        console.log(`Sample videos:`, allVideosInCategory.slice(0, 3).map(v => ({
+          id: v.id,
+          title: v.title.substring(0, 50),
+          categoryId: v.categoryId
+        })));
+      }
+
       const videos = await storage.getVideosByCategory(
         parsedCategoryId, 
         parseInt(videoCount as string) || 8
       );
 
-      console.log(`Found ${videos.length} videos for category ${parsedCategoryId}`);
+      console.log(`Final result: ${videos.length} videos for category ${parsedCategoryId}`);
       res.json(videos);
     } catch (error) {
       console.error("Error fetching home video preview:", error);

@@ -47,7 +47,7 @@ const HomeVideos = () => {
   });
 
   const { data: categories } = useQuery({
-    queryKey: ['/api/admin/blog/categories'],
+    queryKey: ['/api/categories'],
   });
 
   // Form
@@ -68,7 +68,7 @@ const HomeVideos = () => {
 
   const { data: previewVideos, isLoading: previewLoading } = useQuery({
     queryKey: ['/api/admin/home-video-preview', watchedCategoryId, watchedVideoCount],
-    enabled: !!(watchedCategoryId && watchedCategoryId !== ""),
+    enabled: !!(watchedCategoryId && watchedCategoryId !== "" && !watchedCategoryId.startsWith('header_')),
   });
 
   // Update form when settings load
@@ -214,9 +214,9 @@ const HomeVideos = () => {
                           {categories?.map((category: any) => (
                             <SelectItem 
                               key={category.id} 
-                              value={typeof category.id === 'string' ? category.id : category.id.toString()}
+                              value={category.id.toString()}
                             >
-                              {category.name}
+                              {category.name} (ID: {category.id})
                             </SelectItem>
                           ))}
                         </SelectContent>
