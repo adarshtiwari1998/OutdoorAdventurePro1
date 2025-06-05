@@ -909,6 +909,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Public categories endpoint for frontend use
+  app.get("/api/categories", async (req: Request, res: Response) => {
+    try {
+      const categories = await db.query.categories.findMany({
+        orderBy: [schema.categories.type, schema.categories.name]
+      });
+
+      res.json(categories);
+    } catch (error) {
+      console.error("Error fetching categories:", error);
+      res.status(500).json({ message: "Failed to fetch categories" });
+    }
+  });
+
   app.post("/api/admin/categories", async (req: Request, res: Response) => {
     try {
       const { name, slug, description } = req.body;
