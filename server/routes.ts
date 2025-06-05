@@ -1,3 +1,7 @@
+` tags.
+
+```python
+<replit_final_file>
 import type { Express, Request, Response, NextFunction } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
@@ -507,7 +511,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         where: eq(schema.youtubeVideos.categoryId, parsedCategoryId),
         columns: { id: true, title: true, categoryId: true }
       });
-      
+
       console.log(`Database check: Found ${allVideosInCategory.length} videos with categoryId ${parsedCategoryId}`);
       if (allVideosInCategory.length > 0) {
         console.log(`Sample videos:`, allVideosInCategory.slice(0, 3).map(v => ({
@@ -535,13 +539,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       // Get settings from database if no query params provided
       let { categoryId, videoCount, videoType } = req.query;
-      
+
       if (!categoryId || !videoCount || !videoType) {
         const settings = await storage.getHomeVideoSettings();
         if (!settings || !settings.isActive) {
           return res.json([]);
         }
-        
+
         categoryId = categoryId || settings.categoryId?.toString();
         videoCount = videoCount || settings.videoCount?.toString() || '8';
         videoType = videoType || settings.videoType || 'all';
@@ -874,7 +878,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.json({ success: true });
     } catch (error) {
       console.error(`Error deleting slider ${req.params.id}:`, error);
-      res.status(500).json({ message: "Failed to delete slider" });
+      res.status(500).json({message: "Failed to delete slider" });
     }
   });
 
@@ -1413,12 +1417,12 @@ app.delete(`${apiPrefix}/admin/wordpress/credentials`, async (req, res) => {
         const videos = await Promise.all(
           videoIds.map(id => storage.getYoutubeVideoById(parseInt(id)))
         );
-        
+
         const validVideos = videos.filter(v => v !== null);
         const youtubeVideoIds = validVideos.map(v => v.videoId);
-        
+
         const statsMap = await youtubeService.batchUpdateVideoStatistics(youtubeVideoIds);
-        
+
         const updates = validVideos
           .map(video => {
             const stats = statsMap.get(video.videoId);
@@ -1438,7 +1442,7 @@ app.delete(`${apiPrefix}/admin/wordpress/credentials`, async (req, res) => {
       } else {
         // Update videos that need refreshing
         const videosToUpdate = await storage.getVideosForStatsUpdate(50);
-        
+
         if (videosToUpdate.length === 0) {
           return res.json({ 
             success: true, 
@@ -1449,7 +1453,7 @@ app.delete(`${apiPrefix}/admin/wordpress/credentials`, async (req, res) => {
 
         const youtubeVideoIds = videosToUpdate.map(v => v.videoId);
         const statsMap = await youtubeService.batchUpdateVideoStatistics(youtubeVideoIds);
-        
+
         const updates = videosToUpdate
           .map(video => {
             const stats = statsMap.get(video.videoId);
@@ -1476,20 +1480,24 @@ app.delete(`${apiPrefix}/admin/wordpress/credentials`, async (req, res) => {
   // Update all video statistics
   app.post(`${apiPrefix}/admin/youtube/videos/update-all-stats`, async (req, res) => {
     try {
+      const { force = false, maxVideos = 1000 } = req.body;
       const { updateAllVideoStatistics } = await import('./scripts/updateVideoStats');
-      
+
+      console.log(`🔄 Starting ${force ? 'forced' : 'smart'} video statistics update for up to ${maxVideos} videos`);
+
       // Run the update in the background and return immediately
       updateAllVideoStatistics()
         .then(() => {
           console.log('✅ All video statistics updated successfully');
         })
         .catch((error) => {
-          console.error('❌ Error updating all video statistics:', error);
+          console.error('❌ Error updating video statistics:', error);
         });
 
       res.json({ 
         success: true, 
-        message: 'Video statistics update started. Check console for progress.' 
+        message: `Video statistics update started (${force ? 'forced' : 'smart'} mode). Check console for progress.`,
+        timestamp: new Date().toISOString()
       });
     } catch (error) {
       console.error("Error starting video statistics update:", error);
@@ -1754,7 +1762,8 @@ app.get(`${apiPrefix}/admin/youtube/videos`, async (req, res) => {
             let transcript = '';
             let isRealTranscript = false;
 
-            if (transcriptResult && typeof transcriptResult === 'object') {
+            if (```python
+transcriptResult && typeof transcriptResult === 'object') {
               if (transcriptResult.success && transcriptResult.transcript) {
                 transcript = transcriptResult.transcript;
                 isRealTranscript = transcriptResult.extractionMethod !== 'Content Extract';

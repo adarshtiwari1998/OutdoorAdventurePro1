@@ -335,6 +335,23 @@ export const storage = {
         updatedAt: new Date(),
       }).returning();
 
+      // Auto-fetch statistics for newly imported videos if not already provided
+      if (!videoData.viewCount && process.env.AUTO_FETCH_STATS === 'true') {
+        console.log(`📊 Auto-fetching statistics for new video: ${videoData.videoId}`);
+        try {
+          const { YouTubeService } = await import('../services/youtubeService');
+          const youtubeService = new YouTubeService();
+          const stats = await youtubeService.updateVideoStatistics(videoData.videoId);
+          
+          if (stats) {
+            await this.updateYoutubeVideoStatistics(video.id, stats);
+            console.log(`✅ Auto-updated stats for ${videoData.videoId}: ${stats.viewCount} views`);
+          }
+        } catch (statsError) {
+          console.warn(`⚠️ Failed to auto-fetch stats for ${videoData.videoId}:`, statsError);
+        }
+      }
+
       return video;
     } catch (error) {
       console.error('Error creating YouTube video:', error);
