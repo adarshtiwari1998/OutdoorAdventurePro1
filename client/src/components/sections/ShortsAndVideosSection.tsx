@@ -387,7 +387,7 @@ const ShortsAndVideosSection = ({ className = "" }: ShortsAndVideosSectionProps)
 
       {/* Video Modal */}
       <Dialog open={selectedVideoIndex !== null} onOpenChange={closeModal}>
-        <DialogContent className="max-w-[95vw] w-[95vw] h-[95vh] p-0 gap-0 border-0 bg-transparent shadow-none md:max-w-6xl md:w-[90vw] md:h-[90vh]">
+        <DialogContent className="max-w-[95vw] w-[95vw] h-[95vh] p-0 gap-0 border-0 bg-transparent shadow-none md:max-w-4xl md:w-[70vw] md:h-[85vh]">
           {/* Custom Close Button */}
           <button
             onClick={closeModal}
@@ -553,7 +553,7 @@ const ShortsAndVideosSection = ({ className = "" }: ShortsAndVideosSectionProps)
 
       {/* External Preview Boxes - Left Side */}
       {selectedVideoIndex !== null && selectedVideoIndex > 0 && (
-        <div className="fixed left-[calc(50vw-48rem-2rem)] top-1/2 -translate-y-1/2 z-[70] hidden xl:flex flex-col gap-3 max-h-[70vh] overflow-y-auto custom-scrollbar">
+        <div className="fixed left-[calc(50vw-32rem-3rem)] top-1/2 -translate-y-1/2 z-[70] hidden xl:flex flex-col gap-3 max-h-[70vh] overflow-y-auto custom-scrollbar">
           {combinedVideos.slice(Math.max(0, selectedVideoIndex - 3), selectedVideoIndex).map((video, index) => {
             const actualIndex = Math.max(0, selectedVideoIndex - 3) + index;
             return (
@@ -594,7 +594,7 @@ const ShortsAndVideosSection = ({ className = "" }: ShortsAndVideosSectionProps)
 
       {/* External Preview Boxes - Right Side */}
       {selectedVideoIndex !== null && selectedVideoIndex < combinedVideos.length - 1 && (
-        <div className="fixed right-[calc(50vw-48rem-2rem)] top-1/2 -translate-y-1/2 z-[70] hidden xl:flex flex-col gap-3 max-h-[70vh] overflow-y-auto custom-scrollbar">
+        <div className="fixed right-[calc(50vw-32rem-3rem)] top-1/2 -translate-y-1/2 z-[70] hidden xl:flex flex-col gap-3 max-h-[70vh] overflow-y-auto custom-scrollbar">
           {combinedVideos.slice(selectedVideoIndex + 1, Math.min(combinedVideos.length, selectedVideoIndex + 4)).map((video, index) => {
             const actualIndex = selectedVideoIndex + 1 + index;
             return (
