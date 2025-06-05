@@ -658,6 +658,21 @@ header {
     backdrop-filter: blur(4px);
   }
 
+  /* Dialog overlay enhancements for video modal */
+  [data-radix-dialog-overlay] {
+    background: rgba(0, 0, 0, 0.8);
+    backdrop-filter: blur(4px);
+  }
+
+  /* Dialog content enhancements */
+  [data-radix-dialog-content] {
+    max-width: none !important;
+    padding: 0 !important;
+    border: none !important;
+    background: transparent !important;
+    box-shadow: none !important;
+  }
+
   /* Video navigation indicator */
   .video-nav-indicator {
     backdrop-filter: blur(8px);
