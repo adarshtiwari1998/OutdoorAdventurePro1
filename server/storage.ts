@@ -1912,7 +1912,7 @@ export const storage = {
 
       // Build where condition based on video type
       let whereCondition;
-if (videoType === 'all') {
+      if (videoType === 'all') {
         whereCondition = eq(schema.youtubeVideos.categoryId, categoryId);
       } else {
         whereCondition = and(
