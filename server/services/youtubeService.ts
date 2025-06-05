@@ -87,15 +87,65 @@ export class YouTubeService {
     }
   }
 
+  async resolveChannelId(channelIdentifier: string): Promise<string> {
+    try {
+      // If it's already a proper channel ID (starts with UC and 24 chars), return as is
+      if (channelIdentifier.startsWith('UC') && channelIdentifier.length === 24) {
+        return channelIdentifier;
+      }
+
+      // Try to search by channel handle/username
+      console.log(`🔍 Resolving channel identifier: ${channelIdentifier}`);
+      
+      // First try searching by channel name/handle
+      const searchResponse = await this.makeRequest('search', {
+        part: 'snippet',
+        q: channelIdentifier,
+        type: 'channel',
+        maxResults: '1'
+      });
+
+      if (searchResponse.items && searchResponse.items.length > 0) {
+        const channelId = searchResponse.items[0].snippet.channelId;
+        console.log(`✅ Resolved ${channelIdentifier} to channel ID: ${channelId}`);
+        return channelId;
+      }
+
+      // If search doesn't work, try using the forUsername parameter (for legacy usernames)
+      try {
+        const channelResponse = await this.makeRequest('channels', {
+          part: 'snippet',
+          forUsername: channelIdentifier
+        });
+
+        if (channelResponse.items && channelResponse.items.length > 0) {
+          const channelId = channelResponse.items[0].id;
+          console.log(`✅ Resolved username ${channelIdentifier} to channel ID: ${channelId}`);
+          return channelId;
+        }
+      } catch (usernameError) {
+        console.log(`⚠️ Username lookup failed for ${channelIdentifier}`);
+      }
+
+      throw new Error(`Could not resolve channel identifier: ${channelIdentifier}`);
+    } catch (error) {
+      console.error(`❌ Error resolving channel ID for ${channelIdentifier}:`, error);
+      throw error;
+    }
+  }
+
   async getChannelDetails(channelId: string): Promise<YouTubeChannel> {
     try {
+      // First resolve the channel ID if needed
+      const resolvedChannelId = await this.resolveChannelId(channelId);
+      
       const response = await this.makeRequest('channels', {
         part: 'snippet,statistics',
-        id: channelId
+        id: resolvedChannelId
       });
 
       if (!response.items || response.items.length === 0) {
-        throw new Error(`Channel not found: ${channelId}`);
+        throw new Error(`Channel not found: ${resolvedChannelId}`);
       }
 
       const channel = response.items[0];

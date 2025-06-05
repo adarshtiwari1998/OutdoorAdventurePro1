@@ -35,6 +35,7 @@ import { format } from "date-fns";
 
 // Schemas
 const youtubeChannelSchema = z.object({
+  channelUrl: z.string().min(1, "Channel URL is required"),
   channelId: z.string().min(1, "Channel ID is required"),
   channelName: z.string().min(1, "Channel name is required"),
 });
@@ -105,6 +106,48 @@ const YoutubeImport = () => {
     elapsedTime: 0
   });
    const [expandedRows, setExpandedRows] = useState<Set<string>>(new Set());
+
+  // Function to extract channel ID from YouTube URL
+  const extractChannelId = (url: string): string => {
+    if (!url) return '';
+    
+    // Remove whitespace
+    url = url.trim();
+    
+    // Pattern 1: youtube.com/channel/CHANNEL_ID
+    const channelMatch = url.match(/youtube\.com\/channel\/([a-zA-Z0-9_-]+)/);
+    if (channelMatch) {
+      return channelMatch[1];
+    }
+    
+    // Pattern 2: youtube.com/c/CHANNEL_NAME or youtube.com/@CHANNEL_NAME
+    const customMatch = url.match(/youtube\.com\/(?:c\/|@)([a-zA-Z0-9_-]+)/);
+    if (customMatch) {
+      // For custom URLs, we'll need to make an API call to get the actual channel ID
+      // For now, return the custom name and let the backend handle it
+      return customMatch[1];
+    }
+    
+    // Pattern 3: youtube.com/user/USERNAME
+    const userMatch = url.match(/youtube\.com\/user\/([a-zA-Z0-9_-]+)/);
+    if (userMatch) {
+      return userMatch[1];
+    }
+    
+    // If it's already a channel ID (starts with UC), return as is
+    if (url.startsWith('UC') && url.length === 24) {
+      return url;
+    }
+    
+    return '';
+  };
+
+  // Handle channel URL change and auto-extract channel ID
+  const handleChannelUrlChange = (url: string) => {
+    const extractedId = extractChannelId(url);
+    channelForm.setValue('channelUrl', url);
+    channelForm.setValue('channelId', extractedId);
+  };
 
   // Update elapsed time every second during import
   useEffect(() => {
@@ -180,6 +223,7 @@ const YoutubeImport = () => {
   const channelForm = useForm<z.infer<typeof youtubeChannelSchema>>({
     resolver: zodResolver(youtubeChannelSchema),
     defaultValues: {
+      channelUrl: "",
       channelId: "",
       channelName: "",
     }
@@ -650,7 +694,10 @@ const YoutubeImport = () => {
 
   // Event handlers
   const onAddChannelSubmit = (values: z.infer<typeof youtubeChannelSchema>) => {
-    addChannelMutation.mutate(values);
+    addChannelMutation.mutate({
+      channelId: values.channelId,
+      channelName: values.channelName
+    });
   };
 
   const onAddVideoSubmit = (values: z.infer<typeof youtubeVideoSchema>) => {
@@ -1514,14 +1561,45 @@ const YoutubeImport = () => {
                   <form onSubmit={channelForm.handleSubmit(onAddChannelSubmit)} className="space-y-4">
                     <FormField
                       control={channelForm.control}
+                      name="channelUrl"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Channel URL</FormLabel>
+                          <FormControl>
+                            <Input 
+                              placeholder="https://youtube.com/channel/UCfUABeKVh7oJzZG93O2ZioQ or https://youtube.com/@channelname"
+                              {...field}
+                              onChange={(e) => {
+                                field.onChange(e);
+                                handleChannelUrlChange(e.target.value);
+                              }}
+                            />
+                          </FormControl>
+                          <FormMessage />
+                          <p className="text-xs text-muted-foreground">
+                            Paste any YouTube channel URL and the Channel ID will be extracted automatically
+                          </p>
+                        </FormItem>
+                      )}
+                    />
+                    <FormField
+                      control={channelForm.control}
                       name="channelId"
                       render={({ field }) => (
                         <FormItem>
                           <FormLabel>Channel ID</FormLabel>
                           <FormControl>
-                            <Input placeholder="UCfUABeKVh7oJzZG93O2ZioQ" {...field} />
+                            <Input 
+                              placeholder="Auto-extracted from URL above"
+                              {...field}
+                              className="bg-gray-50 dark:bg-gray-900"
+                              readOnly
+                            />
                           </FormControl>
                           <FormMessage />
+                          <p className="text-xs text-muted-foreground">
+                            This field is automatically filled when you enter a channel URL above
+                          </p>
                         </FormItem>
                       )}
                     />
