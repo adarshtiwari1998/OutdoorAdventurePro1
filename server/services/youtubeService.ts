@@ -496,14 +496,7 @@ export class YouTubeService {
     }
   }
 
-  async getVideoTranscript(videoId: string): Promise<{
-    success: boolean;
-    transcript: string;
-    extractionMethod?: string;
-    transcriptLength?: number;
-    error?: string;
-    errorType?: 'NO_CAPTIONS' | 'RATE_LIMITED' | 'RESTRICTED' | 'NETWORK_ERROR' | 'UNKNOWN';
-  }> {
+  async getVideoTranscript(videoId: string): Promise<string> {
     try {
       console.log(`📄 Fetching transcript for: ${videoId}`);
 
@@ -532,6 +525,7 @@ export class YouTubeService {
       let transcriptData;
       let extractionMethod = 'Direct';
       let lastError = '';
+      let availableLanguages: string[] = [];
 
       try {
         // Strategy 1: Direct transcript fetch
@@ -547,26 +541,23 @@ export class YouTubeService {
         lastError = directError.message;
         console.log(`❌ Strategy Direct failed: ${directError.message}`);
 
+        // Extract available languages from error message
+        const availableLanguagesMatch = directError.message.match(/Available languages: ([^)]+)/);
+        if (availableLanguagesMatch) {
+          availableLanguages = availableLanguagesMatch[1].split(',').map(lang => lang.trim());
+          console.log(`🌐 Available languages detected: ${availableLanguages.join(', ')}`);
+        }
+
         // Check for specific error types
         if (directError.message.includes('Transcript is disabled') || 
             directError.message.includes('No transcript found')) {
-          return {
-            success: false,
-            transcript: '',
-            error: 'No captions available for this video',
-            errorType: 'NO_CAPTIONS'
-          };
+          throw new Error('Transcript error: No captions available for this video');
         }
 
         if (directError.message.includes('captcha') || 
             directError.message.includes('too many requests') ||
             directError.message.includes('429')) {
-          return {
-            success: false,
-            transcript: '',
-            error: 'Rate limited by YouTube - please try again later',
-            errorType: 'RATE_LIMITED'
-          };
+          throw new Error('Transcript error: Rate limited by YouTube - please try again later');
         }
 
         try {
@@ -586,132 +577,96 @@ export class YouTubeService {
           lastError = langError.message;
           console.log(`❌ Strategy English failed: ${langError.message}`);
 
-          // Check if error mentions available languages
-          const availableLanguagesMatch = langError.message.match(/Available languages: ([^)]+)/);
-          let availableLanguages: string[] = [];
-          
-          if (availableLanguagesMatch) {
-            availableLanguages = availableLanguagesMatch[1].split(',').map(lang => lang.trim());
-            console.log(`🌐 Available languages detected: ${availableLanguages.join(', ')}`);
-          }
-
           try {
-            // Strategy 3: Try with auto-generated English captions
-            console.log(`🔄 Strategy 3/6: Auto-generated English captions for video: ${videoId}`);
-            const autoDelay = videoDetails.duration > 1800 ? 20000 : 12000;
-            await new Promise(resolve => setTimeout(resolve, autoDelay));
+            // Strategy 3: Try first available language if English not available
+            if (availableLanguages.length > 0) {
+              const firstAvailableLang = availableLanguages[0];
+              console.log(`🔄 Strategy 3/6: First available language (${firstAvailableLang}) for video: ${videoId}`);
+              await new Promise(resolve => setTimeout(resolve, 12000));
 
-            transcriptData = await YoutubeTranscript.fetchTranscript(videoId, { lang: 'en', country: 'US' });
-            extractionMethod = 'Auto-Generated (en)';
+              transcriptData = await YoutubeTranscript.fetchTranscript(videoId, { lang: firstAvailableLang });
+              extractionMethod = `Language-Specific (${firstAvailableLang})`;
 
-            if (!transcriptData || transcriptData.length === 0) {
-              throw new Error('No transcript data from auto-generated English method');
+              if (!transcriptData || transcriptData.length === 0) {
+                throw new Error(`No transcript data from ${firstAvailableLang} language method`);
+              }
+              console.log(`✅ ${firstAvailableLang} language extraction successful: ${transcriptData.length} segments`);
+            } else {
+              // Strategy 4: Try common languages (Hindi, Spanish, French, German, Portuguese)
+              const commonLanguages = ['hi', 'es', 'fr', 'de', 'pt', 'ja', 'ko', 'zh'];
+              let foundTranscript = false;
+
+              for (const lang of commonLanguages) {
+                try {
+                  console.log(`🔄 Strategy 4/6: Trying common language (${lang}) for video: ${videoId}`);
+                  await new Promise(resolve => setTimeout(resolve, 8000));
+
+                  transcriptData = await YoutubeTranscript.fetchTranscript(videoId, { lang });
+                  extractionMethod = `Common Language (${lang})`;
+                  foundTranscript = true;
+
+                  if (transcriptData && transcriptData.length > 0) {
+                    console.log(`✅ ${lang} language extraction successful: ${transcriptData.length} segments`);
+                    break;
+                  }
+                } catch (commonLangError) {
+                  console.log(`❌ ${lang} language failed: ${commonLangError.message}`);
+                  continue;
+                }
+              }
+
+              if (!foundTranscript) {
+                throw new Error('No transcript found in any common language');
+              }
             }
-            console.log(`✅ Auto-generated English extraction successful: ${transcriptData.length} segments`);
-          } catch (autoError) {
-            lastError = autoError.message;
-            console.log(`❌ Strategy Auto-English failed: ${autoError.message}`);
+          } catch (altLangError) {
+            lastError = altLangError.message;
+            console.log(`❌ Strategy Alternative Language failed: ${altLangError.message}`);
 
             try {
-              // Strategy 4: Try first available language if English not available
-              if (availableLanguages.length > 0) {
-                const firstAvailableLang = availableLanguages[0];
-                console.log(`🔄 Strategy 4/6: First available language (${firstAvailableLang}) for video: ${videoId}`);
-                await new Promise(resolve => setTimeout(resolve, 12000));
+              // Strategy 5: Try with auto-generated captions
+              console.log(`🔄 Strategy 5/6: Auto-generated captions for video: ${videoId}`);
+              const autoDelay = videoDetails.duration > 1800 ? 20000 : 12000;
+              await new Promise(resolve => setTimeout(resolve, autoDelay));
 
-                transcriptData = await YoutubeTranscript.fetchTranscript(videoId, { lang: firstAvailableLang });
-                extractionMethod = `Language-Specific (${firstAvailableLang})`;
+              transcriptData = await YoutubeTranscript.fetchTranscript(videoId, { lang: 'en', country: 'US' });
+              extractionMethod = 'Auto-Generated (en)';
 
-                if (!transcriptData || transcriptData.length === 0) {
-                  throw new Error(`No transcript data from ${firstAvailableLang} language method`);
-                }
-                console.log(`✅ ${firstAvailableLang} language extraction successful: ${transcriptData.length} segments`);
-              } else {
-                throw autoError; // No available languages detected, skip this strategy
+              if (!transcriptData || transcriptData.length === 0) {
+                throw new Error('No transcript data from auto-generated method');
               }
-            } catch (altLangError) {
-              lastError = altLangError.message;
-              console.log(`❌ Strategy Alternative Language failed: ${altLangError.message}`);
+              console.log(`✅ Auto-generated extraction successful: ${transcriptData.length} segments`);
+            } catch (autoError) {
+              lastError = autoError.message;
+              console.log(`❌ Strategy Auto-generated failed: ${autoError.message}`);
 
               try {
-                // Strategy 5: Try common languages (Spanish, French, German, Hindi, Portuguese)
-                const commonLanguages = ['es', 'fr', 'de', 'hi', 'pt', 'ja', 'ko', 'zh'];
-                let foundTranscript = false;
+                // Strategy 6: Final attempt with maximum delay
+                if (videoDetails.duration > 1200) {
+                  console.log(`🔄 Strategy 6/6: Final attempt with extended timeout for video: ${videoId}`);
+                  await new Promise(resolve => setTimeout(resolve, 25000));
 
-                for (const lang of commonLanguages) {
-                  if (availableLanguages.length > 0 && !availableLanguages.includes(lang)) {
-                    continue; // Skip if we know available languages and this isn't one
+                  transcriptData = await YoutubeTranscript.fetchTranscript(videoId);
+                  extractionMethod = 'Extended Timeout';
+
+                  if (!transcriptData || transcriptData.length === 0) {
+                    throw new Error('No transcript data from extended timeout method');
                   }
+                  console.log(`✅ Extended timeout extraction successful: ${transcriptData.length} segments`);
+                } else {
+                  throw autoError;
+                }
+              } catch (finalError) {
+                lastError = finalError.message;
+                console.log(`❌ All extraction strategies failed for video ${videoId}`);
 
-                  try {
-                    console.log(`🔄 Strategy 5/6: Trying common language (${lang}) for video: ${videoId}`);
-                    await new Promise(resolve => setTimeout(resolve, 8000));
-
-                    transcriptData = await YoutubeTranscript.fetchTranscript(videoId, { lang });
-                    extractionMethod = `Common Language (${lang})`;
-                    foundTranscript = true;
-
-                    if (transcriptData && transcriptData.length > 0) {
-                      console.log(`✅ ${lang} language extraction successful: ${transcriptData.length} segments`);
-                      break;
-                    }
-                  } catch (commonLangError) {
-                    console.log(`❌ ${lang} language failed: ${commonLangError.message}`);
-                    continue;
-                  }
+                // Create enhanced error message
+                let errorMessage = `All extraction strategies failed: ${lastError}`;
+                if (availableLanguages.length > 0) {
+                  errorMessage += `. Available languages: ${availableLanguages.join(', ')}`;
                 }
 
-                if (!foundTranscript) {
-                  throw new Error('No transcript found in any common language');
-                }
-              } catch (commonLangError) {
-                lastError = commonLangError.message;
-                console.log(`❌ Strategy Common Languages failed: ${commonLangError.message}`);
-
-                try {
-                  // Strategy 6: Final attempt with maximum delay (for very long videos)
-                  if (videoDetails.duration > 1200) {
-                    console.log(`🔄 Strategy 6/6: Final attempt with extended timeout for video: ${videoId}`);
-                    await new Promise(resolve => setTimeout(resolve, 25000));
-
-                    transcriptData = await YoutubeTranscript.fetchTranscript(videoId);
-                    extractionMethod = 'Extended Timeout';
-
-                    if (!transcriptData || transcriptData.length === 0) {
-                      throw new Error('No transcript data from extended timeout method');
-                    }
-                    console.log(`✅ Extended timeout extraction successful: ${transcriptData.length} segments`);
-                  } else {
-                    throw commonLangError;
-                  }
-                } catch (finalError) {
-                  lastError = finalError.message;
-                  console.log(`❌ All extraction strategies failed for video ${videoId}`);
-
-                  // Create a more informative error message
-                  let errorMessage = `All extraction strategies failed: ${lastError}`;
-                  if (availableLanguages.length > 0) {
-                    errorMessage += `. Available languages: ${availableLanguages.join(', ')}`;
-                  }
-
-                  let errorType: any = 'UNKNOWN';
-                  if (lastError.includes('Transcript is disabled') || lastError.includes('No transcript found')) {
-                    errorType = 'NO_CAPTIONS';
-                  } else if (lastError.includes('captcha') || lastError.includes('429')) {
-                    errorType = 'RATE_LIMITED';
-                  } else if (lastError.includes('restricted') || lastError.includes('private')) {
-                    errorType = 'RESTRICTED';
-                  } else if (lastError.includes('network') || lastError.includes('timeout')) {
-                    errorType = 'NETWORK_ERROR';
-                  }
-
-                  return {
-                    success: false,
-                    transcript: '',
-                    error: errorMessage,
-                    errorType
-                  };
-                }
+                throw new Error(`Transcript error: ${errorMessage}`);
               }
             }
           }
@@ -738,7 +693,9 @@ export class YouTubeService {
 
         // Ensure we have substantial content
         if (cleanedTranscript.length > 50) {
-          const formattedTranscript = `Channel: ${videoDetails.channelTitle}
+          const formattedTranscript = `[REAL TRANSCRIPT for ${videoDetails.title}]
+
+Channel: ${videoDetails.channelTitle}
 Published: ${new Date(videoDetails.publishedAt).toLocaleDateString()}
 Video ID: ${videoId}
 Title: ${videoDetails.title}
@@ -749,48 +706,28 @@ Extraction Method: ${extractionMethod}
 ${cleanedTranscript}`;
 
           console.log(`✅ Successfully extracted transcript: ${cleanedTranscript.length} characters using ${extractionMethod}`);
-
-          return {
-            success: true,
-            transcript: formattedTranscript,
-            extractionMethod,
-            transcriptLength: cleanedTranscript.length
-          };
+          return formattedTranscript;
         } else {
-          return {
-            success: false,
-            transcript: '',
-            error: 'Transcript too short or contains no meaningful content',
-            errorType: 'NO_CAPTIONS'
-          };
+          throw new Error('Transcript error: Transcript too short or contains no meaningful content');
         }
       }
 
-      return {
-        success: false,
-        transcript: '',
-        error: 'No usable transcript content found',
-        errorType: 'NO_CAPTIONS'
-      };
+      throw new Error('Transcript error: No usable transcript content found');
 
     } catch (error) {
       console.error(`❌ Error fetching transcript for video ${videoId}:`, error.message);
 
-      let errorType: any = 'UNKNOWN';
-      if (error.message.includes('captcha') || error.message.includes('too many requests')) {
-        errorType = 'RATE_LIMITED';
-      } else if (error.message.includes('network') || error.message.includes('timeout')) {
-        errorType = 'NETWORK_ERROR';
-      } else if (error.message.includes('restricted') || error.message.includes('private')) {
-        errorType = 'RESTRICTED';
-      }
+      // Create fallback transcript with error info
+      const fallbackTranscript = `[TRANSCRIPT EXTRACTION FAILED]
 
-      return {
-        success: false,
-        transcript: '',
-        error: error.message,
-        errorType
-      };
+Video: ${videoId}
+Error: ${error.message}
+
+This video may have captions disabled, be in a non-English language only, or have restricted transcript access.
+
+[End of error transcript]`;
+
+      return fallbackTranscript;
     }
   }
 
