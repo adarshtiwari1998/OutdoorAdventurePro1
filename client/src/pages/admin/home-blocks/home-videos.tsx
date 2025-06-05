@@ -50,15 +50,6 @@ const HomeVideos = () => {
     queryKey: ['/api/admin/blog/categories'],
   });
 
-  // Watch form values for preview
-  const watchedCategoryId = form.watch('categoryId');
-  const watchedVideoCount = form.watch('videoCount');
-
-  const { data: previewVideos, isLoading: previewLoading } = useQuery({
-    queryKey: ['/api/admin/home-video-preview', watchedCategoryId, watchedVideoCount],
-    enabled: !!(watchedCategoryId && watchedCategoryId !== ""),
-  });
-
   // Form
   const form = useForm<HomeVideoSettings>({
     resolver: zodResolver(homeVideoSettingsSchema),
@@ -69,6 +60,15 @@ const HomeVideos = () => {
       title: "Latest Videos",
       description: "Check out our latest outdoor adventure videos",
     },
+  });
+
+  // Watch form values for preview
+  const watchedCategoryId = form.watch('categoryId');
+  const watchedVideoCount = form.watch('videoCount');
+
+  const { data: previewVideos, isLoading: previewLoading } = useQuery({
+    queryKey: ['/api/admin/home-video-preview', watchedCategoryId, watchedVideoCount],
+    enabled: !!(watchedCategoryId && watchedCategoryId !== ""),
   });
 
   // Update form when settings load
