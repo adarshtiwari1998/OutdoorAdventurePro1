@@ -660,9 +660,10 @@ header {
 
   /* Dialog overlay enhancements for video modal */
   [data-radix-dialog-overlay] {
-    background: rgba(0, 0, 0, 0.8);
+    background: rgba(0, 0, 0, 0.85);
     backdrop-filter: blur(4px);
     pointer-events: auto;
+    z-index: 40;
   }
 
   /* Dialog content enhancements */
@@ -672,11 +673,24 @@ header {
     border: none !important;
     background: transparent !important;
     box-shadow: none !important;
-    pointer-events: none;
+    pointer-events: auto;
+    z-index: 50;
   }
 
-  /* Re-enable pointer events for the actual modal content */
+  /* Ensure modal content has proper pointer events */
   [data-radix-dialog-content] > div {
+    pointer-events: auto;
+  }
+
+  /* Prevent preview cards from being higher than modal overlay */
+  .video-preview-thumbnail {
+    position: relative;
+    z-index: 45;
+  }
+
+  /* Ensure external preview containers stay below modal */
+  .preview-containers {
+    z-index: 45;
     pointer-events: auto;
   }
 
