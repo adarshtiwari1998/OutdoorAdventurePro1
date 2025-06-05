@@ -387,7 +387,7 @@ const ShortsAndVideosSection = ({ className = "" }: ShortsAndVideosSectionProps)
 
       {/* Video Modal */}
       <Dialog open={selectedVideoIndex !== null} onOpenChange={closeModal}>
-        <DialogContent className="max-w-4xl w-[90vw] h-[80vh] p-0 gap-0 md:max-w-4xl sm:max-w-full sm:h-full sm:m-0 sm:rounded-none">
+        <DialogContent className="max-w-5xl w-[95vw] h-[85vh] p-0 gap-0 md:max-w-5xl sm:max-w-full sm:h-full sm:m-0 sm:rounded-none">
           {/* Custom Close Button */}
           <button
             onClick={closeModal}
@@ -423,9 +423,9 @@ const ShortsAndVideosSection = ({ className = "" }: ShortsAndVideosSectionProps)
                onTouchEnd={handleTouchEnd}>
 
             {/* Left side - Video Player */}
-            <div className="flex-1 bg-black flex items-center justify-center md:h-full h-[60vh]">
+            <div className="flex-1 bg-black flex items-center justify-center">
               {selectedVideo && (
-                <div className="w-full h-full flex items-center justify-center">
+                <div className="w-full h-full">
                   <iframe
                     src={`https://www.youtube.com/embed/${selectedVideo.videoId}?autoplay=1&rel=0`}
                     title={selectedVideo.title}
@@ -553,14 +553,17 @@ const ShortsAndVideosSection = ({ className = "" }: ShortsAndVideosSectionProps)
 
       {/* External Preview Boxes - Left Side */}
       {selectedVideoIndex !== null && selectedVideoIndex > 0 && (
-        <div className="fixed left-[calc(50vw-32rem-8rem)] top-1/2 -translate-y-1/2 z-30 hidden xl:flex flex-col gap-3 max-h-[60vh] overflow-y-auto">
+        <div className="fixed left-[calc(50vw-40rem-6rem)] top-1/2 -translate-y-1/2 z-[60] hidden xl:flex flex-col gap-3 max-h-[60vh] overflow-y-auto">
           {combinedVideos.slice(Math.max(0, selectedVideoIndex - 3), selectedVideoIndex).map((video, index) => {
             const actualIndex = Math.max(0, selectedVideoIndex - 3) + index;
             return (
               <div
                 key={video.id}
-                className="video-preview-thumbnail w-24 h-16 bg-gray-900 rounded-xl overflow-hidden cursor-pointer border-3 border-white/30 hover:border-white/80 transition-all duration-300 hover:scale-110 shadow-2xl backdrop-blur-lg"
-                onClick={() => setSelectedVideoIndex(actualIndex)}
+                className="video-preview-thumbnail w-28 h-20 bg-gray-900 rounded-xl overflow-hidden cursor-pointer border-2 border-white/40 hover:border-white/90 transition-all duration-300 hover:scale-110 shadow-2xl backdrop-blur-lg"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setSelectedVideoIndex(actualIndex);
+                }}
                 title={video.title}
               >
                 <div className="relative w-full h-full">
@@ -571,11 +574,11 @@ const ShortsAndVideosSection = ({ className = "" }: ShortsAndVideosSectionProps)
                   />
                   <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 hover:opacity-100 transition-opacity duration-300 flex items-center justify-center">
                     <div className="bg-white/20 backdrop-blur-sm rounded-full p-2">
-                      <Play className="h-4 w-4 text-white fill-current" />
+                      <Play className="h-3 w-3 text-white fill-current" />
                     </div>
                   </div>
                   {/* Video index indicator */}
-                  <div className="absolute top-1 left-1 bg-black/70 text-white text-xs px-1.5 py-0.5 rounded">
+                  <div className="absolute top-1 left-1 bg-black/80 text-white text-xs px-2 py-1 rounded">
                     {actualIndex + 1}
                   </div>
                 </div>
@@ -587,14 +590,17 @@ const ShortsAndVideosSection = ({ className = "" }: ShortsAndVideosSectionProps)
 
       {/* External Preview Boxes - Right Side */}
       {selectedVideoIndex !== null && selectedVideoIndex < combinedVideos.length - 1 && (
-        <div className="fixed right-[calc(50vw-32rem-8rem)] top-1/2 -translate-y-1/2 z-30 hidden xl:flex flex-col gap-3 max-h-[60vh] overflow-y-auto">
+        <div className="fixed right-[calc(50vw-40rem-6rem)] top-1/2 -translate-y-1/2 z-[60] hidden xl:flex flex-col gap-3 max-h-[60vh] overflow-y-auto">
           {combinedVideos.slice(selectedVideoIndex + 1, Math.min(combinedVideos.length, selectedVideoIndex + 4)).map((video, index) => {
             const actualIndex = selectedVideoIndex + 1 + index;
             return (
               <div
                 key={video.id}
-                className="video-preview-thumbnail w-24 h-16 bg-gray-900 rounded-xl overflow-hidden cursor-pointer border-3 border-white/30 hover:border-white/80 transition-all duration-300 hover:scale-110 shadow-2xl backdrop-blur-lg"
-                onClick={() => setSelectedVideoIndex(actualIndex)}
+                className="video-preview-thumbnail w-28 h-20 bg-gray-900 rounded-xl overflow-hidden cursor-pointer border-2 border-white/40 hover:border-white/90 transition-all duration-300 hover:scale-110 shadow-2xl backdrop-blur-lg"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setSelectedVideoIndex(actualIndex);
+                }}
                 title={video.title}
               >
                 <div className="relative w-full h-full">
@@ -605,11 +611,11 @@ const ShortsAndVideosSection = ({ className = "" }: ShortsAndVideosSectionProps)
                   />
                   <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 hover:opacity-100 transition-opacity duration-300 flex items-center justify-center">
                     <div className="bg-white/20 backdrop-blur-sm rounded-full p-2">
-                      <Play className="h-4 w-4 text-white fill-current" />
+                      <Play className="h-3 w-3 text-white fill-current" />
                     </div>
                   </div>
                   {/* Video index indicator */}
-                  <div className="absolute top-1 left-1 bg-black/70 text-white text-xs px-1.5 py-0.5 rounded">
+                  <div className="absolute top-1 left-1 bg-black/80 text-white text-xs px-2 py-1 rounded">
                     {actualIndex + 1}
                   </div>
                 </div>
