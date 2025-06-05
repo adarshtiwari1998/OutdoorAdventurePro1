@@ -107,24 +107,32 @@ const FavoriteDestinations = () => {
 
   const deleteMutation = useMutation({
     mutationFn: async (id) => {
+      console.log(`Attempting to delete destination with ID: ${id}`);
       const response = await fetch(`/api/admin/favorite-destinations/${id}`, {
         method: 'DELETE',
       });
+      
       if (!response.ok) {
         const errorText = await response.text();
         console.error('Delete response error:', errorText);
-        throw new Error('Failed to delete destination');
+        throw new Error(`Failed to delete destination: ${response.status} ${response.statusText}`);
       }
       
-      // Check if response has content before parsing JSON
-      const contentType = response.headers.get('content-type');
-      if (contentType && contentType.includes('application/json')) {
-        return response.json();
+      // Parse JSON response
+      const result = await response.json();
+      console.log('Delete response:', result);
+      
+      if (!result.success) {
+        throw new Error(result.error || 'Delete operation failed');
       }
-      return {}; // Return empty object if no JSON content
+      
+      return result;
     },
-    onSuccess: () => {
+    onSuccess: (data) => {
+      console.log('Delete mutation successful:', data);
+      // Force refetch the data
       queryClient.invalidateQueries({ queryKey: ['/api/admin/favorite-destinations'] });
+      queryClient.refetchQueries({ queryKey: ['/api/admin/favorite-destinations'] });
       toast({ title: "Destination deleted successfully" });
     },
     onError: (error) => {
