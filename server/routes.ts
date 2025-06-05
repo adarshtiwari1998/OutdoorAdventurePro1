@@ -1537,12 +1537,14 @@ Status: Transcript extraction failed during import. Video may have captions that
     try {
       const { videoIds, categoryId } = req.body;
 
+      console.log('Bulk category update request:', { videoIds, categoryId, categoryIdType: typeof categoryId });
+
       if (!videoIds || !Array.isArray(videoIds) || videoIds.length === 0) {
         return res.status(400).json({ message: "Video IDs are required" });
       }
 
-      if (!categoryId) {
-        return res.status(400).json({ message: "Category ID is required" });
+      if (!categoryId || categoryId === "" || categoryId === "NaN" || categoryId === "undefined") {
+        return res.status(400).json({ message: "Valid category ID is required" });
       }
 
       // Handle both string and numeric category IDs
@@ -1552,11 +1554,17 @@ Status: Transcript extraction failed during import. Video may have captions that
         // If it's a string, try to parse it as a number
         parsedCategoryId = parseInt(categoryId);
         if (isNaN(parsedCategoryId)) {
+          console.error(`Failed to parse categoryId "${categoryId}" as number`);
           return res.status(400).json({ message: "Valid category ID is required" });
         }
       } else if (typeof categoryId === 'number') {
+        if (isNaN(categoryId)) {
+          console.error(`CategoryId is NaN: ${categoryId}`);
+          return res.status(400).json({ message: "Valid category ID is required" });
+        }
         parsedCategoryId = categoryId;
       } else {
+        console.error(`Invalid categoryId type: ${typeof categoryId}, value: ${categoryId}`);
         return res.status(400).json({ message: "Valid category ID is required" });
       }
 

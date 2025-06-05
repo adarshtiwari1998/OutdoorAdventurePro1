@@ -779,12 +779,30 @@ const YoutubeImport = () => {
   };
 
   const handleBulkCategoryUpdate = () => {
-    if (selectedVideos.length > 0 && bulkCategoryId) {
-      bulkUpdateCategoryMutation.mutate({
-        videoIds: selectedVideos,
-        categoryId: bulkCategoryId
+    if (selectedVideos.length === 0) {
+      toast({
+        title: "No Videos Selected",
+        description: "Please select videos to update",
+        variant: "destructive",
       });
+      return;
     }
+
+    if (!bulkCategoryId || bulkCategoryId === "" || bulkCategoryId === "NaN") {
+      toast({
+        title: "No Category Selected",
+        description: "Please select a category to assign",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    console.log('Bulk update params:', { videoIds: selectedVideos, categoryId: bulkCategoryId });
+
+    bulkUpdateCategoryMutation.mutate({
+      videoIds: selectedVideos,
+      categoryId: bulkCategoryId
+    });
   };
 
   const toggleVideoSelection = (videoId: string) => {
@@ -1179,12 +1197,31 @@ const YoutubeImport = () => {
                     <Button 
                       onClick={() => {
                         const videosWithoutCategory = filteredVideos?.filter(v => !v.category).map(v => v.id) || [];
-                        if (videosWithoutCategory.length > 0 && bulkCategoryId) {
-                          bulkUpdateCategoryMutation.mutate({
-                            videoIds: videosWithoutCategory,
-                            categoryId: bulkCategoryId
+                        
+                        if (videosWithoutCategory.length === 0) {
+                          toast({
+                            title: "No Videos to Update",
+                            description: "All visible videos already have categories assigned",
+                            variant: "default",
                           });
+                          return;
                         }
+
+                        if (!bulkCategoryId || bulkCategoryId === "" || bulkCategoryId === "NaN") {
+                          toast({
+                            title: "No Category Selected",
+                            description: "Please select a category to assign",
+                            variant: "destructive",
+                          });
+                          return;
+                        }
+
+                        console.log('Assign to all params:', { videoIds: videosWithoutCategory, categoryId: bulkCategoryId });
+
+                        bulkUpdateCategoryMutation.mutate({
+                          videoIds: videosWithoutCategory,
+                          categoryId: bulkCategoryId
+                        });
                       }}
                       disabled={!bulkCategoryId || bulkUpdateCategoryMutation.isPending}
                       size="sm"
@@ -1295,7 +1332,8 @@ const YoutubeImport = () => {
                                 <Select 
                                   value="" 
                                   onValueChange={(categoryId) => {
-                                    if (categoryId) {
+                                    if (categoryId && categoryId !== "" && categoryId !== "NaN") {
+                                      console.log('Individual category assignment:', { videoId: video.id, categoryId });
                                       bulkUpdateCategoryMutation.mutate({
                                         videoIds: [video.id],
                                         categoryId: categoryId
