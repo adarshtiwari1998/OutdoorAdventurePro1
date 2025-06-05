@@ -110,49 +110,49 @@ const YoutubeImport = () => {
   // Function to extract channel ID from YouTube URL
   const extractChannelId = (url: string): string => {
     if (!url) return '';
-    
+
     // Remove whitespace and normalize URL
     url = url.trim();
-    
+
     // If it's already a channel ID (starts with UC and is 24 chars), return as is
     if (url.startsWith('UC') && url.length === 24) {
       return url;
     }
-    
+
     // Pattern 1: youtube.com/channel/CHANNEL_ID
     const channelMatch = url.match(/(?:youtube\.com|youtu\.be)\/channel\/([a-zA-Z0-9_-]+)/);
     if (channelMatch) {
       return channelMatch[1];
     }
-    
+
     // Pattern 2: youtube.com/@CHANNEL_HANDLE (new format)
     const handleMatch = url.match(/(?:youtube\.com|youtu\.be)\/@([a-zA-Z0-9_.-]+)/);
     if (handleMatch) {
       return handleMatch[1];
     }
-    
+
     // Pattern 3: youtube.com/c/CHANNEL_NAME (legacy custom URL)
     const customMatch = url.match(/(?:youtube\.com|youtu\.be)\/c\/([a-zA-Z0-9_-]+)/);
     if (customMatch) {
       return customMatch[1];
     }
-    
+
     // Pattern 4: youtube.com/user/USERNAME (very old format)
     const userMatch = url.match(/(?:youtube\.com|youtu\.be)\/user\/([a-zA-Z0-9_-]+)/);
     if (userMatch) {
       return userMatch[1];
     }
-    
+
     // Pattern 5: Direct channel name/handle without full URL
     if (url.startsWith('@')) {
       return url.substring(1); // Remove @ symbol
     }
-    
+
     // If none of the patterns match, assume it might be a handle or channel name
     if (url.length > 0 && !url.includes('/') && !url.includes('youtube')) {
       return url;
     }
-    
+
     return '';
   };
 
@@ -161,7 +161,7 @@ const YoutubeImport = () => {
     const extractedId = extractChannelId(url);
     channelForm.setValue('channelUrl', url);
     channelForm.setValue('channelId', extractedId);
-    
+
     // If we have a valid extracted ID, try to fetch channel details
     if (extractedId && extractedId.length > 0) {
       try {
@@ -173,7 +173,7 @@ const YoutubeImport = () => {
           },
           body: JSON.stringify({ channelIdentifier: extractedId })
         });
-        
+
         if (response.ok) {
           const channelData = await response.json();
           // Auto-fill the channel name and update channel ID with the resolved one
@@ -190,7 +190,7 @@ const YoutubeImport = () => {
   // Update elapsed time every second during import
   useEffect(() => {
     let interval: NodeJS.Timeout;
-    
+
     // Only run timer if importing AND startTime exists (null means stopped)
     if (importProgress.isImporting && importProgress.startTime) {
       interval = setInterval(() => {
@@ -207,7 +207,7 @@ const YoutubeImport = () => {
         });
       }, 1000);
     }
-    
+
     return () => {
       if (interval) {
         clearInterval(interval);
@@ -775,15 +775,15 @@ const YoutubeImport = () => {
   const handleStartImport = () => {
     if (importChannelId) {
       console.log(`🎯 Starting import with category: ${selectedCategoryForImport}`);
-      
+
       // Ensure we pass the correct category ID
       let categoryIdToPass = null;
       if (selectedCategoryForImport && selectedCategoryForImport !== "no-category") {
         categoryIdToPass = selectedCategoryForImport;
       }
-      
+
       console.log(`📋 Final category ID to pass: ${categoryIdToPass}`);
-      
+
       importChannelVideosMutation.mutate({ 
         channelId: importChannelId, 
         limit: importLimit,
@@ -1211,7 +1211,7 @@ const YoutubeImport = () => {
                     <Button 
                       onClick={() => {
                         const videosWithoutCategory = filteredVideos?.filter(v => !v.category).map(v => v.id) || [];
-                        
+
                         if (videosWithoutCategory.length === 0) {
                           toast({
                             title: "No Videos to Update",
@@ -1817,7 +1817,8 @@ const YoutubeImport = () => {
             progress: 0,
             processedCount: 0,
             totalCount: 0,
-            importedCount: 0,
+            importedCount: ```text
+0,
             skippedCount: 0,
             logs: [],
             canClose: false,
@@ -1911,7 +1912,7 @@ const YoutubeImport = () => {
                           minute: '2-digit', 
                           second: '2-digit' 
                         });
-                        
+
                         return (
                           <div key={index} className="mb-1 break-words">
                             <span className="text-gray-500 mr-2 text-xs">
@@ -1961,29 +1962,44 @@ const YoutubeImport = () => {
             )}
           </div>
 
-          <AlertDialogFooter>
-            <AlertDialogAction 
-              disabled={!importProgress.canClose}
-              onClick={() => {
-                setImportProgress({
-                  isImporting: false,
-                  currentStep: '',
-                  progress: 0,
-                  processedCount: 0,
-                  totalCount: 0,
-                  importedCount: 0,
-                  skippedCount: 0,
-                  logs: [],
-                  canClose: false,
-                  startTime: null,
-                  elapsedTime: 0
-                });
-                setShowImportDialog(false);
-              }}
-            >
-              {importProgress.canClose ? "Close" : "Please wait..."}
-            </AlertDialogAction>
-          </AlertDialogFooter>
+          
+{importProgress.progress === 100 && (
+              <AlertDialogFooter className="mt-6">
+                <Button 
+                  onClick={() => {
+                    setImportProgress({
+                      isImporting: false,
+                      currentStep: '',
+                      progress: 0,
+                      processedCount: 0,
+                      totalCount: 0,
+                      importedCount: 0,
+                      skippedCount: 0,
+                      logs: [],
+                      canClose: false,
+                      startTime: null,
+                      elapsedTime: 0
+                    });
+                    setShowImportDialog(false);
+                    // Refresh channel data to update imported counts
+                    queryClient.invalidateQueries({ queryKey: ['/api/admin/youtube/channels'] });
+                  }}
+                  className="w-full"
+                >
+                  <CheckCircle2 className="h-4 w-4 mr-2" />
+                  Close and Refresh
+                </Button>
+              </AlertDialogFooter>
+            )}
+
+            {!importProgress.canClose && importProgress.isImporting && (
+              <AlertDialogFooter className="mt-6">
+                <Button disabled className="w-full">
+                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                  Import in progress... Please wait
+                </Button>
+              </AlertDialogFooter>
+            )}
         </AlertDialogContent>
       </AlertDialog>
 

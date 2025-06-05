@@ -1238,6 +1238,23 @@ app.get(`${apiPrefix}/admin/youtube/videos`, async (req, res) => {
         return res.status(400).json({ message: "Channel ID and name are required" });
       }
 
+      // Check if channel already exists
+      const existingChannel = await db.query.youtubeChannels.findFirst({
+        where: eq(schema.youtubeChannels.channelId, channelId)
+      });
+
+      if (existingChannel) {
+        return res.status(409).json({ 
+          message: "This YouTube channel has already been added to your account",
+          type: "duplicate_channel",
+          existingChannel: {
+            id: existingChannel.id,
+            name: existingChannel.name,
+            channelId: existingChannel.channelId
+          }
+        });
+      }
+
       // Get channel details from YouTube API
       const channelDetails = await youtubeService.getChannelDetails(channelId);
 
@@ -1254,6 +1271,15 @@ app.get(`${apiPrefix}/admin/youtube/videos`, async (req, res) => {
       res.status(201).json(newChannel);
     } catch (error) {
       console.error("Error adding YouTube channel:", error);
+      
+      // Handle database constraint errors
+      if (error.code === '23505' && error.constraint === 'youtube_channels_channel_id_unique') {
+        return res.status(409).json({ 
+          message: "This YouTube channel has already been added to your account",
+          type: "duplicate_channel"
+        });
+      }
+      
       res.status(500).json({ message: "Failed to add YouTube channel" });
     }
   });
