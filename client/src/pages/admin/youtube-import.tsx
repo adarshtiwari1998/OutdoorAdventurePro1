@@ -30,7 +30,27 @@ import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
-import { Play, Youtube, FileText, Upload, RefreshCw, CheckCircle, AlertTriangle, Trash2, ExternalLink, Plus, Eye, EyeOff, Download, PlayCircle, Loader2, AlertCircle, CheckCircle2, Clock, X, Filter, Search, ChevronDown, ChevronUp } from "lucide-react";
+import { 
+  Youtube, 
+  Plus, 
+  Trash2, 
+  Upload, 
+  CheckCircle, 
+  AlertTriangle, 
+  Loader2,
+  Eye,
+  FileText,
+  BarChart,
+  RefreshCw,
+  Search,
+  Filter,
+  MoreVertical,
+  CheckCircle2,
+  X,
+  Play,
+  Timer,
+  Clock
+} from 'lucide-react';
 import { format } from "date-fns";
 
 // Schemas
@@ -1801,9 +1821,8 @@ const YoutubeImport = () => {
                             <Textarea placeholder="Leave empty to fetch from YouTube" {...field} />
                           </FormControl>
                           <FormMessage />
-                        </FormItem>
-                      )}
-                    />
+                        </FormItem>```text
+
                     <Button 
                       type="submit" 
                       disabled={addVideoMutation.isPending}
