@@ -371,51 +371,99 @@ export class YouTubeService {
     }
   }
 
-  async getVideoTranscript(videoId: string): Promise<string> {
+  async getVideoTranscript(videoId: string): Promise<{
+    success: boolean;
+    transcript: string;
+    extractionMethod?: string;
+    transcriptLength?: number;
+    error?: string;
+    errorType?: 'NO_CAPTIONS' | 'RATE_LIMITED' | 'RESTRICTED' | 'NETWORK_ERROR' | 'UNKNOWN';
+  }> {
     try {
       console.log(`📄 Fetching transcript for: ${videoId}`);
 
+      // Get video details first to understand the video
+      let videoDetails;
+      try {
+        videoDetails = await this.getVideoDetails(videoId);
+        console.log(`📋 Video: "${videoDetails.title}" (${videoDetails.duration}s, ${videoDetails.videoType})`);
+      } catch (detailError) {
+        console.warn(`⚠️ Could not fetch video details for ${videoId}: ${detailError.message}`);
+        videoDetails = {
+          title: 'Unknown Title',
+          channelTitle: 'Unknown Channel',
+          publishedAt: new Date(),
+          duration: 0,
+          videoType: 'video'
+        };
+      }
+
       // Simple delay to avoid rate limiting
-      const baseDelay = Math.floor(Math.random() * 5000) + 10000; // 10-15 seconds
+      const baseDelay = Math.floor(Math.random() * 3000) + 2000; // 2-5 seconds
       console.log(`⏳ Waiting ${baseDelay/1000}s before transcript request...`);
       await new Promise(resolve => setTimeout(resolve, baseDelay));
 
       // Use multiple strategies to extract transcript
       let transcriptData;
       let extractionMethod = 'Direct';
+      let lastError = '';
 
       try {
         // Strategy 1: Direct transcript fetch
-        console.log(`🔄 Strategy 1/4: Direct for video: ${videoId}`);
+        console.log(`🔄 Strategy 1/3: Direct extraction for video: ${videoId}`);
         transcriptData = await YoutubeTranscript.fetchTranscript(videoId);
         
         if (!transcriptData || transcriptData.length === 0) {
-          console.log(`⚠️ Strategy Direct found no usable transcript for: ${videoId}`);
-          throw new Error('No transcript data from direct method');
+          lastError = 'No transcript data from direct method';
+          throw new Error(lastError);
         }
+        console.log(`✅ Direct extraction successful: ${transcriptData.length} transcript segments`);
       } catch (directError) {
-        console.log(`❌ Strategy Direct failed for video ${videoId}: ${directError.message}`);
+        lastError = directError.message;
+        console.log(`❌ Strategy Direct failed: ${directError.message}`);
+        
+        // Check for specific error types
+        if (directError.message.includes('Transcript is disabled') || 
+            directError.message.includes('No transcript found')) {
+          return {
+            success: false,
+            transcript: '',
+            error: 'No captions available for this video',
+            errorType: 'NO_CAPTIONS'
+          };
+        }
+        
+        if (directError.message.includes('captcha') || 
+            directError.message.includes('too many requests') ||
+            directError.message.includes('429')) {
+          return {
+            success: false,
+            transcript: '',
+            error: 'Rate limited by YouTube - please try again later',
+            errorType: 'RATE_LIMITED'
+          };
+        }
         
         try {
           // Strategy 2: Try with language specification
-          console.log(`🔄 Strategy 2/4: With Language for video: ${videoId}`);
-          console.log(`⏳ Strategy delay: 60s...`);
-          await new Promise(resolve => setTimeout(resolve, 60000));
+          console.log(`🔄 Strategy 2/3: Language-specific (en) for video: ${videoId}`);
+          await new Promise(resolve => setTimeout(resolve, 5000)); // 5s delay
           
           transcriptData = await YoutubeTranscript.fetchTranscript(videoId, { lang: 'en' });
-          extractionMethod = 'Language-Specific';
+          extractionMethod = 'Language-Specific (en)';
           
           if (!transcriptData || transcriptData.length === 0) {
             throw new Error('No transcript data from language method');
           }
+          console.log(`✅ Language-specific extraction successful: ${transcriptData.length} segments`);
         } catch (langError) {
-          console.log(`❌ Strategy Language failed for video ${videoId}: ${langError.message}`);
+          lastError = langError.message;
+          console.log(`❌ Strategy Language failed: ${langError.message}`);
           
           try {
             // Strategy 3: Try with auto-generated captions
-            console.log(`🔄 Strategy 3/4: Auto-generated for video: ${videoId}`);
-            console.log(`⏳ Strategy delay: 90s...`);
-            await new Promise(resolve => setTimeout(resolve, 90000));
+            console.log(`🔄 Strategy 3/3: Auto-generated captions for video: ${videoId}`);
+            await new Promise(resolve => setTimeout(resolve, 8000)); // 8s delay
             
             transcriptData = await YoutubeTranscript.fetchTranscript(videoId, { lang: 'en', country: 'US' });
             extractionMethod = 'Auto-Generated';
@@ -423,27 +471,35 @@ export class YouTubeService {
             if (!transcriptData || transcriptData.length === 0) {
               throw new Error('No transcript data from auto-generated method');
             }
+            console.log(`✅ Auto-generated extraction successful: ${transcriptData.length} segments`);
           } catch (autoError) {
-            console.log(`❌ Strategy Auto-generated failed for video ${videoId}: ${autoError.message}`);
+            lastError = autoError.message;
+            console.log(`❌ All extraction strategies failed for video ${videoId}`);
             
-            // Strategy 4: Final attempt with different parameters
-            console.log(`🔄 Strategy 4/4: Final attempt for video: ${videoId}`);
-            console.log(`⏳ Strategy delay: 120s...`);
-            await new Promise(resolve => setTimeout(resolve, 120000));
-            
-            try {
-              transcriptData = await YoutubeTranscript.fetchTranscript(videoId, {});
-              extractionMethod = 'Fallback';
-            } catch (finalError) {
-              console.log(`❌ All strategies failed for video ${videoId}`);
-              throw new Error(`All extraction strategies failed: ${finalError.message}`);
+            // Determine error type based on final error
+            let errorType: any = 'UNKNOWN';
+            if (lastError.includes('Transcript is disabled') || lastError.includes('No transcript found')) {
+              errorType = 'NO_CAPTIONS';
+            } else if (lastError.includes('captcha') || lastError.includes('429')) {
+              errorType = 'RATE_LIMITED';
+            } else if (lastError.includes('restricted') || lastError.includes('private')) {
+              errorType = 'RESTRICTED';
+            } else if (lastError.includes('network') || lastError.includes('timeout')) {
+              errorType = 'NETWORK_ERROR';
             }
+            
+            return {
+              success: false,
+              transcript: '',
+              error: `All extraction strategies failed: ${lastError}`,
+              errorType
+            };
           }
         }
       }
       
       if (transcriptData && transcriptData.length > 0) {
-        // Clean and format the transcript - improved cleaning
+        // Clean and format the transcript
         const cleanedTranscript = transcriptData
           .map(item => {
             let text = item.text || '';
@@ -460,54 +516,61 @@ export class YouTubeService {
           .replace(/\s+/g, ' ') // Final whitespace cleanup
           .trim();
 
-        // Ensure we have substantial content (not just descriptions)
-        if (cleanedTranscript.length > 50) { // Minimum 50 characters for real transcript
-          let videoDetails;
-          try {
-            videoDetails = await this.getVideoDetails(videoId);
-          } catch (detailError) {
-            console.warn(`⚠️ Could not fetch video details for ${videoId}, using minimal info`);
-            videoDetails = {
-              title: 'Unknown Title',
-              channelTitle: 'Unknown Channel',
-              publishedAt: new Date(),
-              duration: 0
-            };
-          }
-          
-          console.log(`✅ Successfully extracted transcript: ${cleanedTranscript.length} characters using ${extractionMethod}`);
-          
-          // Return clean transcript without dummy ending text
-          return `Channel: ${videoDetails.channelTitle}
+        // Ensure we have substantial content
+        if (cleanedTranscript.length > 50) {
+          const formattedTranscript = `Channel: ${videoDetails.channelTitle}
 Published: ${new Date(videoDetails.publishedAt).toLocaleDateString()}
 Video ID: ${videoId}
-Duration: ${Math.floor(videoDetails.duration / 60)} minutes ${videoDetails.duration % 60} seconds
+Title: ${videoDetails.title}
+Duration: ${Math.floor(videoDetails.duration / 60)}:${String(videoDetails.duration % 60).padStart(2, '0')}
+Type: ${videoDetails.videoType}
 Extraction Method: ${extractionMethod}
 
 ${cleanedTranscript}`;
+          
+          console.log(`✅ Successfully extracted transcript: ${cleanedTranscript.length} characters using ${extractionMethod}`);
+          
+          return {
+            success: true,
+            transcript: formattedTranscript,
+            extractionMethod,
+            transcriptLength: cleanedTranscript.length
+          };
+        } else {
+          return {
+            success: false,
+            transcript: '',
+            error: 'Transcript too short or contains no meaningful content',
+            errorType: 'NO_CAPTIONS'
+          };
         }
       }
       
-      console.log(`⚠️ No usable transcript content found for: ${videoId}`);
-      throw new Error('No usable transcript content found');
+      return {
+        success: false,
+        transcript: '',
+        error: 'No usable transcript content found',
+        errorType: 'NO_CAPTIONS'
+      };
 
     } catch (error) {
       console.error(`❌ Error fetching transcript for video ${videoId}:`, error.message);
       
-      // For failed transcripts, return a simple error message without video description
+      let errorType: any = 'UNKNOWN';
       if (error.message.includes('captcha') || error.message.includes('too many requests')) {
-        return `TRANSCRIPT UNAVAILABLE: YouTube captcha/rate limit detected for video ${videoId}. 
-
-Error: ${error.message}
-
-This video may have captions that require manual extraction or waiting for rate limits to reset.`;
+        errorType = 'RATE_LIMITED';
+      } else if (error.message.includes('network') || error.message.includes('timeout')) {
+        errorType = 'NETWORK_ERROR';
+      } else if (error.message.includes('restricted') || error.message.includes('private')) {
+        errorType = 'RESTRICTED';
       }
       
-      return `TRANSCRIPT UNAVAILABLE: Failed to extract captions for video ${videoId}.
-
-Error: ${error.message}
-
-This video may not have captions or they may not be accessible via automated extraction.`;
+      return {
+        success: false,
+        transcript: '',
+        error: error.message,
+        errorType
+      };
     }
   }
 

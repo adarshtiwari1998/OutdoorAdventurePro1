@@ -308,7 +308,7 @@ const YoutubeImport = () => {
 
         // Collect video IDs of successfully imported videos
         videoIdsForTranscripts = importedVideos.map((video: YoutubeVideo) => video.id);
-        
+
         if (videoIdsForTranscripts.length > 0) {
           setImportProgress(prev => ({
             ...prev,
@@ -339,7 +339,7 @@ const YoutubeImport = () => {
               }
 
               const transcriptData = await transcriptResponse.json();
-              
+
               setImportProgress(prev => ({
                 ...prev,
                 logs: [...prev.logs, `✅ Transcript successful for video: ${videoId}`]
@@ -394,7 +394,7 @@ const YoutubeImport = () => {
           ],
           canClose: true
         }));
-        
+
         // Auto scroll to show error
         setTimeout(() => {
           const logElement = document.getElementById('import-logs');
@@ -402,7 +402,7 @@ const YoutubeImport = () => {
             logElement.scrollTop = logElement.scrollHeight;
           }
         }, 100);
-        
+
         throw error;
       }
     },
@@ -944,7 +944,8 @@ const YoutubeImport = () => {
                         <SelectItem value="imported">Imported</SelectItem>
                         <SelectItem value="failed">Failed</SelectItem>
                       </SelectContent>
-                    </Select>
+                    </Select```python
+<replit_final_file>
                   </div>
 
                   <div>
@@ -1626,7 +1627,7 @@ const YoutubeImport = () => {
                   </span>
                 </div>
                 <Progress value={importProgress.progress} className="h-3" />
-                
+
                 {/* Summary Stats */}
                 <div className="grid grid-cols-3 gap-4 p-3 bg-gray-50 dark:bg-gray-900 rounded-lg">
                   <div className="text-center">
@@ -1793,8 +1794,7 @@ const YoutubeImport = () => {
                   <SelectItem value="5">5 videos</SelectItem>
                   <SelectItem value="10">10 videos</SelectItem>
                   <SelectItem value="25">25 videos</SelectItem>
-                  <SelectItem value="50">50 videos</SelectItem>
-                  <SelectItem value="100">100 videos</SelectItem>
+                  <SelectItem value="50">50 videos</SelectItem                  <SelectItem value="100">100 videos</SelectItem>
                 </SelectContent>
               </Select>
             </div>
