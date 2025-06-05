@@ -872,8 +872,8 @@ export const storage = {
         },
         author: {
           name: post.author?.fullName || post.author?.username || 'Unknown',
-          avatar: featuredPost.author?.fullName 
-            ? `https://ui-avatars.com/api/?name=${encodeURIComponent(featuredPost.author.fullName)}&background=random`
+          avatar: post.author?.fullName 
+            ? `https://ui-avatars.com/api/?name=${encodeURIComponent(post.author.fullName)}&background=random`
             : `https://ui-avatars.com/api/?name=Unknown&background=random`,
         },
         publishedAt: post.publishedAt || new Date().toISOString(),

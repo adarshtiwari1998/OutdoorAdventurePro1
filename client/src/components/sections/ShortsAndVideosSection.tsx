@@ -186,29 +186,15 @@ const ShortsAndVideosSection = ({ className = "" }: ShortsAndVideosSectionProps)
                       </div>
 
                       {/* Content Info */}
-                      
+
                     <div className="absolute bottom-4 left-4 right-4">
-                      <h3 className="text-white font-bold text-lg mb-2 line-clamp-2">
-                        {shorts[currentShortIndex]?.title}
-                      </h3>
-                      <div className="flex items-center justify-between text-white/80 text-sm mb-2">
-                        <span className="truncate">{shorts[currentShortIndex]?.channelName}</span>
-                        <span>{formatDuration(shorts[currentShortIndex]?.duration || 0)}</span>
-                      </div>
                       <div className="flex items-center gap-4 text-white/70 text-xs">
                         <div className="flex items-center gap-1">
                           <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
                             <path d="M10 12a2 2 0 100-4 2 2 0 000 4z"/>
                             <path fillRule="evenodd" d="M.458 10C1.732 5.943 5.522 3 10 3s8.268 2.943 9.542 7c-1.274 4.057-5.064 7-9.542 7S1.732 14.057.458 10zM14 10a4 4 0 11-8 0 4 4 0 018 0z" clipRule="evenodd"/>
                           </svg>
-                          <span>{formatNumber(shorts[currentShortIndex]?.viewCount || 0)}</span>
-                        </div>
-                        <div className="flex items-center gap-1">
-                          <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
-                            <path fillRule="evenodd" d="M3.172 5.172a4 4 0 015.656 0L10 6.343l1.172-1.171a4 4 0 115.656 5.656L10 17.657l-6.828-6.829a4 4 0 010-5.656z" clipRule="evenodd"/>
-                          </svg>
-                          <span>{formatNumber(shorts[currentShortIndex]?.likeCount || 0)}</span>
-                        </div>
+                          <span>{formatNumber(shorts[currentShortIndex]?.viewCount || 0)}</span></div>
                       </div>
                     </div>
 
@@ -310,51 +296,43 @@ const ShortsAndVideosSection = ({ className = "" }: ShortsAndVideosSectionProps)
 
                         {/* Video Info */}
                         <div className="flex-1 min-w-0">
-                          <h4 className="font-semibold text-sm line-clamp-2 mb-2 group-hover:text-blue-600 transition-colors text-gray-900">
+                          <h3 className="font-semibold text-gray-900 text-sm line-clamp-2 mb-1 group-hover:text-theme transition-colors">
                             {video.title}
-                          </h4>
-
-                          <div className="flex items-center gap-3 text-xs text-gray-500">
-                            <div className="flex items-center gap-1">
-                              <Calendar className="h-3 w-3" />
-                              <span>{format(new Date(video.publishedAt), 'MMM d, yyyy')}</span>
-                            </div>
-                            {video.channelName && (
-                              <span className="truncate">By {video.channelName}</span>
-                            )}
+                          </h3>
+                          <div className="flex items-center gap-2 text-xs text-gray-500 mb-1">
+                            <Calendar className="h-3 w-3" />
+                            <span>{format(new Date(video.publishedAt), 'MMM d, yyyy')}</span>
                           </div>
-
-                          <Badge 
-                            variant="outline" 
-                            className="mt-2 text-xs bg-blue-50 text-blue-600 border-blue-200"
-                          >
-                            🎬 Video
-                          </Badge>
+                          <div className="flex items-center gap-4 text-xs text-gray-500">
+                            <div className="flex items-center gap-1">
+                              <Play className="h-3 w-3" />
+                              <span>{formatDuration(video.duration || 0)}</span>
+                            </div>
+                            <div className="flex items-center gap-1">
+                              <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
+                                <path d="M10 12a2 2 0 100-4 2 2 0 000 4z"/>
+                                <path fillRule="evenodd" d="M.458 10C1.732 5.943 5.522 3 10 3s8.268 2.943 9.542 7c-1.274 4.057-5.064 7-9.542 7S1.732 14.057.458 10zM14 10a4 4 0 11-8 0 4 4 0 018 0z" clipRule="evenodd"/>
+                              </svg>
+                              <span>{formatNumber(video.viewCount || 0)}</span>
+                            </div>
+                            <Badge 
+                              variant="outline" 
+                              className="text-xs bg-blue-50 text-blue-600 border-blue-200"
+                            >
+                              🎬 Video
+                            </Badge>
+                          </div>
                         </div>
                       </div>
                     </CardContent>
                      <div className="absolute bottom-4 left-4 right-4">
-                      <h3 className="text-white font-bold text-lg mb-2 line-clamp-2">
-                        {video.title}
-                      </h3>
-                      <div className="flex items-center justify-between text-white/80 text-sm mb-2">
-                        <span className="truncate">{video.channelName}</span>
-                        <span>{formatDuration(video.duration || 0)}</span>
-                      </div>
                       <div className="flex items-center gap-4 text-white/70 text-xs">
                         <div className="flex items-center gap-1">
                           <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
                             <path d="M10 12a2 2 0 100-4 2 2 0 000 4z"/>
                             <path fillRule="evenodd" d="M.458 10C1.732 5.943 5.522 3 10 3s8.268 2.943 9.542 7c-1.274 4.057-5.064 7-9.542 7S1.732 14.057.458 10zM14 10a4 4 0 11-8 0 4 4 0 018 0z" clipRule="evenodd"/>
                           </svg>
-                          <span>{formatNumber(video.viewCount || 0)}</span>
-                        </div>
-                        <div className="flex items-center gap-1">
-                          <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
-                            <path fillRule="evenodd" d="M3.172 5.172a4 4 0 015.656 0L10 6.343l1.172-1.171a4 4 0 115.656 5.656L10 17.657l-6.828-6.829a4 4 0 010-5.656z" clipRule="evenodd"/>
-                          </svg>
-                          <span>{formatNumber(video.likeCount || 0)}</span>
-                        </div>
+                          <span>{formatNumber(video.viewCount || 0)}</span></div>
                       </div>
                     </div>
                   </Card>
