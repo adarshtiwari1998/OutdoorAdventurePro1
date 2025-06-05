@@ -150,14 +150,14 @@ const ShortsAndVideosSection = ({ className = "" }: ShortsAndVideosSectionProps)
     setShowFullDescription(false);
   };
 
-  const handlePreviousVideo = () => {
+  const handlePreviousVideoModal = () => {
     if (selectedVideoIndex !== null && selectedVideoIndex > 0) {
       setSelectedVideoIndex(selectedVideoIndex - 1);
       setShowFullDescription(false);
     }
   };
 
-  const handleNextVideo = () => {
+  const handleNextVideoModal = () => {
     if (selectedVideoIndex !== null && selectedVideoIndex < combinedVideos.length - 1) {
       setSelectedVideoIndex(selectedVideoIndex + 1);
       setShowFullDescription(false);
@@ -182,10 +182,10 @@ const ShortsAndVideosSection = ({ className = "" }: ShortsAndVideosSectionProps)
     const isDownSwipe = distance < -50;
 
     if (isUpSwipe && selectedVideoIndex !== null && selectedVideoIndex < combinedVideos.length - 1) {
-      handleNextVideo();
+      handleNextVideoModal();
     }
     if (isDownSwipe && selectedVideoIndex !== null && selectedVideoIndex > 0) {
-      handlePreviousVideo();
+      handlePreviousVideoModal();
     }
   };
 
@@ -609,7 +609,7 @@ const ShortsAndVideosSection = ({ className = "" }: ShortsAndVideosSectionProps)
                 onClick={(e) => {
                   e.preventDefault();
                   e.stopPropagation();
-                  handlePreviousVideo();
+                  handlePreviousVideoModal();
                 }}
                 className="absolute -left-16 top-1/2 -translate-y-1/2 z-[60] bg-black/70 hover:bg-black/90 text-white rounded-full p-3 transition-colors"
               >
@@ -622,7 +622,7 @@ const ShortsAndVideosSection = ({ className = "" }: ShortsAndVideosSectionProps)
                 onClick={(e) => {
                   e.preventDefault();
                   e.stopPropagation();
-                  handleNextVideo();
+                  handleNextVideoModal();
                 }}
                 className="absolute -right-16 top-1/2 -translate-y-1/2 z-[60] bg-black/70 hover:bg-black/90 text-white rounded-full p-3 transition-colors"
               >
