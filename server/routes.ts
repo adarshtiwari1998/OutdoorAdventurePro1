@@ -1547,15 +1547,42 @@ Status: Transcript extraction failed during import. Video may have captions that
         return res.status(400).json({ message: "Valid category ID is required" });
       }
 
-      // Handle both string and numeric category IDs
-      let parsedCategoryId: number;
+      // Handle both string and numeric category IDs, including header categories
+      let parsedCategoryId: number | null = null;
       
       if (typeof categoryId === 'string') {
-        // If it's a string, try to parse it as a number
-        parsedCategoryId = parseInt(categoryId);
-        if (isNaN(parsedCategoryId)) {
-          console.error(`Failed to parse categoryId "${categoryId}" as number`);
-          return res.status(400).json({ message: "Valid category ID is required" });
+        // Check if it's a header category (format: "header_X")
+        if (categoryId.startsWith('header_')) {
+          const headerIdStr = categoryId.replace('header_', '');
+          const headerConfigId = parseInt(headerIdStr);
+          
+          if (isNaN(headerConfigId)) {
+            console.error(`Failed to parse header category ID "${categoryId}"`);
+            return res.status(400).json({ message: "Valid category ID is required" });
+          }
+          
+          // Get the header config to find or create corresponding blog category
+          const headerConfig = await db.query.headerConfigs.findFirst({
+            where: eq(schema.headerConfigs.id, headerConfigId)
+          });
+          
+          if (!headerConfig) {
+            console.error(`Header config not found for ID: ${headerConfigId}`);
+            return res.status(400).json({ message: "Header category not found" });
+          }
+          
+          // Ensure there's a corresponding blog category
+          const blogCategory = await storage.ensureBlogCategoryFromHeader(headerConfig.category);
+          parsedCategoryId = blogCategory.id;
+          
+          console.log(`Mapped header category "${categoryId}" to blog category ID: ${parsedCategoryId}`);
+        } else {
+          // Regular numeric string
+          parsedCategoryId = parseInt(categoryId);
+          if (isNaN(parsedCategoryId)) {
+            console.error(`Failed to parse categoryId "${categoryId}" as number`);
+            return res.status(400).json({ message: "Valid category ID is required" });
+          }
         }
       } else if (typeof categoryId === 'number') {
         if (isNaN(categoryId)) {
@@ -1565,6 +1592,10 @@ Status: Transcript extraction failed during import. Video may have captions that
         parsedCategoryId = categoryId;
       } else {
         console.error(`Invalid categoryId type: ${typeof categoryId}, value: ${categoryId}`);
+        return res.status(400).json({ message: "Valid category ID is required" });
+      }
+
+      if (parsedCategoryId === null) {
         return res.status(400).json({ message: "Valid category ID is required" });
       }
 
