@@ -301,6 +301,12 @@ const AdminLayout = ({ children, title }: AdminLayoutProps) => {
                   isActive={location === '/admin/home-blocks/travelers-choice'}
                 />
                 <AdminMenuItem
+                  icon={Video}
+                  label="Home Videos"
+                  href="/admin/home-blocks/home-videos"
+                  isActive={location === '/admin/home-blocks/home-videos'}
+                />
+                <AdminMenuItem
                   icon={Compass}
                   label="Tips Management"
                   href="/admin/home-blocks/tips-management"
