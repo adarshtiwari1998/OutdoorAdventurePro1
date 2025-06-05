@@ -533,11 +533,25 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.get(`${apiPrefix}/home-videos`, async (req, res) => {
     try {
-      const { categoryId, videoCount, videoType } = req.query;
+      // Get settings from database if no query params provided
+      let { categoryId, videoCount, videoType } = req.query;
+      
+      if (!categoryId || !videoCount || !videoType) {
+        const settings = await storage.getHomeVideoSettings();
+        if (!settings || !settings.isActive) {
+          return res.json([]);
+        }
+        
+        categoryId = categoryId || settings.categoryId?.toString();
+        videoCount = videoCount || settings.videoCount?.toString() || '8';
+        videoType = videoType || settings.videoType || 'all';
+      }
 
-      if (!categoryId) {
+      if (!categoryId || categoryId === 'null' || categoryId === 'undefined') {
         return res.json([]);
       }
+
+      console.log(`Fetching home videos: categoryId=${categoryId}, videoCount=${videoCount}, videoType=${videoType}`);
 
       const videos = await storage.getVideosByCategory(
         parseInt(categoryId as string), 
@@ -545,6 +559,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         videoType as string || 'all'
       );
 
+      console.log(`Found ${videos.length} videos for home page`);
       res.json(videos);
     } catch (error) {
       console.error("Error fetching home videos:", error);

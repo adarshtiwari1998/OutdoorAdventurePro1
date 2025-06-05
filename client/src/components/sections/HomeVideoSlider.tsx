@@ -37,6 +37,23 @@ const HomeVideoSlider = ({ className = "" }: HomeVideoSliderProps) => {
 
   const { data: videos, isLoading } = useQuery<Video[]>({
     queryKey: ['/api/home-videos', settings?.categoryId, settings?.videoCount, settings?.videoType],
+    queryFn: async () => {
+      if (!settings?.isActive || !settings?.categoryId) {
+        return [];
+      }
+      
+      const params = new URLSearchParams({
+        categoryId: settings.categoryId.toString(),
+        videoCount: (settings.videoCount || 8).toString(),
+        videoType: settings.videoType || 'all'
+      });
+      
+      const response = await fetch(`/api/home-videos?${params}`);
+      if (!response.ok) {
+        throw new Error('Failed to fetch videos');
+      }
+      return response.json();
+    },
     enabled: !!(settings?.isActive && settings?.categoryId),
   });
 
