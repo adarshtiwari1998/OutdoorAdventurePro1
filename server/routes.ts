@@ -874,8 +874,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const { name, slug, description } = req.body;
 
       if (!name || !slug) {
-        return res.status(400).json({ message: "Name and slug are required" });
-      }
+        return res.status(400).json({ message: "Name and slug are required" });      }
 
       const newCategory = await storage.createBlogCategory({
         name,
@@ -1367,11 +1366,11 @@ app.get(`${apiPrefix}/admin/youtube/videos`, async (req, res) => {
             console.log(`📄 Step 2/2: Fetching transcript for: ${video.title} (${video.id})`);
 
             const transcriptResult = await youtubeService.getVideoTranscript(video.id);
-            
+
             // Handle the result object properly
             let transcript = '';
             let isRealTranscript = false;
-            
+
             if (transcriptResult && typeof transcriptResult === 'object') {
               if (transcriptResult.success && transcriptResult.transcript) {
                 transcript = transcriptResult.transcript;
@@ -1442,11 +1441,11 @@ Status: Transcript extraction failed during import. Video may have captions that
           if (i < videosToImport.length - 1) {
             const baseDelay = 15000; // Reduced to 15 seconds minimum
             let errorMultiplier = 1;
-            
+
             if (transcriptErrorCount > 0) {
               errorMultiplier = Math.min(transcriptErrorCount + 1, 3); // Max 3x delay
             }
-            
+
             const finalDelay = baseDelay * errorMultiplier;
             console.log(`⏳ Waiting ${finalDelay/1000} seconds before next video (error count: ${transcriptErrorCount})...`);
             await new Promise(resolve => setTimeout(resolve, finalDelay));
@@ -1679,7 +1678,7 @@ Status: Transcript extraction failed during import. Video may have captions that
       try {
         await storage.ensureBlogCategoryFromHeader(validatedData.category);
       } catch (error) {
-        console.error(`Failed to create blog category for header ${validatedData.category}:`, error);
+        console.error(`Failed to create blog category for header ${validatedDataData.category}:`, error);
         // Don't fail the header creation if blog category creation fails
       }
 
@@ -2742,12 +2741,27 @@ app.get(`${apiPrefix}/admin/tips/:id`, async (req, res) => {
             });
 
             const transcriptPromise = youtubeService.getVideoTranscript(video.videoId);
-            const transcript = await Promise.race([transcriptPromise, timeoutPromise]) as string;
+            const transcriptResult = await Promise.race([transcriptPromise, timeoutPromise]);
 
             // Enhanced transcript analysis
-            const isRealTranscript = transcript.includes('[REAL TRANSCRIPT') && 
-                                   !transcript.includes('[CAPTIONS DETECTED') &&
-                                   !transcript.includes('[TRANSCRIPT EXTRACTION FAILED');
+            let transcript = '';
+            let isRealTranscript = false;
+
+            if (transcriptResult && typeof transcriptResult === 'object') {
+              if (transcriptResult.success && transcriptResult.transcript) {
+                transcript = transcriptResult.transcript;
+                isRealTranscript = transcriptResult.extractionMethod !== 'Content Extract';
+              } else {
+                throw new Error(transcriptResult.error || 'Transcript extraction failed');
+              }
+            } else if (typeof transcriptResult === 'string') {
+              transcript = transcriptResult;
+              isRealTranscript = transcript.includes('[REAL TRANSCRIPT') || 
+                               transcript.includes('[TRANSCRIPT for') || 
+                               transcript.includes('[CAPTIONS DETECTED');
+            } else {
+              throw new Error('Invalid transcript result format');
+            }
 
             const isContentExtract = transcript.includes('[CAPTIONS DETECTED');
             const isFailed = transcript.includes('[TRANSCRIPT EXTRACTION FAILED');

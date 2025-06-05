@@ -1708,15 +1708,17 @@ const YoutubeImport = () => {
                       <div className="text-gray-500">Waiting for log output...</div>
                     ) : (
                       importProgress.logs.map((log, index) => {
-                        const currentTime = importProgress.startTime 
-                          ? Math.floor((new Date().getTime() - importProgress.startTime.getTime()) / 1000)
-                          : 0;
-                        const timeStr = `${Math.floor(currentTime / 60)}:${(currentTime % 60).toString().padStart(2, '0')}`;
+                        const timeStr = new Date().toLocaleTimeString('en-US', { 
+                          hour12: false, 
+                          hour: '2-digit', 
+                          minute: '2-digit', 
+                          second: '2-digit' 
+                        });
                         
                         return (
                           <div key={index} className="mb-1 break-words">
                             <span className="text-gray-500 mr-2 text-xs">
-                              [+{timeStr}]
+                              [{timeStr}]
                             </span>
                             <span 
                               className={
