@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useForm } from "react-hook-form";
@@ -51,9 +50,13 @@ const HomeVideos = () => {
     queryKey: ['/api/admin/blog/categories'],
   });
 
+  // Watch form values for preview
+  const watchedCategoryId = form.watch('categoryId');
+  const watchedVideoCount = form.watch('videoCount');
+
   const { data: previewVideos, isLoading: previewLoading } = useQuery({
-    queryKey: ['/api/admin/home-video-preview', settings?.categoryId, settings?.videoCount],
-    enabled: !!(settings?.categoryId && settings?.videoCount),
+    queryKey: ['/api/admin/home-video-preview', watchedCategoryId, watchedVideoCount],
+    enabled: !!(watchedCategoryId && watchedCategoryId !== ""),
   });
 
   // Form

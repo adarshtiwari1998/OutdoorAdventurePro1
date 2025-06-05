@@ -398,11 +398,22 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const { categoryId, videoCount, isActive, title, description } = req.body;
 
+      console.log('Received home video settings:', { categoryId, videoCount, isActive, title, description });
+
       // Safely parse categoryId - handle null, undefined, empty string, and "NaN"
       let parsedCategoryId = null;
-      if (categoryId && categoryId !== "" && categoryId !== "NaN" && !isNaN(parseInt(categoryId))) {
-        parsedCategoryId = parseInt(categoryId);
+      if (categoryId !== null && categoryId !== undefined && categoryId !== "" && categoryId !== "NaN") {
+        if (typeof categoryId === 'number') {
+          parsedCategoryId = categoryId;
+        } else if (typeof categoryId === 'string') {
+          const parsed = parseInt(categoryId);
+          if (!isNaN(parsed)) {
+            parsedCategoryId = parsed;
+          }
+        }
       }
+
+      console.log('Parsed categoryId:', parsedCategoryId);
 
       const settings = await storage.saveHomeVideoSettings({
         categoryId: parsedCategoryId,
@@ -412,6 +423,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         description
       });
 
+      console.log('Saved settings:', settings);
       res.json(settings);
     } catch (error) {
       console.error("Error saving home video settings:", error);
@@ -423,15 +435,23 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const { categoryId, videoCount } = req.query;
 
-      if (!categoryId) {
+      console.log('Preview request - categoryId:', categoryId, 'videoCount:', videoCount);
+
+      if (!categoryId || categoryId === "undefined" || categoryId === "null") {
+        return res.json([]);
+      }
+
+      const parsedCategoryId = parseInt(categoryId as string);
+      if (isNaN(parsedCategoryId)) {
         return res.json([]);
       }
 
       const videos = await storage.getVideosByCategory(
-        parseInt(categoryId as string), 
+        parsedCategoryId, 
         parseInt(videoCount as string) || 8
       );
 
+      console.log(`Found ${videos.length} videos for category ${parsedCategoryId}`);
       res.json(videos);
     } catch (error) {
       console.error("Error fetching home video preview:", error);

@@ -1859,10 +1859,13 @@ export const storage = {
 
   async getVideosByCategory(categoryId: number, limit: number = 8) {
     try {
+      console.log(`Getting videos for category ${categoryId} with limit ${limit}`);
+      
       const videos = await db.query.youtubeVideos.findMany({
         where: and(
           eq(schema.youtubeVideos.categoryId, categoryId),
-          eq(schema.youtubeVideos.importStatus, 'imported')
+          // Remove the importStatus filter to include all videos
+          // eq(schema.youtubeVideos.importStatus, 'imported')
         ),
         orderBy: desc(schema.youtubeVideos.publishedAt),
         limit,
@@ -1871,6 +1874,8 @@ export const storage = {
           category: true
         }
       });
+
+      console.log(`Found ${videos.length} videos for category ${categoryId}`);
 
       return videos.map(video => ({
         id: video.id.toString(),
