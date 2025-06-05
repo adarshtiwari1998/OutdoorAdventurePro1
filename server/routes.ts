@@ -1425,23 +1425,11 @@ Status: Transcript extraction failed during import. Video may have captions that
 
           // Enhanced circuit breaker with captcha detection
           if (i < videosToImport.length - 1) {
-            const baseDelay = 60000; // Increased to 60 seconds minimum
+            const baseDelay = 15000; // Reduced to 15 seconds minimum
             let errorMultiplier = 1;
             
-            // Check if we hit captcha/rate limit
-            const isCaptchaError = transcriptError && (
-              transcriptError.message.includes('captcha') || 
-              transcriptError.message.includes('too many requests')
-            );
-            
-            if (isCaptchaError) {
-              console.log(`🚫 CAPTCHA DETECTED! Stopping import to prevent further blocking.`);
-              console.log(`💡 Please wait 2-4 hours or change IP address before continuing.`);
-              break; // Stop processing immediately
-            }
-            
             if (transcriptErrorCount > 0) {
-              errorMultiplier = Math.min(transcriptErrorCount + 1, 5); // Max 5x delay
+              errorMultiplier = Math.min(transcriptErrorCount + 1, 3); // Max 3x delay
             }
             
             const finalDelay = baseDelay * errorMultiplier;

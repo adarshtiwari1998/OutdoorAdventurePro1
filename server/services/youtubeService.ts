@@ -375,102 +375,57 @@ export class YouTubeService {
     try {
       console.log(`📄 Fetching transcript for: ${videoId}`);
 
-      // Enhanced rate limiting with exponential backoff
-      const baseDelay = Math.floor(Math.random() * 15000) + 30000; // 30-45 seconds
+      // Simple delay to avoid rate limiting
+      const baseDelay = Math.floor(Math.random() * 5000) + 10000; // 10-15 seconds
       console.log(`⏳ Waiting ${baseDelay/1000}s before transcript request...`);
       await new Promise(resolve => setTimeout(resolve, baseDelay));
 
-      // Try multiple approaches with different strategies and longer delays
-      const strategies = [
-        { name: 'Direct', options: {}, delay: 0 },
-        { name: 'With Language', options: { lang: 'en' }, delay: 60000 },
-        { name: 'Auto Language', options: { lang: 'auto' }, delay: 90000 },
-        { name: 'With Country', options: { lang: 'en', country: 'US' }, delay: 120000 }
-      ];
+      // Use the simple approach that works
+      const transcriptData = await YoutubeTranscript.fetchTranscript(videoId);
+      
+      if (transcriptData && transcriptData.length > 0) {
+        // Clean and format the transcript using your working approach
+        const cleanedTranscript = transcriptData
+          .map(item => item.text.replace(/\$.*?\$/g, '').trim())
+          .filter(text => text.length > 0)
+          .join(' ');
 
-      let lastError;
-      for (let strategyIndex = 0; strategyIndex < strategies.length; strategyIndex++) {
-        const strategy = strategies[strategyIndex];
-        
-        try {
-          console.log(`🔄 Strategy ${strategyIndex + 1}/4: ${strategy.name} for video: ${videoId}`);
-          
-          // Add progressive delay between strategies with circuit breaker
-          if (strategyIndex > 0) {
-            const strategyDelay = strategy.delay || (30000 + (strategyIndex * 30000)); // 30s, 60s, 90s, 120s
-            console.log(`⏳ Strategy delay: ${strategyDelay/1000}s...`);
-            await new Promise(resolve => setTimeout(resolve, strategyDelay));
+        if (cleanedTranscript.length > 10) { // Ensure we have some content
+          let videoDetails;
+          try {
+            videoDetails = await this.getVideoDetails(videoId);
+          } catch (detailError) {
+            console.warn(`⚠️ Could not fetch video details for ${videoId}, using minimal info`);
+            videoDetails = {
+              title: 'Unknown Title',
+              channelTitle: 'Unknown Channel',
+              publishedAt: new Date(),
+              duration: 0
+            };
           }
           
-          const transcriptData = await YoutubeTranscript.fetchTranscript(videoId, strategy.options);
+          console.log(`✅ Successfully extracted transcript: ${cleanedTranscript.length} characters`);
           
-          if (transcriptData && transcriptData.length > 0) {
-            // Clean and format the transcript
-            const cleanedTranscript = transcriptData
-              .map(item => {
-                // Remove music notation and clean text
-                let text = item.text
-                  .replace(/\$.*?\$/g, '') // Remove $...$ patterns
-                  .replace(/\[.*?\]/g, '') // Remove [...]
-                  .replace(/♪.*?♪/g, '') // Remove music symbols
-                  .replace(/\s+/g, ' ') // Normalize whitespace
-                  .trim();
-                return text;
-              })
-              .filter(text => text.length > 0)
-              .join(' ');
-
-            if (cleanedTranscript.length > 50) { // Ensure we have substantial content
-              let videoDetails;
-              try {
-                videoDetails = await this.getVideoDetails(videoId);
-              } catch (detailError) {
-                console.warn(`⚠️ Could not fetch video details for ${videoId}, using minimal info`);
-                videoDetails = {
-                  title: 'Unknown Title',
-                  channelTitle: 'Unknown Channel',
-                  publishedAt: new Date(),
-                  duration: 0
-                };
-              }
-              
-              console.log(`✅ Successfully extracted transcript using ${strategy.name}: ${cleanedTranscript.length} characters`);
-              
-              return `[REAL TRANSCRIPT for "${videoDetails.title}"]
+          return `[REAL TRANSCRIPT for "${videoDetails.title}"]
 
 Channel: ${videoDetails.channelTitle}
 Published: ${new Date(videoDetails.publishedAt).toLocaleDateString()}
 Video ID: ${videoId}
 Duration: ${Math.floor(videoDetails.duration / 60)} minutes ${videoDetails.duration % 60} seconds
-Extraction Method: ${strategy.name}
 
 ${cleanedTranscript}
 
 [End of real transcript]`;
-            }
-          }
-          
-          console.log(`⚠️ Strategy ${strategy.name} found no usable transcript for: ${videoId}`);
-          
-        } catch (error) {
-          lastError = error;
-          console.error(`❌ Strategy ${strategy.name} failed for video ${videoId}:`, error.message);
-          
-          // If rate limited, implement exponential backoff
-          if (error.message.includes('captcha') || error.message.includes('too many requests')) {
-            const backoffDelay = Math.min(120000 + (strategyIndex * 60000), 300000); // 2-5 minutes
-            console.log(`🚫 CAPTCHA/Rate limited detected! Waiting ${backoffDelay/1000}s before next strategy...`);
-            console.log(`💡 Tip: Consider using a VPN or waiting 1-2 hours before retrying`);
-            await new Promise(resolve => setTimeout(resolve, backoffDelay));
-          }
         }
       }
       
-      // If all strategies failed, try to get video details for content extraction
+      console.log(`⚠️ No transcript found for: ${videoId}`);
+      
+      // If transcript failed, try to get video details for content extraction
       try {
         const videoDetails = await this.getVideoDetails(videoId);
         
-        console.log(`⚠️ All transcript strategies failed, creating content extract for: ${videoId}`);
+        console.log(`⚠️ Creating content extract for: ${videoId}`);
         
         return `[CAPTIONS DETECTED - Content extract for "${videoDetails.title}"]
 
@@ -494,47 +449,48 @@ Manual review may be required for full transcript access.
         
         return `[TRANSCRIPT EXTRACTION FAILED for video ${videoId}]
 
-Error: ${lastError?.message || 'Unknown error'}
+Error: Failed to fetch transcript and video details
 
-Details Error: ${detailError.message}
+🚫 POSSIBLE ISSUES:
+1. Video may not have captions/subtitles
+2. Video may be private or restricted
+3. Rate limiting from YouTube
+4. Network connectivity issues
 
-🚫 CAPTCHA REQUIRED: YouTube is blocking transcript requests from this IP address.
-
-SOLUTIONS TO BYPASS CAPTCHA:
-1. 🌐 Change IP Address:
-   - Use a VPN service and connect to a different location
-   - Restart your router/modem to get a new IP
-   - Use mobile hotspot temporarily
-
-2. ⏰ Wait and Retry:
-   - Wait 2-4 hours before retrying
-   - YouTube's rate limits reset periodically
-   - Try during off-peak hours (late night/early morning)
-
-3. 🔧 Manual Bypass (if desperate):
-   - Open YouTube in browser from same IP
-   - Solve any visible captchas
-   - Try accessing video transcripts manually
-   - This may reset the rate limit temporarily
-
-4. 📦 Batch Processing:
-   - Process only 1-2 videos per hour
-   - Use longer delays (5+ minutes between requests)
-   - Split large imports across multiple days
-
-Current Status: BLOCKED - Manual intervention required
+SOLUTIONS:
+1. Wait 1-2 hours and try again
+2. Check if video has captions manually on YouTube
+3. Ensure video is public and accessible
 
 [End of error report]`;
       }
 
     } catch (error) {
-      console.error(`❌ Critical error fetching transcript for video ${videoId}:`, error.message);
+      console.error(`❌ Error fetching transcript for video ${videoId}:`, error.message);
+      
+      // Check if it's a rate limiting error
+      if (error.message.includes('captcha') || error.message.includes('too many requests')) {
+        return `[TRANSCRIPT EXTRACTION FAILED for video ${videoId}]
+
+Error: ${error.message}
+
+🚫 CAPTCHA REQUIRED: YouTube is blocking transcript requests from this IP address.
+
+SOLUTIONS TO BYPASS CAPTCHA:
+1. 🌐 Change IP Address (use VPN)
+2. ⏰ Wait 2-4 hours before retrying
+3. 📦 Process fewer videos at once
+
+Current Status: BLOCKED - Manual intervention required
+
+[End of error report]`;
+      }
       
       return `[TRANSCRIPT EXTRACTION FAILED for video ${videoId}]
 
-Critical Error: ${error.message}
+Error: ${error.message}
 
-This may indicate a network connectivity issue or API changes.
+This may indicate a network connectivity issue or the video doesn't have captions.
 
 [End of error report]`;
     }
