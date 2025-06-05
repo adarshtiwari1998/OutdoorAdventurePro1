@@ -400,15 +400,36 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       console.log('Received home video settings:', { categoryId, videoCount, isActive, title, description });
 
-      // Safely parse categoryId - handle null, undefined, empty string, and "NaN"
+      // Handle both regular category IDs and header category IDs
       let parsedCategoryId = null;
       if (categoryId !== null && categoryId !== undefined && categoryId !== "" && categoryId !== "NaN") {
         if (typeof categoryId === 'number') {
           parsedCategoryId = categoryId;
         } else if (typeof categoryId === 'string') {
-          const parsed = parseInt(categoryId);
-          if (!isNaN(parsed)) {
-            parsedCategoryId = parsed;
+          // Check if it's a header category (format: "header_X")
+          if (categoryId.startsWith('header_')) {
+            const headerIdStr = categoryId.replace('header_', '');
+            const headerConfigId = parseInt(headerIdStr);
+
+            if (!isNaN(headerConfigId)) {
+              // Get the header config to find or create corresponding blog category
+              const headerConfig = await db.query.headerConfigs.findFirst({
+                where: eq(schema.headerConfigs.id, headerConfigId)
+              });
+
+              if (headerConfig) {
+                // Ensure there's a corresponding blog category
+                const blogCategory = await storage.ensureBlogCategoryFromHeader(headerConfig.category);
+                parsedCategoryId = blogCategory.id;
+                console.log(`Mapped header category "${categoryId}" to blog category ID: ${parsedCategoryId}`);
+              }
+            }
+          } else {
+            // Regular numeric string
+            const parsed = parseInt(categoryId);
+            if (!isNaN(parsed)) {
+              parsedCategoryId = parsed;
+            }
           }
         }
       }
