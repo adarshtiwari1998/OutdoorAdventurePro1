@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
@@ -100,9 +100,32 @@ const YoutubeImport = () => {
     importedCount: 0,
     skippedCount: 0,
     logs: [] as string[],
-    canClose: false
+    canClose: false,
+    startTime: null as Date | null,
+    elapsedTime: 0
   });
    const [expandedRows, setExpandedRows] = useState<Set<string>>(new Set());
+
+  // Update elapsed time every second during import
+  useEffect(() => {
+    let interval: NodeJS.Timeout;
+    
+    if (importProgress.isImporting && importProgress.startTime) {
+      interval = setInterval(() => {
+        const elapsed = Math.floor((new Date().getTime() - importProgress.startTime!.getTime()) / 1000);
+        setImportProgress(prev => ({
+          ...prev,
+          elapsedTime: elapsed
+        }));
+      }, 1000);
+    }
+    
+    return () => {
+      if (interval) {
+        clearInterval(interval);
+      }
+    };
+  }, [importProgress.isImporting, importProgress.startTime]);
 
   // Queries
   const { data: channels, isLoading: channelsLoading } = useQuery<YoutubeChannel[]>({
@@ -222,6 +245,7 @@ const YoutubeImport = () => {
       console.log(`🎬 Importing ${limit} videos for channel: ${channelId}`);
 
       // Reset progress and start immediately
+      const startTime = new Date();
       setImportProgress({
         isImporting: true,
         currentStep: 'Initializing import...',
@@ -236,7 +260,9 @@ const YoutubeImport = () => {
           `🎯 Target channel: ${channelId}`,
           `⚙️ Preparing import workflow...`
         ],
-        canClose: false
+        canClose: false,
+        startTime,
+        elapsedTime: 0
       });
 
       // Auto-scroll function
@@ -1597,7 +1623,9 @@ const YoutubeImport = () => {
             importedCount: 0,
             skippedCount: 0,
             logs: [],
-            canClose: false
+            canClose: false,
+            startTime: null,
+            elapsedTime: 0
           });
           setShowImportDialog(false);
         }
@@ -1621,9 +1649,12 @@ const YoutubeImport = () => {
                     <Loader2 className="h-4 w-4 animate-spin" />
                     {importProgress.currentStep}
                   </span>
-                  <span className="text-sm text-muted-foreground font-mono">
-                    {importProgress.progress}%
-                  </span>
+                  <div className="flex items-center gap-3 text-sm text-muted-foreground font-mono">
+                    <span>
+                      {Math.floor(importProgress.elapsedTime / 60)}:{(importProgress.elapsedTime % 60).toString().padStart(2, '0')}
+                    </span>
+                    <span>{importProgress.progress}%</span>
+                  </div>
                 </div>
                 <Progress value={importProgress.progress} className="h-3" />
 
@@ -1676,26 +1707,35 @@ const YoutubeImport = () => {
                     {importProgress.logs.length === 0 ? (
                       <div className="text-gray-500">Waiting for log output...</div>
                     ) : (
-                      importProgress.logs.map((log, index) => (
-                        <div key={index} className="mb-1 break-words">
-                          <span className="text-gray-500 mr-2">
-                            [{new Date().toLocaleTimeString()}]
-                          </span>
-                          <span 
-                            className={
-                              log.includes('❌') || log.includes('Error') ? 'text-red-400' :
-                              log.includes('✅') || log.includes('Success') ? 'text-green-400' :
-                              log.includes('⚠️') || log.includes('Warning') ? 'text-yellow-400' :
-                              log.includes('🔄') || log.includes('Processing') ? 'text-blue-400' :
-                              log.includes('📄') || log.includes('Fetching') ? 'text-cyan-400' :
-                              log.includes('🎬') || log.includes('Video') ? 'text-purple-400' :
-                              'text-green-400'
-                            }
-                          >
-                            {log}
-                          </span>
-                        </div>
-                      ))
+                      importProgress.logs.map((log, index) => {
+                        const currentTime = importProgress.startTime 
+                          ? Math.floor((new Date().getTime() - importProgress.startTime.getTime()) / 1000)
+                          : 0;
+                        const timeStr = `${Math.floor(currentTime / 60)}:${(currentTime % 60).toString().padStart(2, '0')}`;
+                        
+                        return (
+                          <div key={index} className="mb-1 break-words">
+                            <span className="text-gray-500 mr-2 text-xs">
+                              [+{timeStr}]
+                            </span>
+                            <span 
+                              className={
+                                log.includes('❌') || log.includes('Error') || log.includes('failed') ? 'text-red-400' :
+                                log.includes('✅') || log.includes('Success') || log.includes('successful') ? 'text-green-400' :
+                                log.includes('⚠️') || log.includes('Warning') || log.includes('Partial') ? 'text-yellow-400' :
+                                log.includes('🔄') || log.includes('Processing') || log.includes('Starting') ? 'text-blue-400' :
+                                log.includes('📄') || log.includes('Fetching') || log.includes('transcript') ? 'text-cyan-400' :
+                                log.includes('🎬') || log.includes('Video') || log.includes('Imported') ? 'text-purple-400' :
+                                log.includes('💥') || log.includes('FAILED') ? 'text-red-500 font-bold' :
+                                log.includes('🎉') || log.includes('completed') ? 'text-green-500 font-bold' :
+                                'text-green-400'
+                              }
+                            >
+                              {log}
+                            </span>
+                          </div>
+                        );
+                      })
                     )}
                   </div>
                 </div>
@@ -1735,7 +1775,9 @@ const YoutubeImport = () => {
                   importedCount: 0,
                   skippedCount: 0,
                   logs: [],
-                  canClose: false
+                  canClose: false,
+                  startTime: null,
+                  elapsedTime: 0
                 });
                 setShowImportDialog(false);
               }}

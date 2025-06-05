@@ -1366,12 +1366,27 @@ app.get(`${apiPrefix}/admin/youtube/videos`, async (req, res) => {
           try {
             console.log(`📄 Step 2/2: Fetching transcript for: ${video.title} (${video.id})`);
 
-            const transcript = await youtubeService.getVideoTranscript(video.id);
-
-            // Check if we got a real transcript vs content extract
-            const isRealTranscript = transcript.includes('[REAL TRANSCRIPT') || 
-                                   transcript.includes('[TRANSCRIPT for') || 
-                                   transcript.includes('[CAPTIONS DETECTED');
+            const transcriptResult = await youtubeService.getVideoTranscript(video.id);
+            
+            // Handle the result object properly
+            let transcript = '';
+            let isRealTranscript = false;
+            
+            if (transcriptResult && typeof transcriptResult === 'object') {
+              if (transcriptResult.success && transcriptResult.transcript) {
+                transcript = transcriptResult.transcript;
+                isRealTranscript = transcriptResult.extractionMethod !== 'Content Extract';
+              } else {
+                throw new Error(transcriptResult.error || 'Transcript extraction failed');
+              }
+            } else if (typeof transcriptResult === 'string') {
+              transcript = transcriptResult;
+              isRealTranscript = transcript.includes('[REAL TRANSCRIPT') || 
+                               transcript.includes('[TRANSCRIPT for') || 
+                               transcript.includes('[CAPTIONS DETECTED');
+            } else {
+              throw new Error('Invalid transcript result format');
+            }
 
             // Update video with transcript
             await storage.updateYoutubeVideoTranscript(savedVideo.id, transcript);
