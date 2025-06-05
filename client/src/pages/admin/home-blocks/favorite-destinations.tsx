@@ -110,11 +110,22 @@ const FavoriteDestinations = () => {
       const response = await fetch(`/api/admin/favorite-destinations/${id}`, {
         method: 'DELETE',
       });
-      if (!response.ok) throw new Error('Failed to delete destination');
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.error || 'Failed to delete destination');
+      }
+      return response.json();
     },
     onSuccess: () => {
       queryClient.invalidateQueries(['/api/admin/favorite-destinations']);
       toast({ title: "Destination deleted successfully" });
+    },
+    onError: (error) => {
+      toast({ 
+        title: "Error deleting destination", 
+        description: error.message,
+        variant: "destructive"
+      });
     },
   });
 

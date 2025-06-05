@@ -1619,7 +1619,7 @@ for (const tip of tipsAndIdeasData) {
 }
 
 // Seed favorite destinations
-await db.insert(schema.favoriteDestinations).values([
+    const favoriteDestinationsData = [
       {
         title: "New York",
         image: "https://images.unsplash.com/photo-1522083165195-3424ed129620",
@@ -1684,7 +1684,18 @@ await db.insert(schema.favoriteDestinations).values([
         description: "Ancient pyramids and Mayan wonders",
         order: 7
       }
-    ]);
+    ];
+
+    for (const destination of favoriteDestinationsData) {
+      const existingDestination = await db.query.favoriteDestinations.findFirst({
+        where: eq(schema.favoriteDestinations.slug, destination.slug)
+      });
+
+      if (!existingDestination) {
+        console.log(`Creating favorite destination: ${destination.title}`);
+        await db.insert(schema.favoriteDestinations).values(destination);
+      }
+    }
 
     console.log("Seeding complete!");
   } catch (error) {
