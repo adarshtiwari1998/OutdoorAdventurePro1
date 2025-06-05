@@ -587,8 +587,40 @@ header {
 
   /* External video preview boxes */
   .video-preview-thumbnail {
-    backdrop-filter: blur(8px);
-    background: rgba(0, 0, 0, 0.8);
+    backdrop-filter: blur(12px);
+    background: rgba(0, 0, 0, 0.9);
+    position: relative;
+    overflow: hidden;
+  }
+
+  .video-preview-thumbnail::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.1) 0%, rgba(255, 255, 255, 0.05) 50%, transparent 100%);
+    opacity: 0;
+    transition: opacity 0.3s ease;
+    pointer-events: none;
+    z-index: 1;
+  }
+
+  .video-preview-thumbnail:hover::before {
+    opacity: 1;
+  }
+
+  /* Enhanced modal dialog positioning */
+  .video-modal-dialog {
+    position: fixed;
+    left: 50%;
+    top: 50%;
+    transform: translate(-50%, -50%);
+    max-width: 64rem; /* 4xl */
+    width: 90vw;
+    max-height: 80vh;
+    z-index: 50;
   }
 
   /* Custom scrollbar for external preview columns */
@@ -608,6 +640,22 @@ header {
 
   .video-preview-thumbnail::-webkit-scrollbar-thumb:hover {
     background: rgba(255, 255, 255, 0.5);
+  }
+
+  /* Enhanced preview container styling */
+  .preview-container-left,
+  .preview-container-right {
+    backdrop-filter: blur(8px);
+    background: rgba(0, 0, 0, 0.2);
+    border-radius: 1rem;
+    padding: 0.75rem;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+  }
+
+  /* Video modal overlay enhancement */
+  .video-modal-overlay {
+    background: rgba(0, 0, 0, 0.8);
+    backdrop-filter: blur(4px);
   }
 
   /* Video navigation indicator */

@@ -387,7 +387,7 @@ const ShortsAndVideosSection = ({ className = "" }: ShortsAndVideosSectionProps)
 
       {/* Video Modal */}
       <Dialog open={selectedVideoIndex !== null} onOpenChange={closeModal}>
-        <DialogContent className="max-w-5xl w-full h-[85vh] p-0 gap-0 md:max-w-5xl sm:max-w-full sm:h-full sm:m-0 sm:rounded-none">
+        <DialogContent className="max-w-4xl w-[90vw] h-[80vh] p-0 gap-0 md:max-w-4xl sm:max-w-full sm:h-full sm:m-0 sm:rounded-none">
           {/* Custom Close Button */}
           <button
             onClick={closeModal}
@@ -396,12 +396,12 @@ const ShortsAndVideosSection = ({ className = "" }: ShortsAndVideosSectionProps)
             <X className="h-4 w-4" />
           </button>
 
-          {/* Navigation Arrows - Desktop */}
+          {/* Navigation Arrows - Desktop - Positioned outside modal */}
           <div className="hidden md:block">
             {selectedVideoIndex !== null && selectedVideoIndex > 0 && (
               <button
                 onClick={handlePreviousVideo}
-                className="absolute left-4 top-1/2 -translate-y-1/2 z-40 bg-black/50 hover:bg-black/70 text-white rounded-full p-3 transition-colors"
+                className="absolute -left-16 top-1/2 -translate-y-1/2 z-40 bg-black/50 hover:bg-black/70 text-white rounded-full p-3 transition-colors"
               >
                 <ChevronLeft className="h-6 w-6" />
               </button>
@@ -410,7 +410,7 @@ const ShortsAndVideosSection = ({ className = "" }: ShortsAndVideosSectionProps)
             {selectedVideoIndex !== null && selectedVideoIndex < combinedVideos.length - 1 && (
               <button
                 onClick={handleNextVideo}
-                className="absolute right-4 top-1/2 -translate-y-1/2 z-40 bg-black/50 hover:bg-black/70 text-white rounded-full p-3 transition-colors"
+                className="absolute -right-16 top-1/2 -translate-y-1/2 z-40 bg-black/50 hover:bg-black/70 text-white rounded-full p-3 transition-colors"
               >
                 <ChevronRight className="h-6 w-6" />
               </button>
@@ -553,23 +553,31 @@ const ShortsAndVideosSection = ({ className = "" }: ShortsAndVideosSectionProps)
 
       {/* External Preview Boxes - Left Side */}
       {selectedVideoIndex !== null && selectedVideoIndex > 0 && (
-        <div className="fixed left-6 top-1/2 -translate-y-1/2 z-40 hidden md:flex flex-col gap-3 max-h-[70vh] overflow-y-auto">
+        <div className="fixed left-[calc(50vw-32rem-8rem)] top-1/2 -translate-y-1/2 z-30 hidden xl:flex flex-col gap-3 max-h-[60vh] overflow-y-auto">
           {combinedVideos.slice(Math.max(0, selectedVideoIndex - 3), selectedVideoIndex).map((video, index) => {
             const actualIndex = Math.max(0, selectedVideoIndex - 3) + index;
             return (
               <div
                 key={video.id}
-                className="video-preview-thumbnail w-20 h-14 bg-gray-800 rounded-lg overflow-hidden cursor-pointer border-2 border-white/20 hover:border-white/60 transition-all duration-200 hover:scale-105 shadow-lg backdrop-blur-sm"
+                className="video-preview-thumbnail w-24 h-16 bg-gray-900 rounded-xl overflow-hidden cursor-pointer border-3 border-white/30 hover:border-white/80 transition-all duration-300 hover:scale-110 shadow-2xl backdrop-blur-lg"
                 onClick={() => setSelectedVideoIndex(actualIndex)}
                 title={video.title}
               >
-                <img
-                  src={video.thumbnail}
-                  alt={video.title}
-                  className="w-full h-full object-cover"
-                />
-                <div className="absolute inset-0 bg-black/30 flex items-center justify-center opacity-0 hover:opacity-100 transition-opacity">
-                  <Play className="h-4 w-4 text-white fill-current" />
+                <div className="relative w-full h-full">
+                  <img
+                    src={video.thumbnail}
+                    alt={video.title}
+                    className="w-full h-full object-cover"
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 hover:opacity-100 transition-opacity duration-300 flex items-center justify-center">
+                    <div className="bg-white/20 backdrop-blur-sm rounded-full p-2">
+                      <Play className="h-4 w-4 text-white fill-current" />
+                    </div>
+                  </div>
+                  {/* Video index indicator */}
+                  <div className="absolute top-1 left-1 bg-black/70 text-white text-xs px-1.5 py-0.5 rounded">
+                    {actualIndex + 1}
+                  </div>
                 </div>
               </div>
             );
@@ -579,23 +587,31 @@ const ShortsAndVideosSection = ({ className = "" }: ShortsAndVideosSectionProps)
 
       {/* External Preview Boxes - Right Side */}
       {selectedVideoIndex !== null && selectedVideoIndex < combinedVideos.length - 1 && (
-        <div className="fixed right-6 top-1/2 -translate-y-1/2 z-40 hidden md:flex flex-col gap-3 max-h-[70vh] overflow-y-auto">
+        <div className="fixed right-[calc(50vw-32rem-8rem)] top-1/2 -translate-y-1/2 z-30 hidden xl:flex flex-col gap-3 max-h-[60vh] overflow-y-auto">
           {combinedVideos.slice(selectedVideoIndex + 1, Math.min(combinedVideos.length, selectedVideoIndex + 4)).map((video, index) => {
             const actualIndex = selectedVideoIndex + 1 + index;
             return (
               <div
                 key={video.id}
-                className="video-preview-thumbnail w-20 h-14 bg-gray-800 rounded-lg overflow-hidden cursor-pointer border-2 border-white/20 hover:border-white/60 transition-all duration-200 hover:scale-105 shadow-lg backdrop-blur-sm"
+                className="video-preview-thumbnail w-24 h-16 bg-gray-900 rounded-xl overflow-hidden cursor-pointer border-3 border-white/30 hover:border-white/80 transition-all duration-300 hover:scale-110 shadow-2xl backdrop-blur-lg"
                 onClick={() => setSelectedVideoIndex(actualIndex)}
                 title={video.title}
               >
-                <img
-                  src={video.thumbnail}
-                  alt={video.title}
-                  className="w-full h-full object-cover"
-                />
-                <div className="absolute inset-0 bg-black/30 flex items-center justify-center opacity-0 hover:opacity-100 transition-opacity">
-                  <Play className="h-4 w-4 text-white fill-current" />
+                <div className="relative w-full h-full">
+                  <img
+                    src={video.thumbnail}
+                    alt={video.title}
+                    className="w-full h-full object-cover"
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 hover:opacity-100 transition-opacity duration-300 flex items-center justify-center">
+                    <div className="bg-white/20 backdrop-blur-sm rounded-full p-2">
+                      <Play className="h-4 w-4 text-white fill-current" />
+                    </div>
+                  </div>
+                  {/* Video index indicator */}
+                  <div className="absolute top-1 left-1 bg-black/70 text-white text-xs px-1.5 py-0.5 rounded">
+                    {actualIndex + 1}
+                  </div>
                 </div>
               </div>
             );
