@@ -33,6 +33,7 @@ const homeVideoSettingsSchema = z.object({
   isActive: z.boolean(),
   title: z.string().min(1, "Title is required"),
   description: z.string().optional(),
+  videoType: z.enum(["all", "video", "short"]).default("all"),
 });
 
 type HomeVideoSettings = z.infer<typeof homeVideoSettingsSchema>;
@@ -59,6 +60,7 @@ const HomeVideos = () => {
       isActive: true,
       title: "Latest Videos",
       description: "Check out our latest outdoor adventure videos",
+      videoType: "all",
     },
   });
 
@@ -71,15 +73,16 @@ const HomeVideos = () => {
     queryFn: async () => {
       const currentCategoryId = form.getValues('categoryId');
       const currentVideoCount = form.getValues('videoCount');
+      const currentVideoType = form.getValues('videoType');
       
-      console.log('Preview query - using form values:', { currentCategoryId, currentVideoCount });
+      console.log('Preview query - using form values:', { currentCategoryId, currentVideoCount, currentVideoType });
       
       if (!currentCategoryId || currentCategoryId === "" || currentCategoryId === "undefined" || currentCategoryId.startsWith('header_')) {
         console.log('Preview query - invalid categoryId, returning empty array');
         return [];
       }
       
-      const response = await fetch(`/api/admin/home-video-preview?categoryId=${currentCategoryId}&videoCount=${currentVideoCount || 8}`);
+      const response = await fetch(`/api/admin/home-video-preview?categoryId=${currentCategoryId}&videoCount=${currentVideoCount || 8}&videoType=${currentVideoType || 'all'}`);
       return response.json();
     },
     enabled: !!(watchedCategoryId && watchedCategoryId !== "" && watchedCategoryId !== "undefined" && !watchedCategoryId.startsWith('header_')),
@@ -96,6 +99,7 @@ const HomeVideos = () => {
         isActive: settings.isActive ?? true,
         title: settings.title || "Latest Videos",
         description: settings.description || "Check out our latest outdoor adventure videos",
+        videoType: settings.videoType || "all",
       };
       console.log('Setting form values:', newValues);
       form.reset(newValues);
@@ -262,6 +266,32 @@ const HomeVideos = () => {
                       <FormMessage />
                       <div className="text-sm text-muted-foreground">
                         How many videos to display in the slider (1-20)
+                      </div>
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="videoType"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Video Type Filter</FormLabel>
+                      <Select onValueChange={field.onChange} value={field.value}>
+                        <FormControl>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Select video type" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          <SelectItem value="all">All Videos (Shorts + Videos)</SelectItem>
+                          <SelectItem value="video">Videos Only</SelectItem>
+                          <SelectItem value="short">Shorts Only</SelectItem>
+                        </SelectContent>
+                      </Select>
+                      <FormMessage />
+                      <div className="text-sm text-muted-foreground">
+                        Choose what type of content to show in the slider
                       </div>
                     </FormItem>
                   )}

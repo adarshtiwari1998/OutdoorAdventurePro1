@@ -323,9 +323,9 @@ export const storage = {
       // Advanced title matching with multiple algorithms
       for (const blogPost of existingBlogPosts) {
         const matchScore = this.calculateAdvancedTitleSimilarity(video.title, blogPost.title);
-        
+
         console.log(`🔍 Matching "${video.title}" vs "${blogPost.title}" - Score: ${matchScore}`);
-        
+
         // Use a threshold of 0.6 for matches (60% similarity)
         if (matchScore > 0.6 && matchScore > bestMatchScore) {
           hasBlogPostMatch = true;
@@ -468,10 +468,10 @@ export const storage = {
   calculateJaccardSimilarity(str1: string, str2: string): number {
     const words1 = new Set(str1.split(' ').filter(word => word.length > 2));
     const words2 = new Set(str2.split(' ').filter(word => word.length > 2));
-    
+
     const intersection = new Set([...words1].filter(word => words2.has(word)));
     const union = new Set([...words1, ...words2]);
-    
+
     return union.size === 0 ? 0 : intersection.size / union.size;
   },
 
@@ -479,7 +479,7 @@ export const storage = {
   calculateKeywordSimilarity(str1: string, str2: string): number {
     // Common stop words to ignore
     const stopWords = new Set(['the', 'and', 'or', 'but', 'in', 'on', 'at', 'to', 'for', 'of', 'with', 'by', 'a', 'an', 'is', 'are', 'was', 'were', 'be', 'been', 'have', 'has', 'had', 'do', 'does', 'did', 'will', 'would', 'could', 'should', 'may', 'might', 'must', 'can', 'this', 'that', 'these', 'those', 'i', 'you', 'he', 'she', 'it', 'we', 'they', 'me', 'him', 'her', 'us', 'them']);
-    
+
     const getKeywords = (str: string): string[] => {
       return str
         .split(' ')
@@ -541,7 +541,7 @@ export const storage = {
     for (const word1 of words1) {
       for (const word2 of words2) {
         totalComparisons++;
-        
+
         // Direct match
         if (word1 === word2) {
           semanticMatches += 1;
@@ -1857,60 +1857,61 @@ export const storage = {
     }
   },
 
-  async getVideosByCategory(categoryId: number, limit: number = 8) {
+  async getVideosByCategory(categoryId: number, limit = 8, videoType = 'all') {
     try {
-      console.log(`Getting videos for category ${categoryId} with limit ${limit}`);
-      
-      // First, let's check what categories exist and what videos we have
-      const allVideos = await db.query.youtubeVideos.findMany({
-        orderBy: desc(schema.youtubeVideos.publishedAt),
-        limit: 10, // Just a sample to see what we have
-        with: {
-          channel: true,
-          category: true
-        }
+      console.log(`Getting videos for category ${categoryId} with limit ${limit} and videoType ${videoType}`);
+
+      // Build where condition based on video type
+      let whereCondition;
+      if (videoType === 'all') {
+        whereCondition = eq(schema.youtubeVideos.categoryId, categoryId);
+      } else {
+        whereCondition = and(
+          eq(schema.youtubeVideos.categoryId, categoryId),
+          eq(schema.youtubeVideos.videoType, videoType)
+        );
+      }
+
+      // First check how many videos exist for this category and type
+      const allVideosInCategory = await db.query.youtubeVideos.findMany({
+        where: whereCondition,
+        columns: { id: true, title: true, categoryId: true, videoType: true }
       });
-      
-      console.log(`Sample of available videos:`, allVideos.map(v => ({
+
+      console.log(`Sample of available videos:`, await db.query.youtubeVideos.findMany({
+        columns: { 
+          id: true, 
+          title: true, 
+          categoryId: true,
+          videoType: true
+        },
+        with: {
+          category: {
+            columns: { name: true }
+          }
+        },
+        limit: 10
+      }).then(videos => videos.map(v => ({
         id: v.id,
         title: v.title.substring(0, 50),
         categoryId: v.categoryId,
-        categoryName: v.category?.name
+        categoryName: v.category?.name,
+        videoType: v.videoType
       })));
-      
+
+      console.log(`Found ${allVideosInCategory.length} videos for category ${categoryId} with type ${videoType}`);
+
       const videos = await db.query.youtubeVideos.findMany({
-        where: eq(schema.youtubeVideos.categoryId, categoryId),
+        where: whereCondition,
         orderBy: desc(schema.youtubeVideos.publishedAt),
         limit,
         with: {
-          channel: true,
-          category: true
+          category: true,
+          channel: true
         }
       });
 
-      console.log(`Found ${videos.length} videos for category ${categoryId}`);
-      
-      if (videos.length === 0) {
-        // Let's see what categories are actually being used
-        const categoriesInUse = await db.query.youtubeVideos.findMany({
-          columns: {
-            categoryId: true
-          },
-          where: eq(schema.youtubeVideos.categoryId, categoryId)
-        });
-        console.log(`No videos found. Videos with categoryId ${categoryId}:`, categoriesInUse.length);
-        
-        // Also check if there are any videos with different category IDs
-        const someVideos = await db.query.youtubeVideos.findMany({
-          columns: {
-            id: true,
-            categoryId: true,
-            title: true
-          },
-          limit: 5
-        });
-        console.log(`Sample videos with their category IDs:`, someVideos);
-      }
+      console.log(`Final result: ${videos.length} videos for category ${categoryId} with type ${videoType}`);
 
       return videos.map(video => ({
         id: video.id.toString(),
@@ -1919,12 +1920,15 @@ export const storage = {
         description: video.description,
         thumbnail: video.thumbnail,
         publishedAt: video.publishedAt,
+        channelId: video.channelId,
+        categoryId: video.categoryId,
+        category: video.category,
+        channel: video.channel,
         videoType: video.videoType,
-        duration: video.duration,
-        channelName: video.channel?.name
+        duration: video.duration
       }));
     } catch (error) {
-      console.error(`Error getting videos by category ${categoryId}:`, error);
+      console.error('Error getting videos by category:', error);
       throw error;
     }
   },

@@ -36,7 +36,7 @@ const HomeVideoSlider = ({ className = "" }: HomeVideoSliderProps) => {
   });
 
   const { data: videos, isLoading } = useQuery<Video[]>({
-    queryKey: ['/api/home-videos', settings?.categoryId, settings?.videoCount],
+    queryKey: ['/api/home-videos', settings?.categoryId, settings?.videoCount, settings?.videoType],
     enabled: !!(settings?.isActive && settings?.categoryId),
   });
 

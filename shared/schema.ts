@@ -661,6 +661,7 @@ export const homeVideoSettings = pgTable("home_video_settings", {
   isActive: boolean("is_active").default(true),
   title: text("title").default("Latest Videos"),
   description: text("description"),
+  videoType: text("video_type").default("all").notNull(), // 'all', 'video', 'short'
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
 });
@@ -675,6 +676,9 @@ export const homeVideoSettingsRelations = relations(homeVideoSettings, ({ one })
 export const insertHomeVideoSettingsSchema = createInsertSchema(homeVideoSettings, {
   title: (schema) => schema.min(1, "Title is required"),
   videoCount: (schema) => schema.min(1, "Must show at least 1 video").max(20, "Maximum 20 videos"),
+  videoType: (schema) => schema.refine(val => ['all', 'video', 'short'].includes(val), {
+    message: "Video type must be one of: all, video, short"
+  }),
 });
 
 export type InsertHomeVideoSettings = z.infer<typeof insertHomeVideoSettingsSchema>;

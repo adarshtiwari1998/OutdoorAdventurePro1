@@ -396,9 +396,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.post(`${apiPrefix}/admin/home-video-settings`, async (req, res) => {
     try {
-      const { categoryId, videoCount, isActive, title, description } = req.body;
+      const { categoryId, videoCount, isActive, title, description, videoType } = req.body;
 
-      console.log('Received home video settings:', { categoryId, videoCount, isActive, title, description });
+      console.log('Received home video settings:', { categoryId, videoCount, isActive, title, description, videoType });
 
       // Handle both regular category IDs and header category IDs
       let parsedCategoryId = null;
@@ -443,7 +443,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         videoCount,
         isActive,
         title,
-        description
+        description,
+        videoType: videoType || 'all'
       });
 
       console.log('Saved settings:', settings);
@@ -456,9 +457,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.get(`${apiPrefix}/admin/home-video-preview`, async (req, res) => {
     try {
-      const { categoryId, videoCount } = req.query;
+      const { categoryId, videoCount, videoType } = req.query;
 
-      console.log('Preview request - categoryId:', categoryId, 'videoCount:', videoCount);
+      console.log('Preview request - categoryId:', categoryId, 'videoCount:', videoCount, 'videoType:', videoType);
 
       if (!categoryId || categoryId === "undefined" || categoryId === "null" || categoryId === "" || categoryId === undefined) {
         console.log('No valid categoryId provided, returning empty array');
@@ -518,7 +519,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       const videos = await storage.getVideosByCategory(
         parsedCategoryId, 
-        parseInt(videoCount as string) || 8
+        parseInt(videoCount as string) || 8,
+        videoType as string || 'all'
       );
 
       console.log(`Final result: ${videos.length} videos for category ${parsedCategoryId}`);
@@ -531,7 +533,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.get(`${apiPrefix}/home-videos`, async (req, res) => {
     try {
-      const { categoryId, videoCount } = req.query;
+      const { categoryId, videoCount, videoType } = req.query;
 
       if (!categoryId) {
         return res.json([]);
@@ -539,7 +541,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       const videos = await storage.getVideosByCategory(
         parseInt(categoryId as string), 
-        parseInt(videoCount as string) || 8
+        parseInt(videoCount as string) || 8,
+        videoType as string || 'all'
       );
 
       res.json(videos);
