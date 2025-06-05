@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { useForm } from "react-hook-form";
+import { useForm } from "react";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { 
@@ -933,8 +933,6 @@ const YoutubeImport = () => {
           <TabsTrigger value="channels">Channels</TabsTrigger>
           <TabsTrigger value="videos" disabled={!selectedChannelId}>Videos</TabsTrigger>
           <TabsTrigger value="add">Add New</TabsTrigger>
-        </Tabs```text
-
         </TabsList>
 
         <TabsContent value="channels">
@@ -1820,10 +1818,7 @@ const YoutubeImport = () => {
             processedCount: 0,
             totalCount: 0,
             importedCount: 0,
-            skipped
-This commit removes emojis from console.log statements to prevent syntax errors.
-```text
-Count: 0,
+            skippedCount: 0,
             logs: [],
             canClose: false,
             startTime: null,
