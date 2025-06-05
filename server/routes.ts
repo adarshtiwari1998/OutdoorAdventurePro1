@@ -1352,7 +1352,15 @@ app.get(`${apiPrefix}/admin/youtube/videos`, async (req, res) => {
             thumbnail: video.thumbnailUrl,
             publishedAt: video.publishedAt,
             channelId: channel.id, // This is already a number from the channel object
-            categoryId: categoryId && !isNaN(parseInt(categoryId)) ? parseInt(categoryId) : null,
+            categoryId: (() => {
+              if (!categoryId) return null;
+              if (typeof categoryId === 'number' && !isNaN(categoryId)) return categoryId;
+              if (typeof categoryId === 'string') {
+                const parsed = parseInt(categoryId);
+                return !isNaN(parsed) ? parsed : null;
+              }
+              return null;
+            })(),
             transcript: null,
             importStatus: 'processing',
             videoType: video.videoType,
@@ -1533,11 +1541,28 @@ Status: Transcript extraction failed during import. Video may have captions that
         return res.status(400).json({ message: "Video IDs are required" });
       }
 
-      if (!categoryId || isNaN(parseInt(categoryId))) {
+      if (!categoryId) {
+        return res.status(400).json({ message: "Category ID is required" });
+      }
+
+      // Handle both string and numeric category IDs
+      let parsedCategoryId: number;
+      
+      if (typeof categoryId === 'string') {
+        // If it's a string, try to parse it as a number
+        parsedCategoryId = parseInt(categoryId);
+        if (isNaN(parsedCategoryId)) {
+          return res.status(400).json({ message: "Valid category ID is required" });
+        }
+      } else if (typeof categoryId === 'number') {
+        parsedCategoryId = categoryId;
+      } else {
         return res.status(400).json({ message: "Valid category ID is required" });
       }
 
-      await storage.updateYoutubeVideosCategory(videoIds, parseInt(categoryId));
+      console.log(`Updating ${videoIds.length} videos to category ID: ${parsedCategoryId}`);
+
+      await storage.updateYoutubeVideosCategory(videoIds, parsedCategoryId);
       res.json({ success: true });
     } catch (error) {
       console.error("Error updating YouTube videos category:", error);
