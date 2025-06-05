@@ -699,12 +699,12 @@ header {
   /* Prevent preview cards from being higher than modal overlay */
   .video-preview-thumbnail {
     position: relative;
-    z-index: 45;
+    z-index: 35;
   }
 
   /* Ensure external preview containers stay below modal */
   .preview-containers {
-    z-index: 45;
+    z-index: 35;
     pointer-events: auto;
   }
 
