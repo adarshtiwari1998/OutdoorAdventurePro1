@@ -1973,7 +1973,10 @@ export const storage = {
         category: video.category,
         channel: video.channel,
         videoType: video.videoType,
-        duration: video.duration
+        duration: video.duration,
+        viewCount: video.viewCount || 0,
+        likeCount: video.likeCount || 0,
+        commentCount: video.commentCount || 0
       }));
     } catch (error) {
       console.error('Error getting videos by category:', error);

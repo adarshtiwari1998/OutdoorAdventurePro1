@@ -19,6 +19,7 @@ interface Video {
   channelName?: string;
   viewCount?: number;
   likeCount?: number;
+  commentCount?: number;
 }
 
 interface ShortsAndVideosSectionProps {
@@ -395,20 +396,22 @@ const ShortsAndVideosSection = ({ className = "" }: ShortsAndVideosSectionProps)
                     {/* Video Stats */}
                     <div className="flex items-center justify-between bg-gray-50 p-3 rounded-lg">
                       <div className="text-center">
-                        <div className="text-lg font-semibold text-gray-900">10</div>
+                        <div className="text-lg font-semibold text-gray-900">
+                          {formatNumber(selectedVideo.likeCount || 0)}
+                        </div>
                         <div className="text-xs text-gray-500">Likes</div>
                       </div>
                       <div className="text-center">
-                        <div className="text-lg font-semibold text-gray-900">155</div>
+                        <div className="text-lg font-semibold text-gray-900">
+                          {formatNumber(selectedVideo.viewCount || 0)}
+                        </div>
                         <div className="text-xs text-gray-500">Views</div>
                       </div>
                       <div className="text-center">
                         <div className="text-lg font-semibold text-gray-900">
-                          {format(new Date(selectedVideo.publishedAt), 'MMM d')}
+                          {formatNumber(selectedVideo.commentCount || 0)}
                         </div>
-                        <div className="text-xs text-gray-500">
-                          {format(new Date(selectedVideo.publishedAt), 'yyyy')}
-                        </div>
+                        <div className="text-xs text-gray-500">Comments</div>
                       </div>
                     </div>
 
