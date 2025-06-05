@@ -1473,6 +1473,30 @@ app.delete(`${apiPrefix}/admin/wordpress/credentials`, async (req, res) => {
     }
   });
 
+  // Update all video statistics
+  app.post(`${apiPrefix}/admin/youtube/videos/update-all-stats`, async (req, res) => {
+    try {
+      const { updateAllVideoStatistics } = await import('./scripts/updateVideoStats');
+      
+      // Run the update in the background and return immediately
+      updateAllVideoStatistics()
+        .then(() => {
+          console.log('✅ All video statistics updated successfully');
+        })
+        .catch((error) => {
+          console.error('❌ Error updating all video statistics:', error);
+        });
+
+      res.json({ 
+        success: true, 
+        message: 'Video statistics update started. Check console for progress.' 
+      });
+    } catch (error) {
+      console.error("Error starting video statistics update:", error);
+      res.status(500).json({ message: "Failed to start video statistics update" });
+    }
+  });
+
   app.get(`${apiPrefix}/admin/youtube/stats-status`, async (req, res) => {
     try {
       const videosToUpdate = await storage.getVideosForStatsUpdate(1000);
