@@ -1897,7 +1897,7 @@ export const storage = {
         categoryId: v.categoryId,
         categoryName: v.category?.name,
         videoType: v.videoType
-      })));
+      }))));
 
       console.log(`Found ${allVideosInCategory.length} videos for category ${categoryId} with type ${videoType}`);
 
