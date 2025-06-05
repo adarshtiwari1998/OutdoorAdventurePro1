@@ -1758,7 +1758,7 @@ app.get(`${apiPrefix}/admin/youtube/videos`, async (req, res) => {
             let transcript = '';
             let isRealTranscript = false;
 
-            if (```python
+            if (
 transcriptResult && typeof transcriptResult === 'object') {
               if (transcriptResult.success && transcriptResult.transcript) {
                 transcript = transcriptResult.transcript;
