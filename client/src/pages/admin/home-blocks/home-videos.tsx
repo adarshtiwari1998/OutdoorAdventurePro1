@@ -67,7 +67,21 @@ const HomeVideos = () => {
   const watchedVideoCount = form.watch('videoCount');
 
   const { data: previewVideos, isLoading: previewLoading } = useQuery({
-    queryKey: ['/api/admin/home-video-preview', watchedCategoryId, watchedVideoCount],
+    queryKey: ['/api/admin/home-video-preview'],
+    queryFn: async () => {
+      const currentCategoryId = form.getValues('categoryId');
+      const currentVideoCount = form.getValues('videoCount');
+      
+      console.log('Preview query - using form values:', { currentCategoryId, currentVideoCount });
+      
+      if (!currentCategoryId || currentCategoryId === "" || currentCategoryId === "undefined" || currentCategoryId.startsWith('header_')) {
+        console.log('Preview query - invalid categoryId, returning empty array');
+        return [];
+      }
+      
+      const response = await fetch(`/api/admin/home-video-preview?categoryId=${currentCategoryId}&videoCount=${currentVideoCount || 8}`);
+      return response.json();
+    },
     enabled: !!(watchedCategoryId && watchedCategoryId !== "" && watchedCategoryId !== "undefined" && !watchedCategoryId.startsWith('header_')),
     refetchOnMount: true,
   });
