@@ -11,6 +11,7 @@ import { Loader2 } from "lucide-react";
 import FavoriteDestinations from "@/components/sections/FavoriteDestinations";
 import TravelersChoice from "@/components/sections/TravelersChoice";
 import TipsAndIdeas from "@/components/sections/TipsAndIdeas";
+import HomeVideoSlider from "@/components/sections/HomeVideoSlider";
 
 const Home = () => {
   // Fetch home sliders from the API
@@ -80,9 +81,10 @@ const Home = () => {
 
       <FavoriteDestinations />
       <TravelersChoice />
-      <TipsAndIdeas />
       <FeaturedActivities />
+      <HomeVideoSlider />
       <ChannelsSection />
+      <TipsAndIdeas />
       <FeaturedProducts />
       <BlogSection />
       <TestimonialSection />

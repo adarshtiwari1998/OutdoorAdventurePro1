@@ -25,13 +25,14 @@ import AdminAuth from "@/pages/admin/auth";
 import Profile from "@/pages/admin/profile";
 import Settings from "@/pages/admin/settings";
 import FavoriteDestinations from "@/pages/admin/home-blocks/favorite-destinations";
+import TipsManagement from "@/pages/admin/home-blocks/tips-management";
+import TravelersChoice from "@/pages/admin/home-blocks/travelers-choice";
+import HomeVideos from "@/pages/admin/home-blocks/home-videos";
 import { ThemeProvider } from "@/contexts/ThemeContext";
 import { GlobalThemeProvider } from "@/contexts/GlobalThemeManager";
 import { AuthProvider } from "@/hooks/use-auth";
 import { ProtectedRoute } from "@/lib/protected-route";
 import { ReactNode, useEffect, useState } from "react";
-import TravelersChoice from "@/pages/admin/home-blocks/travelers-choice";
-import TipsManagement from "@/pages/admin/home-blocks/tips-management";
 import DashboardAssets from "@/pages/admin/dashboard-assets";
 // No need to import QueryClient or QueryClientProvider here as they are used in main.tsx
 
@@ -72,6 +73,7 @@ function Router() {
       <ProtectedRoute path="/admin/home-blocks/travelers-choice" component={TravelersChoice} />
 
        <ProtectedRoute path="/admin/home-blocks/tips-management" component={TipsManagement} />
+        <ProtectedRoute path="/admin/home-blocks/home-videos" component={HomeVideos} />
       <ProtectedRoute path="/admin/dashboard-assets" component={DashboardAssets} />
       {/* Landing page style routes */}
       <ProtectedRoute path="/admin/styles/home" component={LandingPageStyle} />

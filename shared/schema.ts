@@ -652,3 +652,30 @@ export const insertDashboardAssetSchema = createInsertSchema(dashboardAssets, {
 
 export type InsertDashboardAsset = z.infer<typeof insertDashboardAssetSchema>;
 export type DashboardAsset = typeof dashboardAssets.$inferSelect;
+
+// Home Video Settings
+export const homeVideoSettings = pgTable("home_video_settings", {
+  id: serial("id").primaryKey(),
+  categoryId: integer("category_id").references(() => categories.id),
+  videoCount: integer("video_count").default(8),
+  isActive: boolean("is_active").default(true),
+  title: text("title").default("Latest Videos"),
+  description: text("description"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+
+export const homeVideoSettingsRelations = relations(homeVideoSettings, ({ one }) => ({
+  category: one(categories, {
+    fields: [homeVideoSettings.categoryId],
+    references: [categories.id],
+  }),
+}));
+
+export const insertHomeVideoSettingsSchema = createInsertSchema(homeVideoSettings, {
+  title: (schema) => schema.min(1, "Title is required"),
+  videoCount: (schema) => schema.min(1, "Must show at least 1 video").max(20, "Maximum 20 videos"),
+});
+
+export type InsertHomeVideoSettings = z.infer<typeof insertHomeVideoSettingsSchema>;
+export type HomeVideoSettings = typeof homeVideoSettings.$inferSelect;

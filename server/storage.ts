@@ -1811,6 +1811,84 @@ export const storage = {
     }
   },
 
+  // Home Video Slider Management
+  async getHomeVideoSettings() {
+    try {
+      const settings = await db.query.homeVideoSettings.findFirst();
+      return settings || {
+        categoryId: null,
+        videoCount: 8,
+        isActive: false,
+        title: "Latest Videos",
+        description: "Check out our latest outdoor adventure videos"
+      };
+    } catch (error) {
+      console.error('Error getting home video settings:', error);
+      throw error;
+    }
+  },
+
+  async saveHomeVideoSettings(settingsData: any) {
+    try {
+      const existingSettings = await db.query.homeVideoSettings.findFirst();
+
+      if (existingSettings) {
+        const [updated] = await db.update(schema.homeVideoSettings)
+          .set({
+            ...settingsData,
+            updatedAt: new Date()
+          })
+          .where(eq(schema.homeVideoSettings.id, existingSettings.id))
+          .returning();
+        return updated;
+      } else {
+        const [created] = await db.insert(schema.homeVideoSettings)
+          .values({
+            ...settingsData,
+            createdAt: new Date(),
+            updatedAt: new Date()
+          })
+          .returning();
+        return created;
+      }
+    } catch (error) {
+      console.error('Error saving home video settings:', error);
+      throw error;
+    }
+  },
+
+  async getVideosByCategory(categoryId: number, limit: number = 8) {
+    try {
+      const videos = await db.query.youtubeVideos.findMany({
+        where: and(
+          eq(schema.youtubeVideos.categoryId, categoryId),
+          eq(schema.youtubeVideos.importStatus, 'imported')
+        ),
+        orderBy: desc(schema.youtubeVideos.publishedAt),
+        limit,
+        with: {
+          channel: true,
+          category: true
+        }
+      });
+
+      return videos.map(video => ({
+        id: video.id.toString(),
+        videoId: video.videoId,
+        title: video.title,
+        description: video.description,
+        thumbnail: video.thumbnail,
+        publishedAt: video.publishedAt,
+        videoType: video.videoType,
+        duration: video.duration,
+        channelName: video.channel?.name
+      }));
+    } catch (error) {
+      console.error(`Error getting videos by category ${categoryId}:`, error);
+      throw error;
+    }
+  },
+
   // Favorite Destinations Management
   async getFavoriteDestinations() {
     try {

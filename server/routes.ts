@@ -373,6 +373,86 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Home Video Slider routes
+  app.get(`${apiPrefix}/home-video-settings`, async (req, res) => {
+    try {
+      const settings = await storage.getHomeVideoSettings();
+      res.json(settings);
+    } catch (error) {
+      console.error("Error fetching home video settings:", error);
+      res.status(500).json({ message: "Failed to fetch home video settings" });
+    }
+  });
+
+  app.get(`${apiPrefix}/admin/home-video-settings`, async (req, res) => {
+    try {
+      const settings = await storage.getHomeVideoSettings();
+      res.json(settings);
+    } catch (error) {
+      console.error("Error fetching home video settings:", error);
+      res.status(500).json({ message: "Failed to fetch home video settings" });
+    }
+  });
+
+  app.post(`${apiPrefix}/admin/home-video-settings`, async (req, res) => {
+    try {
+      const { categoryId, videoCount, isActive, title, description } = req.body;
+
+      const settings = await storage.saveHomeVideoSettings({
+        categoryId: parseInt(categoryId),
+        videoCount,
+        isActive,
+        title,
+        description
+      });
+
+      res.json(settings);
+    } catch (error) {
+      console.error("Error saving home video settings:", error);
+      res.status(500).json({ message: "Failed to save home video settings" });
+    }
+  });
+
+  app.get(`${apiPrefix}/admin/home-video-preview`, async (req, res) => {
+    try {
+      const { categoryId, videoCount } = req.query;
+
+      if (!categoryId) {
+        return res.json([]);
+      }
+
+      const videos = await storage.getVideosByCategory(
+        parseInt(categoryId as string), 
+        parseInt(videoCount as string) || 8
+      );
+
+      res.json(videos);
+    } catch (error) {
+      console.error("Error fetching home video preview:", error);
+      res.status(500).json({ message: "Failed to fetch home video preview" });
+    }
+  });
+
+  app.get(`${apiPrefix}/home-videos`, async (req, res) => {
+    try {
+      const { categoryId, videoCount } = req.query;
+
+      if (!categoryId) {
+        return res.json([]);
+      }
+
+      const videos = await storage.getVideosByCategory(
+        parseInt(categoryId as string), 
+        parseInt(videoCount as string) || 8
+      );
+
+      res.json(videos);
+    } catch (error) {
+      console.error("Error fetching home videos:", error);
+      res.status(500).json({ message: "Failed to fetch home videos" });
+    }
+  });
+
   // Dashboard Assets routes
   app.get(`${apiPrefix}/admin/dashboard-assets`, async (req, res) => {
     try {
