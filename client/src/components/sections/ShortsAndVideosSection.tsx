@@ -67,13 +67,13 @@ const ShortsAndVideosSection = ({ className = "" }: ShortsAndVideosSectionProps)
   const videos = allVideos?.filter(video => video.videoType === 'video') || [];
   const combinedVideos = [...shorts, ...videos];
 
-  // Auto scroll for shorts
+  // Auto scroll for shorts (only if more than 2 shorts)
   useEffect(() => {
-    if (!isAutoScrolling || shorts.length === 0) return;
+    if (!isAutoScrolling || shorts.length <= 2) return;
 
     autoScrollRef.current = setInterval(() => {
       setCurrentShortIndex((prev) => (prev + 1) % shorts.length);
-    }, 3000);
+    }, 4000); // Increased interval for better viewing
 
     return () => {
       if (autoScrollRef.current) {
@@ -201,96 +201,117 @@ const ShortsAndVideosSection = ({ className = "" }: ShortsAndVideosSectionProps)
 
               {shorts.length > 0 && (
                 <div className="relative">
-                  {/* Shorts Container */}
+                  {/* Shorts Container - Show 2 cards */}
                   <div 
-                    className="relative bg-gray-100 rounded-2xl overflow-hidden shadow-lg border"
-                    style={{ aspectRatio: '9/16', height: '600px' }}
+                    className="grid grid-cols-2 gap-4"
                     onMouseEnter={() => setIsAutoScrolling(false)}
                     onMouseLeave={() => setIsAutoScrolling(true)}
                   >
-                    {/* Current Short */}
-                    <div className="relative w-full h-full group cursor-pointer" onClick={() => handleVideoClick(currentShortIndex)}>
-                      <img
-                        src={shorts[currentShortIndex]?.thumbnail}
-                        alt={shorts[currentShortIndex]?.title}
-                        className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
-                      />
+                    {/* Display current two shorts */}
+                    {[0, 1].map((offset) => {
+                      const index = (currentShortIndex + offset) % shorts.length;
+                      const short = shorts[index];
+                      if (!short) return null;
+                      
+                      return (
+                        <div 
+                          key={`${short.id}-${index}`}
+                          className="relative bg-gray-100 rounded-2xl overflow-hidden shadow-lg border"
+                          style={{ aspectRatio: '9/16', height: '300px' }}
+                        >
+                          <div className="relative w-full h-full group cursor-pointer" onClick={() => handleVideoClick(index)}>
+                            <img
+                              src={short.thumbnail}
+                              alt={short.title}
+                              className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
+                            />
 
-                      {/* Play Button */}
-                      <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-                        <div className="bg-white/90 backdrop-blur-sm rounded-full p-6 transform scale-75 group-hover:scale-100 transition-transform duration-300">
-                          <Play className="h-12 w-12 text-gray-900 fill-current" />
-                        </div>
-                      </div>
+                            {/* Play Button */}
+                            <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                              <div className="bg-white/90 backdrop-blur-sm rounded-full p-4 transform scale-75 group-hover:scale-100 transition-transform duration-300">
+                                <Play className="h-8 w-8 text-gray-900 fill-current" />
+                              </div>
+                            </div>
 
-                      {/* Short Badge */}
-                      <div className="absolute top-4 left-4">
-                        <Badge className="bg-red-600 text-white border-none">
-                          🩳 Short
-                        </Badge>
-                      </div>
+                            {/* Short Badge */}
+                            <div className="absolute top-2 left-2">
+                              <Badge className="bg-red-600 text-white border-none text-xs">
+                                🩳 Short
+                              </Badge>
+                            </div>
 
-                      {/* Content Info */}
-                      <div className="absolute bottom-4 left-4 right-4">
-                        <div className="flex items-center gap-4 text-white/70 text-xs">
-                          <div className="flex items-center gap-1">
-                            <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
-                              <path d="M10 12a2 2 0 100-4 2 2 0 000 4z"/>
-                              <path fillRule="evenodd" d="M.458 10C1.732 5.943 5.522 3 10 3s8.268 2.943 9.542 7c-1.274 4.057-5.064 7-9.542 7S1.732 14.057.458 10zM14 10a4 4 0 11-8 0 4 4 0 018 0z" clipRule="evenodd"/>
-                            </svg>
-                            <span>{formatNumber(shorts[currentShortIndex]?.viewCount || 0)}</span>
+                            {/* Content Info */}
+                            <div className="absolute bottom-2 left-2 right-2">
+                              <div className="flex items-center gap-2 text-white/70 text-xs">
+                                <div className="flex items-center gap-1">
+                                  <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
+                                    <path d="M10 12a2 2 0 100-4 2 2 0 000 4z"/>
+                                    <path fillRule="evenodd" d="M.458 10C1.732 5.943 5.522 3 10 3s8.268 2.943 9.542 7c-1.274 4.057-5.064 7-9.542 7S1.732 14.057.458 10zM14 10a4 4 0 11-8 0 4 4 0 018 0z" clipRule="evenodd"/>
+                                  </svg>
+                                  <span>{formatNumber(short.viewCount || 0)}</span>
+                                </div>
+                              </div>
+                            </div>
+
+                            {/* Current indicator */}
+                            {offset === 0 && (
+                              <div className="absolute top-2 right-2">
+                                <div className="bg-red-600 text-white text-xs px-2 py-1 rounded-full font-medium">
+                                  Playing
+                                </div>
+                              </div>
+                            )}
                           </div>
                         </div>
-                      </div>
+                      );
+                    })}
+                  </div>
 
+                  {/* Navigation Controls - Only show if more than 2 shorts */}
+                  {shorts.length > 2 && (
+                    <>
                       {/* Navigation Arrows */}
-                      <div className="absolute right-4 top-1/2 -translate-y-1/2 flex flex-col gap-2">
+                      <div className="flex justify-center mt-4 gap-4">
                         <Button
                           variant="outline"
-                          size="icon"
-                          className="bg-white/20 hover:bg-white/30 border-white/20 text-white h-8 w-8"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            handlePreviousShort();
-                          }}
-                          disabled={shorts.length <= 1}
+                          size="sm"
+                          className="bg-white hover:bg-gray-50 border-gray-300 text-gray-700"
+                          onClick={handlePreviousShort}
                         >
-                          <ChevronUp className="h-4 w-4" />
+                          <ChevronLeft className="h-4 w-4 mr-1" />
+                          Previous
                         </Button>
                         <Button
                           variant="outline"
-                          size="icon"
-                          className="bg-white/20 hover:bg-white/30 border-white/20 text-white h-8 w-8"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            handleNextShort();
-                          }}
-                          disabled={shorts.length <= 1}
+                          size="sm"
+                          className="bg-white hover:bg-gray-50 border-gray-300 text-gray-700"
+                          onClick={handleNextShort}
                         >
-                          <ChevronDown className="h-4 w-4" />
+                          Next
+                          <ChevronRight className="h-4 w-4 ml-1" />
                         </Button>
                       </div>
-                    </div>
-                  </div>
 
-                  {/* Shorts Indicator */}
-                  <div className="flex justify-center mt-4 space-x-1">
-                    {shorts.map((_, index) => (
-                      <button
-                        key={index}
-                        className={`w-2 h-2 rounded-full transition-all duration-300 ${
-                          index === currentShortIndex 
-                            ? 'bg-red-500 w-8' 
-                            : 'bg-gray-400 hover:bg-gray-500'
-                        }`}
-                        onClick={() => {
-                          setCurrentShortIndex(index);
-                          setIsAutoScrolling(false);
-                          setTimeout(() => setIsAutoScrolling(true), 10000);
-                        }}
-                      />
-                    ))}
-                  </div>
+                      {/* Shorts Indicator */}
+                      <div className="flex justify-center mt-4 space-x-1">
+                        {shorts.map((_, index) => (
+                          <button
+                            key={index}
+                            className={`w-2 h-2 rounded-full transition-all duration-300 ${
+                              index === currentShortIndex 
+                                ? 'bg-red-500 w-8' 
+                                : 'bg-gray-400 hover:bg-gray-500'
+                            }`}
+                            onClick={() => {
+                              setCurrentShortIndex(index);
+                              setIsAutoScrolling(false);
+                              setTimeout(() => setIsAutoScrolling(true), 10000);
+                            }}
+                          />
+                        ))}
+                      </div>
+                    </>
+                  )}
                 </div>
               )}
             </div>
@@ -305,74 +326,151 @@ const ShortsAndVideosSection = ({ className = "" }: ShortsAndVideosSectionProps)
                 <span className="text-sm text-gray-500">{videos.length} videos</span>
               </div>
 
-              <div className="space-y-4 max-h-[600px] overflow-y-auto">
-                {videos.map((video, index) => (
-                  <Card 
-                    key={video.id}
-                    className="group cursor-pointer transition-all duration-300 hover:shadow-lg hover:-translate-y-1 bg-white border border-gray-200 hover:border-gray-300"
-                    onClick={() => handleVideoClick(shorts.length + index)}
-                  >
-                    <CardContent className="p-0">
-                      <div className="flex gap-4 p-4">
-                        {/* Video Thumbnail */}
-                        <div className="relative flex-shrink-0 w-40 h-24 bg-gray-100 rounded-lg overflow-hidden">
-                          <img
-                            src={video.thumbnail}
-                            alt={video.title}
-                            className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
-                          />
+              {videos.length > 4 ? (
+                /* Horizontal Scroll Layout for 5+ videos */
+                <div className="relative">
+                  <div className="flex gap-4 overflow-x-auto pb-4 custom-scrollbar max-h-[600px]">
+                    {videos.map((video, index) => (
+                      <Card 
+                        key={video.id}
+                        className="group cursor-pointer transition-all duration-300 hover:shadow-lg hover:-translate-y-1 bg-white border border-gray-200 hover:border-gray-300 flex-shrink-0 w-80"
+                        onClick={() => handleVideoClick(shorts.length + index)}
+                      >
+                        <CardContent className="p-0">
+                          <div className="flex flex-col">
+                            {/* Video Thumbnail */}
+                            <div className="relative w-full h-44 bg-gray-100 overflow-hidden">
+                              <img
+                                src={video.thumbnail}
+                                alt={video.title}
+                                className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
+                              />
 
-                          {/* Play Overlay */}
-                          <div className="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center">
-                            <div className="bg-white/20 backdrop-blur-md rounded-full p-2">
-                              <Play className="h-4 w-4 text-white fill-current" />
+                              {/* Play Overlay */}
+                              <div className="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center">
+                                <div className="bg-white/20 backdrop-blur-md rounded-full p-3">
+                                  <Play className="h-6 w-6 text-white fill-current" />
+                                </div>
+                              </div>
+
+                              {/* Duration Badge */}
+                              {video.duration && (
+                                <div className="absolute bottom-2 right-2">
+                                  <Badge variant="outline" className="bg-black/70 text-white text-xs border-none">
+                                    {formatDuration(video.duration)}
+                                  </Badge>
+                                </div>
+                              )}
+                            </div>
+
+                            {/* Video Info */}
+                            <div className="p-4">
+                              <h3 className="font-semibold text-gray-900 text-sm line-clamp-2 mb-2 group-hover:text-theme transition-colors">
+                                {video.title}
+                              </h3>
+                              <div className="flex items-center gap-2 text-xs text-gray-500 mb-2">
+                                <Calendar className="h-3 w-3" />
+                                <span>{format(new Date(video.publishedAt), 'MMM d, yyyy')}</span>
+                              </div>
+                              <div className="flex items-center justify-between text-xs text-gray-500">
+                                <div className="flex items-center gap-3">
+                                  <div className="flex items-center gap-1">
+                                    <Play className="h-3 w-3" />
+                                    <span>{formatDuration(video.duration || 0)}</span>
+                                  </div>
+                                  <div className="flex items-center gap-1">
+                                    <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
+                                      <path d="M10 12a2 2 0 100-4 2 2 0 000 4z"/>
+                                      <path fillRule="evenodd" d="M.458 10C1.732 5.943 5.522 3 10 3s8.268 2.943 9.542 7c-1.274 4.057-5.064 7-9.542 7S1.732 14.057.458 10zM14 10a4 4 0 11-8 0 4 4 0 018 0z" clipRule="evenodd"/>
+                                    </svg>
+                                    <span>{formatNumber(video.viewCount || 0)}</span>
+                                  </div>
+                                </div>
+                                <Badge 
+                                  variant="outline" 
+                                  className="text-xs bg-blue-50 text-blue-600 border-blue-200"
+                                >
+                                  🎬 Video
+                                </Badge>
+                              </div>
                             </div>
                           </div>
+                        </CardContent>
+                      </Card>
+                    ))}
+                  </div>
+                </div>
+              ) : (
+                /* Vertical List Layout for 4 or fewer videos */
+                <div className="space-y-4 max-h-[600px] overflow-y-auto">
+                  {videos.map((video, index) => (
+                    <Card 
+                      key={video.id}
+                      className="group cursor-pointer transition-all duration-300 hover:shadow-lg hover:-translate-y-1 bg-white border border-gray-200 hover:border-gray-300"
+                      onClick={() => handleVideoClick(shorts.length + index)}
+                    >
+                      <CardContent className="p-0">
+                        <div className="flex gap-4 p-4">
+                          {/* Video Thumbnail */}
+                          <div className="relative flex-shrink-0 w-40 h-24 bg-gray-100 rounded-lg overflow-hidden">
+                            <img
+                              src={video.thumbnail}
+                              alt={video.title}
+                              className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
+                            />
 
-                          {/* Duration Badge */}
-                          {video.duration && (
-                            <div className="absolute bottom-1 right-1">
-                              <Badge variant="outline" className="bg-black/70 text-white text-xs border-none">
-                                {formatDuration(video.duration)}
+                            {/* Play Overlay */}
+                            <div className="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center">
+                              <div className="bg-white/20 backdrop-blur-md rounded-full p-2">
+                                <Play className="h-4 w-4 text-white fill-current" />
+                              </div>
+                            </div>
+
+                            {/* Duration Badge */}
+                            {video.duration && (
+                              <div className="absolute bottom-1 right-1">
+                                <Badge variant="outline" className="bg-black/70 text-white text-xs border-none">
+                                  {formatDuration(video.duration)}
+                                </Badge>
+                              </div>
+                            )}
+                          </div>
+
+                          {/* Video Info */}
+                          <div className="flex-1 min-w-0">
+                            <h3 className="font-semibold text-gray-900 text-sm line-clamp-2 mb-1 group-hover:text-theme transition-colors">
+                              {video.title}
+                            </h3>
+                            <div className="flex items-center gap-2 text-xs text-gray-500 mb-1">
+                              <Calendar className="h-3 w-3" />
+                              <span>{format(new Date(video.publishedAt), 'MMM d, yyyy')}</span>
+                            </div>
+                            <div className="flex items-center gap-4 text-xs text-gray-500">
+                              <div className="flex items-center gap-1">
+                                <Play className="h-3 w-3" />
+                                <span>{formatDuration(video.duration || 0)}</span>
+                              </div>
+                              <div className="flex items-center gap-1">
+                                <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
+                                  <path d="M10 12a2 2 0 100-4 2 2 0 000 4z"/>
+                                  <path fillRule="evenodd" d="M.458 10C1.732 5.943 5.522 3 10 3s8.268 2.943 9.542 7c-1.274 4.057-5.064 7-9.542 7S1.732 14.057.458 10zM14 10a4 4 0 11-8 0 4 4 0 018 0z" clipRule="evenodd"/>
+                                </svg>
+                                <span>{formatNumber(video.viewCount || 0)}</span>
+                              </div>
+                              <Badge 
+                                variant="outline" 
+                                className="text-xs bg-blue-50 text-blue-600 border-blue-200"
+                              >
+                                🎬 Video
                               </Badge>
                             </div>
-                          )}
-                        </div>
-
-                        {/* Video Info */}
-                        <div className="flex-1 min-w-0">
-                          <h3 className="font-semibold text-gray-900 text-sm line-clamp-2 mb-1 group-hover:text-theme transition-colors">
-                            {video.title}
-                          </h3>
-                          <div className="flex items-center gap-2 text-xs text-gray-500 mb-1">
-                            <Calendar className="h-3 w-3" />
-                            <span>{format(new Date(video.publishedAt), 'MMM d, yyyy')}</span>
-                          </div>
-                          <div className="flex items-center gap-4 text-xs text-gray-500">
-                            <div className="flex items-center gap-1">
-                              <Play className="h-3 w-3" />
-                              <span>{formatDuration(video.duration || 0)}</span>
-                            </div>
-                            <div className="flex items-center gap-1">
-                              <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
-                                <path d="M10 12a2 2 0 100-4 2 2 0 000 4z"/>
-                                <path fillRule="evenodd" d="M.458 10C1.732 5.943 5.522 3 10 3s8.268 2.943 9.542 7c-1.274 4.057-5.064 7-9.542 7S1.732 14.057.458 10zM14 10a4 4 0 11-8 0 4 4 0 018 0z" clipRule="evenodd"/>
-                              </svg>
-                              <span>{formatNumber(video.viewCount || 0)}</span>
-                            </div>
-                            <Badge 
-                              variant="outline" 
-                              className="text-xs bg-blue-50 text-blue-600 border-blue-200"
-                            >
-                              🎬 Video
-                            </Badge>
                           </div>
                         </div>
-                      </div>
-                    </CardContent>
-                  </Card>
-                ))}
-              </div>
+                      </CardContent>
+                    </Card>
+                  ))}
+                </div>
+              )}
 
               {videos.length === 0 && (
                 <div className="text-center py-12 text-gray-500">
