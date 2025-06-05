@@ -1524,6 +1524,7 @@ Happy fishing!
       });
 
       if (!existingTravelersChoiceItem) {
+        console.log(`Creating travelers choice: ${travelersChoiceItem.title}`);
         await db.insert(schema.travelersChoice).values(travelersChoiceItem);
       }
     }
@@ -1625,12 +1626,13 @@ for (const tip of tipsAndIdeasData) {
   });
 
   if (!existingTip) {
+    console.log(`Creating tip: ${tip.title}`);
     await db.insert(schema.tipsAndIdeas).values(tip);
   }
 }
 
 // Seed favorite destinations
-await db.insert(schema.favoriteDestinations).values([
+    const favoriteDestinationsData = [
       {
         title: "New York",
         image: "https://images.unsplash.com/photo-1522083165195-3424ed129620",
@@ -1695,7 +1697,18 @@ await db.insert(schema.favoriteDestinations).values([
         description: "Ancient pyramids and Mayan wonders",
         order: 7
       }
-    ]);
+    ];
+
+    for (const destination of favoriteDestinationsData) {
+      const existingDestination = await db.query.favoriteDestinations.findFirst({
+        where: eq(schema.favoriteDestinations.slug, destination.slug)
+      });
+
+      if (!existingDestination) {
+        console.log(`Creating favorite destination: ${destination.title}`);
+        await db.insert(schema.favoriteDestinations).values(destination);
+      }
+    }
 
     console.log("Seeding complete!");
   } catch (error) {
