@@ -1,0 +1,67 @@
+// Seed favorite destinations
+await db.insert(schema.favoriteDestinations).values([
+      {
+        title: "New York",
+        image: "https://images.unsplash.com/photo-1522083165195-3424ed129620",
+        slug: "new-york",
+        country: "United States", 
+        description: "Iconic cityscape and vibrant urban experiences",
+        order: 0
+      },
+      {
+        title: "Texas",
+        image: "https://images.unsplash.com/photo-1531218150217-54595bc2b934",
+        slug: "texas",
+        country: "United States",
+        description: "Historic churches and cultural heritage",
+        order: 1
+      },
+      {
+        title: "Paris",
+        image: "https://images.unsplash.com/photo-1502602898657-3e91760cbb34",
+        slug: "paris",
+        country: "France",
+        description: "City of love with iconic Eiffel Tower",
+        order: 2
+      },
+      {
+        title: "Michigan",
+        image: "https://images.unsplash.com/photo-1596394516093-501ba68a0ba6",
+        slug: "michigan",
+        country: "United States",
+        description: "Beautiful vineyards and rolling landscapes",
+        order: 3
+      },
+      {
+        title: "Colorado",
+        image: "https://images.unsplash.com/photo-1546156929-a4c0ac411f47",
+        slug: "colorado",
+        country: "United States",
+        description: "Majestic archways and mountain scenery",
+        order: 4
+      },
+      {
+        title: "Georgia",
+        image: "https://images.unsplash.com/photo-1603888613934-ee2f7d143dd0",
+        slug: "georgia",
+        country: "United States",
+        description: "Crystal clear waters and hidden lagoons",
+        order: 5
+      },
+      {
+        title: "Florida",
+        image: "https://images.unsplash.com/photo-1605723517503-3cadb5818a0c",
+        slug: "florida",
+        country: "United States",
+        description: "Beautiful beaches and coastal living",
+        order: 6
+      },
+      {
+        title: "Africa",
+        image: "https://images.unsplash.com/photo-1589182337358-2cb63099350c",
+        slug: "africa",
+        country: "Africa",
+        description: "Ancient pyramids and Mayan wonders",
+        order: 7
+      }
+    ]);
