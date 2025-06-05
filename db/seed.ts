@@ -375,6 +375,7 @@ async function seed() {
       is_active BOOLEAN DEFAULT TRUE,
       title TEXT DEFAULT 'Latest Videos',
       description TEXT,
+      video_type TEXT DEFAULT 'all' NOT NULL,
       created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
       updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
   );
