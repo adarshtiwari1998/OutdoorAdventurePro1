@@ -5,7 +5,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { ChevronUp, ChevronDown, Play, Calendar, Clock, X, ThumbsUp, ThumbsDown, Share, MoreHorizontal } from "lucide-react";
+import { ChevronUp, ChevronDown, Play, Calendar, Clock, X } from "lucide-react";
 import { format } from "date-fns";
 
 interface Video {
@@ -394,7 +394,11 @@ const ShortsAndVideosSection = ({ className = "" }: ShortsAndVideosSectionProps)
 
                     {/* Video Description */}
                     <div>
-                      <div className="text-sm text-gray-700 whitespace-pre-wrap">
+                      <div 
+                        className={`text-sm text-gray-700 whitespace-pre-wrap ${
+                          showFullDescription ? 'max-h-60 overflow-y-auto' : ''
+                        }`}
+                      >
                         {showFullDescription 
                           ? selectedVideo.description 
                           : truncateDescription(selectedVideo.description, 100)
@@ -410,28 +414,16 @@ const ShortsAndVideosSection = ({ className = "" }: ShortsAndVideosSectionProps)
                       </div>
                     </div>
 
-                    {/* Action Buttons */}
-                    <div className="space-y-3 pt-4 border-t">
-                      <div className="flex items-center justify-between">
-                        <Button variant="ghost" className="flex-1 flex items-center gap-2 justify-start">
-                          <ThumbsUp className="h-4 w-4" />
-                          <span>10</span>
-                        </Button>
-                      </div>
-                      
-                      <Button variant="ghost" className="w-full flex items-center gap-2 justify-start">
-                        <ThumbsDown className="h-4 w-4" />
-                        <span>Dislike</span>
-                      </Button>
-
-                      <Button variant="ghost" className="w-full flex items-center gap-2 justify-start">
-                        <Share className="h-4 w-4" />
-                        <span>Share</span>
-                      </Button>
-
-                      <Button variant="ghost" className="w-full flex items-center gap-2 justify-start">
-                        <MoreHorizontal className="h-4 w-4" />
-                        <span>More</span>
+                    {/* See on YouTube Button */}
+                    <div className="pt-4 border-t">
+                      <Button 
+                        className="w-full bg-red-600 hover:bg-red-700 text-white flex items-center gap-2 justify-center"
+                        onClick={() => window.open(`https://www.youtube.com/watch?v=${selectedVideo.videoId}`, '_blank')}
+                      >
+                        <svg className="h-5 w-5" viewBox="0 0 24 24" fill="currentColor">
+                          <path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/>
+                        </svg>
+                        See on YouTube
                       </Button>
                     </div>
 
