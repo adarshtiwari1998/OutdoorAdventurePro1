@@ -340,13 +340,26 @@ export const storage = {
         console.log(`❌ No blog post match found for: "${video.title}"`);
       }
 
+      // Safely convert channelId to integer or null
+      let parsedChannelId: number | null = null;
+      if (video.channelId !== undefined && video.channelId !== null) {
+        if (typeof video.channelId === 'number') {
+          parsedChannelId = video.channelId;
+        } else if (typeof video.channelId === 'string') {
+          const parsed = parseInt(video.channelId);
+          if (!isNaN(parsed)) {
+            parsedChannelId = parsed;
+          }
+        }
+      }
+
       const [newVideo] = await db.insert(schema.youtubeVideos).values({
         videoId: video.videoId,
         title: video.title,
         description: video.description,
         thumbnail: video.thumbnail,
         publishedAt: new Date(video.publishedAt),
-        channelId: video.channelId,
+        channelId: parsedChannelId,
         categoryId: video.categoryId,
         transcript: video.transcript || null,
         importStatus: video.importStatus || 'imported',

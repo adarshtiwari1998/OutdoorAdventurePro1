@@ -1351,7 +1351,7 @@ app.get(`${apiPrefix}/admin/youtube/videos`, async (req, res) => {
             description: video.description,
             thumbnail: video.thumbnailUrl,
             publishedAt: video.publishedAt,
-            channelId: channel.id,
+            channelId: channel.id, // This is already a number from the channel object
             categoryId: categoryId ? parseInt(categoryId) : null,
             transcript: null,
             importStatus: 'processing',
