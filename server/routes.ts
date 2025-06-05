@@ -458,14 +458,46 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       console.log('Preview request - categoryId:', categoryId, 'videoCount:', videoCount);
 
-      if (!categoryId || categoryId === "undefined" || categoryId === "null") {
+      if (!categoryId || categoryId === "undefined" || categoryId === "null" || categoryId === "") {
+        console.log('No valid categoryId provided, returning empty array');
         return res.json([]);
       }
 
-      const parsedCategoryId = parseInt(categoryId as string);
-      if (isNaN(parsedCategoryId)) {
+      // Handle both regular category IDs and header category IDs
+      let parsedCategoryId = null;
+      if (typeof categoryId === 'string') {
+        // Check if it's a header category (format: "header_X")
+        if (categoryId.startsWith('header_')) {
+          const headerIdStr = categoryId.replace('header_', '');
+          const headerConfigId = parseInt(headerIdStr);
+
+          if (!isNaN(headerConfigId)) {
+            // Get the header config to find or create corresponding blog category
+            const headerConfig = await db.query.headerConfigs.findFirst({
+              where: eq(schema.headerConfigs.id, headerConfigId)
+            });
+
+            if (headerConfig) {
+              // Ensure there's a corresponding blog category
+              const blogCategory = await storage.ensureBlogCategoryFromHeader(headerConfig.category);
+              parsedCategoryId = blogCategory.id;
+              console.log(`Mapped header category "${categoryId}" to blog category ID: ${parsedCategoryId}`);
+            }
+          }
+        } else {
+          // Regular numeric string
+          parsedCategoryId = parseInt(categoryId);
+        }
+      } else if (typeof categoryId === 'number') {
+        parsedCategoryId = categoryId;
+      }
+
+      if (isNaN(parsedCategoryId) || parsedCategoryId === null) {
+        console.log('Failed to parse categoryId, returning empty array');
         return res.json([]);
       }
+
+      console.log(`Looking for videos with category_id: ${parsedCategoryId}`);
 
       const videos = await storage.getVideosByCategory(
         parsedCategoryId, 

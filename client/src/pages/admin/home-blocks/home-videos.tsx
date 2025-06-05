@@ -47,7 +47,7 @@ const HomeVideos = () => {
   });
 
   const { data: categories } = useQuery({
-    queryKey: ['/api/admin/categories'],
+    queryKey: ['/api/admin/blog/categories'],
   });
 
   // Form
@@ -212,7 +212,10 @@ const HomeVideos = () => {
                         </FormControl>
                         <SelectContent>
                           {categories?.map((category: any) => (
-                            <SelectItem key={category.id} value={category.id.toString()}>
+                            <SelectItem 
+                              key={category.id} 
+                              value={typeof category.id === 'string' ? category.id : category.id.toString()}
+                            >
                               {category.name}
                             </SelectItem>
                           ))}

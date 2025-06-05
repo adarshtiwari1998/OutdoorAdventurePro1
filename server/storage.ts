@@ -1861,12 +1861,25 @@ export const storage = {
     try {
       console.log(`Getting videos for category ${categoryId} with limit ${limit}`);
       
+      // First, let's check what categories exist and what videos we have
+      const allVideos = await db.query.youtubeVideos.findMany({
+        orderBy: desc(schema.youtubeVideos.publishedAt),
+        limit: 10, // Just a sample to see what we have
+        with: {
+          channel: true,
+          category: true
+        }
+      });
+      
+      console.log(`Sample of available videos:`, allVideos.map(v => ({
+        id: v.id,
+        title: v.title.substring(0, 50),
+        categoryId: v.categoryId,
+        categoryName: v.category?.name
+      })));
+      
       const videos = await db.query.youtubeVideos.findMany({
-        where: and(
-          eq(schema.youtubeVideos.categoryId, categoryId),
-          // Remove the importStatus filter to include all videos
-          // eq(schema.youtubeVideos.importStatus, 'imported')
-        ),
+        where: eq(schema.youtubeVideos.categoryId, categoryId),
         orderBy: desc(schema.youtubeVideos.publishedAt),
         limit,
         with: {
@@ -1876,6 +1889,28 @@ export const storage = {
       });
 
       console.log(`Found ${videos.length} videos for category ${categoryId}`);
+      
+      if (videos.length === 0) {
+        // Let's see what categories are actually being used
+        const categoriesInUse = await db.query.youtubeVideos.findMany({
+          columns: {
+            categoryId: true
+          },
+          where: eq(schema.youtubeVideos.categoryId, categoryId)
+        });
+        console.log(`No videos found. Videos with categoryId ${categoryId}:`, categoriesInUse.length);
+        
+        // Also check if there are any videos with different category IDs
+        const someVideos = await db.query.youtubeVideos.findMany({
+          columns: {
+            id: true,
+            categoryId: true,
+            title: true
+          },
+          limit: 5
+        });
+        console.log(`Sample videos with their category IDs:`, someVideos);
+      }
 
       return videos.map(video => ({
         id: video.id.toString(),
