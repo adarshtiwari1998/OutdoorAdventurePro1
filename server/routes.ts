@@ -876,6 +876,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (!name || !slug) {
         return res.status(400).json({ message: "Name and slug are required" });      }
 
+```python
       const newCategory = await storage.createBlogCategory({
         name,
         slug,
@@ -2864,6 +2865,50 @@ app.get(`${apiPrefix}/admin/tips/:id`, async (req, res) => {
     } catch (error) {
       console.error("Error in intelligent transcript retry:", error);
       res.status(500).json({ message: "Failed to retry transcripts" });
+    }
+  });
+
+  app.post('/api/admin/youtube/resolve-channel', async (req, res) => {
+    try {
+      const { channelIdentifier } = req.body;
+
+      if (!channelIdentifier) {
+        return res.status(400).json({ message: 'Channel identifier is required' });
+      }
+
+      console.log(`🔍 Resolving YouTube channel: ${channelIdentifier}`);
+
+      // Use YouTube service to get channel details
+      const channelDetails = await youtubeService.getChannelDetails(channelIdentifier);
+
+      console.log(`✅ Resolved channel: ${channelDetails.title} (${channelDetails.id})`);
+
+      res.json({
+        id: channelDetails.id,
+        channelId: channelDetails.id,
+        title: channelDetails.title,
+        name: channelDetails.title,
+        description: channelDetails.description,
+        subscribers: channelDetails.subscriberCount,
+        videoCount: channelDetails.videoCount
+      });
+
+    } catch (error) {
+      console.error('❌ Error resolving YouTube channel:', error);
+      res.status(400).json({ 
+        message: error.message || 'Failed to resolve YouTube channel'
+      });
+    }
+  });
+
+  // YouTube channel routes
+  app.get('/api/admin/youtube/channels', async (req, res) => {
+    try {
+      const channels = await storage.getAdminYoutubeChannels();
+      res.json(channels);
+    } catch (error) {
+      console.error("Error fetching admin YouTube channels:", error);
+      res.status(500).json({ message: "Failed to fetch YouTube channels" });
     }
   });
 

@@ -111,31 +111,45 @@ const YoutubeImport = () => {
   const extractChannelId = (url: string): string => {
     if (!url) return '';
     
-    // Remove whitespace
+    // Remove whitespace and normalize URL
     url = url.trim();
     
+    // If it's already a channel ID (starts with UC and is 24 chars), return as is
+    if (url.startsWith('UC') && url.length === 24) {
+      return url;
+    }
+    
     // Pattern 1: youtube.com/channel/CHANNEL_ID
-    const channelMatch = url.match(/youtube\.com\/channel\/([a-zA-Z0-9_-]+)/);
+    const channelMatch = url.match(/(?:youtube\.com|youtu\.be)\/channel\/([a-zA-Z0-9_-]+)/);
     if (channelMatch) {
       return channelMatch[1];
     }
     
-    // Pattern 2: youtube.com/c/CHANNEL_NAME or youtube.com/@CHANNEL_NAME
-    const customMatch = url.match(/youtube\.com\/(?:c\/|@)([a-zA-Z0-9_-]+)/);
+    // Pattern 2: youtube.com/@CHANNEL_HANDLE (new format)
+    const handleMatch = url.match(/(?:youtube\.com|youtu\.be)\/@([a-zA-Z0-9_.-]+)/);
+    if (handleMatch) {
+      return handleMatch[1];
+    }
+    
+    // Pattern 3: youtube.com/c/CHANNEL_NAME (legacy custom URL)
+    const customMatch = url.match(/(?:youtube\.com|youtu\.be)\/c\/([a-zA-Z0-9_-]+)/);
     if (customMatch) {
-      // For custom URLs, we'll need to make an API call to get the actual channel ID
-      // For now, return the custom name and let the backend handle it
       return customMatch[1];
     }
     
-    // Pattern 3: youtube.com/user/USERNAME
-    const userMatch = url.match(/youtube\.com\/user\/([a-zA-Z0-9_-]+)/);
+    // Pattern 4: youtube.com/user/USERNAME (very old format)
+    const userMatch = url.match(/(?:youtube\.com|youtu\.be)\/user\/([a-zA-Z0-9_-]+)/);
     if (userMatch) {
       return userMatch[1];
     }
     
-    // If it's already a channel ID (starts with UC), return as is
-    if (url.startsWith('UC') && url.length === 24) {
+    // Pattern 5: Direct channel name/handle without full URL
+    if (url.startsWith('@')) {
+      return url.substring(1); // Remove @ symbol
+    }
+    
+    // If none of the patterns match, assume it might be a handle or channel name
+    if (url.length > 0 && !url.includes('/') && !url.includes('youtube')) {
       return url;
     }
     
@@ -143,10 +157,34 @@ const YoutubeImport = () => {
   };
 
   // Handle channel URL change and auto-extract channel ID
-  const handleChannelUrlChange = (url: string) => {
+  const handleChannelUrlChange = async (url: string) => {
     const extractedId = extractChannelId(url);
     channelForm.setValue('channelUrl', url);
     channelForm.setValue('channelId', extractedId);
+    
+    // If we have a valid extracted ID, try to fetch channel details
+    if (extractedId && extractedId.length > 0) {
+      try {
+        // Make API call to resolve channel details
+        const response = await fetch(`/api/admin/youtube/resolve-channel`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ channelIdentifier: extractedId })
+        });
+        
+        if (response.ok) {
+          const channelData = await response.json();
+          // Auto-fill the channel name and update channel ID with the resolved one
+          channelForm.setValue('channelName', channelData.title || channelData.name || '');
+          channelForm.setValue('channelId', channelData.id || channelData.channelId || extractedId);
+        }
+      } catch (error) {
+        console.log('Could not auto-fetch channel details:', error);
+        // Silently fail - user can still fill manually
+      }
+    }
   };
 
   // Update elapsed time every second during import
@@ -1564,10 +1602,10 @@ const YoutubeImport = () => {
                       name="channelUrl"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel>Channel URL</FormLabel>
+                          <FormLabel>Channel URL or Handle</FormLabel>
                           <FormControl>
                             <Input 
-                              placeholder="https://youtube.com/channel/UCfUABeKVh7oJzZG93O2ZioQ or https://youtube.com/@channelname"
+                              placeholder="https://youtube.com/@HowToHaveFunCruising or UCfUABeKVh7oJzZG93O2ZioQ"
                               {...field}
                               onChange={(e) => {
                                 field.onChange(e);
@@ -1577,7 +1615,7 @@ const YoutubeImport = () => {
                           </FormControl>
                           <FormMessage />
                           <p className="text-xs text-muted-foreground">
-                            Paste any YouTube channel URL and the Channel ID will be extracted automatically
+                            Paste any YouTube channel URL, handle (@channelname), or Channel ID. Channel details will be fetched automatically.
                           </p>
                         </FormItem>
                       )}
@@ -1590,7 +1628,7 @@ const YoutubeImport = () => {
                           <FormLabel>Channel ID</FormLabel>
                           <FormControl>
                             <Input 
-                              placeholder="Auto-extracted from URL above"
+                              placeholder="Will be resolved automatically (e.g., UCfUABeKVh7oJzZG93O2ZioQ)"
                               {...field}
                               className="bg-gray-50 dark:bg-gray-900"
                               readOnly
@@ -1598,7 +1636,7 @@ const YoutubeImport = () => {
                           </FormControl>
                           <FormMessage />
                           <p className="text-xs text-muted-foreground">
-                            This field is automatically filled when you enter a channel URL above
+                            The actual YouTube Channel ID will appear here after URL/handle resolution
                           </p>
                         </FormItem>
                       )}
@@ -1610,9 +1648,15 @@ const YoutubeImport = () => {
                         <FormItem>
                           <FormLabel>Channel Name</FormLabel>
                           <FormControl>
-                            <Input placeholder="Channel Name" {...field} />
+                            <Input 
+                              placeholder="Will be filled automatically or enter manually" 
+                              {...field} 
+                            />
                           </FormControl>
                           <FormMessage />
+                          <p className="text-xs text-muted-foreground">
+                            Channel name will be fetched automatically when URL/handle is resolved
+                          </p>
                         </FormItem>
                       )}
                     />
