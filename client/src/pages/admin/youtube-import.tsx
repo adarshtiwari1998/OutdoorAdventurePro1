@@ -1793,7 +1793,8 @@ const YoutubeImport = () => {
                   <SelectItem value="5">5 videos</SelectItem>
                   <SelectItem value="10">10 videos</SelectItem>
                   <SelectItem value="25">25 videos</SelectItem>
-                  <SelectItem value="50">50 videos</SelectItem                  <SelectItem value="100">100 videos</SelectItem>
+                  <SelectItem value="50">50 videos</SelectItem>
+                  <SelectItem value="100">100 videos</SelectItem>
                 </SelectContent>
               </Select>
             </div>
