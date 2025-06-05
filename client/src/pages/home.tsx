@@ -11,7 +11,6 @@ import { Loader2 } from "lucide-react";
 import FavoriteDestinations from "@/components/sections/FavoriteDestinations";
 import TravelersChoice from "@/components/sections/TravelersChoice";
 import TipsAndIdeas from "@/components/sections/TipsAndIdeas";
-import HomeVideoSlider from "@/components/sections/HomeVideoSlider";
 import ShortsAndVideosSection from "@/components/sections/ShortsAndVideosSection";
 
 const Home = () => {
@@ -84,7 +83,6 @@ const Home = () => {
       <TravelersChoice />
       <ShortsAndVideosSection />
       <FeaturedActivities />
-      <HomeVideoSlider />
       <ChannelsSection />
       <TipsAndIdeas />
       <FeaturedProducts />
