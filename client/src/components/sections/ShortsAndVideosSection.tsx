@@ -29,11 +29,14 @@ interface ShortsAndVideosSectionProps {
 const ShortsAndVideosSection = ({ className = "" }: ShortsAndVideosSectionProps) => {
   const [currentShortIndex, setCurrentShortIndex] = useState(0);
   const [isAutoScrolling, setIsAutoScrolling] = useState(true);
+  const [currentVideoIndex, setCurrentVideoIndex] = useState(0);
+  const [isVideoAutoScrolling, setIsVideoAutoScrolling] = useState(true);
   const [selectedVideoIndex, setSelectedVideoIndex] = useState<number | null>(null);
   const [showFullDescription, setShowFullDescription] = useState(false);
   const [touchStart, setTouchStart] = useState<number | null>(null);
   const [touchEnd, setTouchEnd] = useState<number | null>(null);
   const autoScrollRef = useRef<NodeJS.Timeout>();
+  const videoAutoScrollRef = useRef<NodeJS.Timeout>();
 
   // Fetch home video settings and videos
   const { data: settings } = useQuery({
@@ -82,6 +85,21 @@ const ShortsAndVideosSection = ({ className = "" }: ShortsAndVideosSectionProps)
     };
   }, [isAutoScrolling, shorts.length]);
 
+  // Auto scroll for videos (only if more than 4 videos for horizontal layout)
+  useEffect(() => {
+    if (!isVideoAutoScrolling || videos.length <= 4) return;
+
+    videoAutoScrollRef.current = setInterval(() => {
+      setCurrentVideoIndex((prev) => (prev + 1) % Math.max(1, videos.length - 1));
+    }, 5000); // Slower interval for videos
+
+    return () => {
+      if (videoAutoScrollRef.current) {
+        clearInterval(videoAutoScrollRef.current);
+      }
+    };
+  }, [isVideoAutoScrolling, videos.length]);
+
   const handlePreviousShort = () => {
     setIsAutoScrolling(false);
     setCurrentShortIndex((prev) => (prev - 1 + shorts.length) % shorts.length);
@@ -92,6 +110,18 @@ const ShortsAndVideosSection = ({ className = "" }: ShortsAndVideosSectionProps)
     setIsAutoScrolling(false);
     setCurrentShortIndex((prev) => (prev + 1) % shorts.length);
     setTimeout(() => setIsAutoScrolling(true), 10000);
+  };
+
+  const handlePreviousVideo = () => {
+    setIsVideoAutoScrolling(false);
+    setCurrentVideoIndex((prev) => (prev - 1 + Math.max(1, videos.length - 1)) % Math.max(1, videos.length - 1));
+    setTimeout(() => setIsVideoAutoScrolling(true), 10000);
+  };
+
+  const handleNextVideo = () => {
+    setIsVideoAutoScrolling(false);
+    setCurrentVideoIndex((prev) => (prev + 1) % Math.max(1, videos.length - 1));
+    setTimeout(() => setIsVideoAutoScrolling(true), 10000);
   };
 
   const formatDuration = (seconds: number) => {
@@ -203,7 +233,7 @@ const ShortsAndVideosSection = ({ className = "" }: ShortsAndVideosSectionProps)
                 <div className="relative">
                   {/* Shorts Container - Show 2 cards */}
                   <div 
-                    className="grid grid-cols-2 gap-4"
+                    className="grid grid-cols-2 gap-2"
                     onMouseEnter={() => setIsAutoScrolling(false)}
                     onMouseLeave={() => setIsAutoScrolling(true)}
                   >
@@ -275,7 +305,7 @@ const ShortsAndVideosSection = ({ className = "" }: ShortsAndVideosSectionProps)
                         <Button
                           variant="outline"
                           size="sm"
-                          className="bg-white hover:bg-gray-50 border-gray-300 text-gray-700"
+                          className="bg-white hover:bg-red-50 border-red-300 text-red-700 hover:border-red-400 font-medium shadow-sm"
                           onClick={handlePreviousShort}
                         >
                           <ChevronLeft className="h-4 w-4 mr-1" />
@@ -284,7 +314,7 @@ const ShortsAndVideosSection = ({ className = "" }: ShortsAndVideosSectionProps)
                         <Button
                           variant="outline"
                           size="sm"
-                          className="bg-white hover:bg-gray-50 border-gray-300 text-gray-700"
+                          className="bg-white hover:bg-red-50 border-red-300 text-red-700 hover:border-red-400 font-medium shadow-sm"
                           onClick={handleNextShort}
                         >
                           Next
@@ -323,19 +353,37 @@ const ShortsAndVideosSection = ({ className = "" }: ShortsAndVideosSectionProps)
                   <div className="w-1 h-6 bg-blue-500 rounded"></div>
                   Videos
                 </h3>
-                <span className="text-sm text-gray-500">{videos.length} videos</span>
+                <div className="flex items-center gap-4">
+                  <span className="text-sm text-gray-500">{videos.length} videos</span>
+                  {videos.length > 4 && (
+                    <div className="flex items-center gap-2 text-sm text-gray-500">
+                      <div className={`w-2 h-2 rounded-full ${isVideoAutoScrolling ? 'bg-green-500' : 'bg-yellow-500'}`}></div>
+                      {isVideoAutoScrolling ? 'Auto-playing' : 'Paused'}
+                    </div>
+                  )}
+                </div>
               </div>
 
               {videos.length > 4 ? (
                 /* Horizontal Scroll Layout for 5+ videos */
                 <div className="relative">
-                  <div className="flex gap-4 overflow-x-auto pb-4 custom-scrollbar max-h-[600px]">
-                    {videos.map((video, index) => (
+                  <div 
+                    className="flex gap-4 pb-4 max-h-[600px] overflow-hidden"
+                    onMouseEnter={() => setIsVideoAutoScrolling(false)}
+                    onMouseLeave={() => setIsVideoAutoScrolling(true)}
+                  >
+                    {/* Show 2 videos at a time */}
+                    {[0, 1].map((offset) => {
+                      const index = (currentVideoIndex + offset) % videos.length;
+                      const video = videos[index];
+                      if (!video) return null;
+                      
+                      return (
                       <Card 
-                        key={video.id}
-                        className="group cursor-pointer transition-all duration-300 hover:shadow-lg hover:-translate-y-1 bg-white border border-gray-200 hover:border-gray-300 flex-shrink-0 w-80"
-                        onClick={() => handleVideoClick(shorts.length + index)}
-                      >
+                          key={`${video.id}-${index}`}
+                          className="group cursor-pointer transition-all duration-300 hover:shadow-lg hover:-translate-y-1 bg-white border border-gray-200 hover:border-gray-300 flex-shrink-0 w-80"
+                          onClick={() => handleVideoClick(shorts.length + index)}
+                        >
                         <CardContent className="p-0">
                           <div className="flex flex-col">
                             {/* Video Thumbnail */}
@@ -396,9 +444,55 @@ const ShortsAndVideosSection = ({ className = "" }: ShortsAndVideosSectionProps)
                             </div>
                           </div>
                         </CardContent>
-                      </Card>
-                    ))}
+                        </Card>
+                      );
+                    })}
                   </div>
+
+                  {/* Video Navigation Controls */}
+                  {videos.length > 2 && (
+                    <>
+                      <div className="flex justify-center mt-4 gap-4">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className="bg-white hover:bg-blue-50 border-blue-300 text-blue-700 hover:border-blue-400 font-medium shadow-sm"
+                          onClick={handlePreviousVideo}
+                        >
+                          <ChevronLeft className="h-4 w-4 mr-1" />
+                          Previous
+                        </Button>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className="bg-white hover:bg-blue-50 border-blue-300 text-blue-700 hover:border-blue-400 font-medium shadow-sm"
+                          onClick={handleNextVideo}
+                        >
+                          Next
+                          <ChevronRight className="h-4 w-4 ml-1" />
+                        </Button>
+                      </div>
+
+                      {/* Video Indicators */}
+                      <div className="flex justify-center mt-4 space-x-1">
+                        {videos.slice(0, -1).map((_, index) => (
+                          <button
+                            key={index}
+                            className={`w-2 h-2 rounded-full transition-all duration-300 ${
+                              index === currentVideoIndex 
+                                ? 'bg-blue-500 w-8' 
+                                : 'bg-gray-400 hover:bg-gray-500'
+                            }`}
+                            onClick={() => {
+                              setCurrentVideoIndex(index);
+                              setIsVideoAutoScrolling(false);
+                              setTimeout(() => setIsVideoAutoScrolling(true), 10000);
+                            }}
+                          />
+                        ))}
+                      </div>
+                    </>
+                  )}
                 </div>
               ) : (
                 /* Vertical List Layout for 4 or fewer videos */
