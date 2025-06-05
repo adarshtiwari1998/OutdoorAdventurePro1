@@ -353,6 +353,19 @@ export const storage = {
         }
       }
 
+      // Safely convert categoryId to integer or null
+      let parsedCategoryId: number | null = null;
+      if (video.categoryId !== undefined && video.categoryId !== null) {
+        if (typeof video.categoryId === 'number' && !isNaN(video.categoryId)) {
+          parsedCategoryId = video.categoryId;
+        } else if (typeof video.categoryId === 'string') {
+          const parsed = parseInt(video.categoryId);
+          if (!isNaN(parsed)) {
+            parsedCategoryId = parsed;
+          }
+        }
+      }
+
       const [newVideo] = await db.insert(schema.youtubeVideos).values({
         videoId: video.videoId,
         title: video.title,
@@ -360,7 +373,7 @@ export const storage = {
         thumbnail: video.thumbnail,
         publishedAt: new Date(video.publishedAt),
         channelId: parsedChannelId,
-        categoryId: video.categoryId,
+        categoryId: parsedCategoryId,
         transcript: video.transcript || null,
         importStatus: video.importStatus || 'imported',
         hasBlogPostMatch,
