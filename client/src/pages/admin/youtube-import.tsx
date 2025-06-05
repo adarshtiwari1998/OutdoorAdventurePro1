@@ -75,6 +75,9 @@ type YoutubeVideo = {
   videoType?: "video" | "short";
   duration?: number;
   transcript?: string;
+  viewCount?: number;
+  likeCount?: number;
+  commentCount?: number;
 };
 
 const YoutubeImport = () => {
@@ -1583,7 +1586,7 @@ const YoutubeImport = () => {
                                   </div>
                                 )}
 
-                                <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4 text-sm">
+                                <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-4 text-sm">
                                   <div>
                                     <span className="font-semibold">Video ID:</span>
                                     <div className="text-muted-foreground font-mono">{video.videoId}</div>
@@ -1613,6 +1616,24 @@ const YoutubeImport = () => {
                                   <div>
                                     <span className="font-semibold">Import Status:</span>
                                     <div className="text-muted-foreground capitalize">{video.importStatus}</div>
+                                  </div>
+                                  <div>
+                                    <span className="font-semibold">View Count:</span>
+                                    <div className="text-muted-foreground font-mono">
+                                      {video.viewCount ? video.viewCount.toLocaleString() : 'N/A'}
+                                    </div>
+                                  </div>
+                                  <div>
+                                    <span className="font-semibold">Like Count:</span>
+                                    <div className="text-muted-foreground font-mono">
+                                      {video.likeCount ? video.likeCount.toLocaleString() : 'N/A'}
+                                    </div>
+                                  </div>
+                                  <div>
+                                    <span className="font-semibold">Comment Count:</span>
+                                    <div className="text-muted-foreground font-mono">
+                                      {video.commentCount ? video.commentCount.toLocaleString() : 'N/A'}
+                                    </div>
                                   </div>
                                 </div>
 
