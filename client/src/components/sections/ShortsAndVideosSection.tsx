@@ -579,7 +579,7 @@ const ShortsAndVideosSection = ({ className = "" }: ShortsAndVideosSectionProps)
 
       {/* External Preview Boxes - Left Side */}
       {selectedVideoIndex !== null && selectedVideoIndex > 0 && (
-        <div className="fixed left-4 top-1/2 -translate-y-1/2 z-[35] hidden lg:flex flex-col gap-3 max-h-[60vh] overflow-y-auto custom-scrollbar pr-2"></div>
+        <div className="fixed left-4 top-1/2 -translate-y-1/2 z-[35] hidden lg:flex flex-col gap-3 max-h-[60vh] overflow-y-auto custom-scrollbar pr-2">
           {combinedVideos.slice(Math.max(0, selectedVideoIndex - 3), selectedVideoIndex).map((video, index) => {
             const actualIndex = Math.max(0, selectedVideoIndex - 3) + index;
             return (
@@ -625,7 +625,7 @@ const ShortsAndVideosSection = ({ className = "" }: ShortsAndVideosSectionProps)
 
       {/* External Preview Boxes - Right Side */}
       {selectedVideoIndex !== null && selectedVideoIndex < combinedVideos.length - 1 && (
-        <div className="fixed right-4 top-1/2 -translate-y-1/2 z-[35] hidden lg:flex flex-col gap-3 max-h-[60vh] overflow-y-auto custom-scrollbar pl-2"></div>
+        <div className="fixed right-4 top-1/2 -translate-y-1/2 z-[35] hidden lg:flex flex-col gap-3 max-h-[60vh] overflow-y-auto custom-scrollbar pl-2">
           {combinedVideos.slice(selectedVideoIndex + 1, Math.min(combinedVideos.length, selectedVideoIndex + 4)).map((video, index) => {
             const actualIndex = selectedVideoIndex + 1 + index;
             return (
