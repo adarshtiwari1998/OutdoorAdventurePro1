@@ -78,7 +78,7 @@ async function updateAllVideoStatistics() {
 export { updateAllVideoStatistics };
 
 // Run directly if this file is executed
-if (require.main === module) {
+if (import.meta.url === `file://${process.argv[1]}`) {
   updateAllVideoStatistics()
     .then(() => {
       console.log('✅ Script completed successfully');
