@@ -563,10 +563,15 @@ const ShortsAndVideosSection = ({ className = "" }: ShortsAndVideosSectionProps)
                 onClick={(e) => {
                   e.preventDefault();
                   e.stopPropagation();
+                  e.nativeEvent.stopImmediatePropagation();
                   setSelectedVideoIndex(actualIndex);
                   setShowFullDescription(false);
                 }}
-                onMouseDown={(e) => e.stopPropagation()}
+                onMouseDown={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  e.nativeEvent.stopImmediatePropagation();
+                }}
                 title={video.title}
               >
                 <div className="relative w-full h-full">
@@ -604,10 +609,15 @@ const ShortsAndVideosSection = ({ className = "" }: ShortsAndVideosSectionProps)
                 onClick={(e) => {
                   e.preventDefault();
                   e.stopPropagation();
+                  e.nativeEvent.stopImmediatePropagation();
                   setSelectedVideoIndex(actualIndex);
                   setShowFullDescription(false);
                 }}
-                onMouseDown={(e) => e.stopPropagation()}
+                onMouseDown={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  e.nativeEvent.stopImmediatePropagation();
+                }}
                 title={video.title}
               >
                 <div className="relative w-full h-full">
