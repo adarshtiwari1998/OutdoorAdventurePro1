@@ -110,13 +110,20 @@ const YoutubeImport = () => {
   useEffect(() => {
     let interval: NodeJS.Timeout;
     
+    // Only run timer if importing AND startTime exists (null means stopped)
     if (importProgress.isImporting && importProgress.startTime) {
       interval = setInterval(() => {
-        const elapsed = Math.floor((new Date().getTime() - importProgress.startTime!.getTime()) / 1000);
-        setImportProgress(prev => ({
-          ...prev,
-          elapsedTime: elapsed
-        }));
+        setImportProgress(prev => {
+          // Double check startTime still exists before updating
+          if (!prev.startTime) {
+            return prev;
+          }
+          const elapsed = Math.floor((new Date().getTime() - prev.startTime.getTime()) / 1000);
+          return {
+            ...prev,
+            elapsedTime: elapsed
+          };
+        });
       }, 1000);
     }
     
@@ -316,7 +323,7 @@ const YoutubeImport = () => {
         const data = await response.json();
         const importedVideos = data.videos || []; 
 
-        // Update with actual counts
+        // Update with actual counts from backend
         setImportProgress(prev => ({
           ...prev,
           currentStep: 'Video import phase completed',
@@ -327,7 +334,9 @@ const YoutubeImport = () => {
           logs: [...prev.logs, 
             `✅ Imported ${data.count || 0} videos successfully`,
             `⏭️ Skipped ${data.skipped || 0} duplicate videos`,
-            `🎯 Starting transcript collection phase...`
+            `📄 Transcripts successful: ${data.transcriptSuccessCount || 0}`,
+            `❌ Transcript failures: ${data.transcriptErrorCount || 0}`,
+            `🎯 Starting final processing...`
           ]
         }));
         autoScrollLogs();
@@ -382,13 +391,13 @@ const YoutubeImport = () => {
           }
         }
 
-        // Step 4: Complete
+        // Step 4: Complete - use actual counts from backend response
         setImportProgress(prev => ({
           ...prev,
           currentStep: 'Import completed successfully!',
           progress: 100,
-          processedCount: data.total || 0,
-          totalCount: data.total || 0,
+          processedCount: data.count || 0,
+          totalCount: data.count || 0,
           importedCount: data.count || 0,
           skippedCount: data.skipped || 0,
           logs: [
@@ -397,16 +406,22 @@ const YoutubeImport = () => {
             `📊 Final Summary:`,
             `   • ${data.count || 0} videos imported`,
             `   • ${data.skipped || 0} videos skipped`,
-            `   • ${videoIdsForTranscripts.length} transcripts processed`,
-            `✅ All operations completed successfully!`
+            `   • ${data.transcriptSuccessCount || 0} transcripts successful`,
+            `   • ${data.transcriptErrorCount || 0} transcript failures`,
+            `✅ All operations completed successfully!`,
+            `⏰ Total time: ${Math.floor((new Date().getTime() - prev.startTime!.getTime()) / 1000)}s`
           ],
-          canClose: true
+          canClose: true,
+          // Stop the timer by clearing start time
+          startTime: null,
+          elapsedTime: Math.floor((new Date().getTime() - prev.startTime!.getTime()) / 1000)
         }));
         autoScrollLogs();
 
         return data;
       } catch (error) {
         const errorMessage = error instanceof Error ? error.message : String(error);
+        const finalElapsedTime = prev.startTime ? Math.floor((new Date().getTime() - prev.startTime.getTime()) / 1000) : 0;
         setImportProgress(prev => ({
           ...prev,
           currentStep: 'Import failed',
@@ -415,10 +430,14 @@ const YoutubeImport = () => {
             ...prev.logs, 
             `💥 IMPORT FAILED!`,
             `❌ Error: ${errorMessage}`,
+            `⏰ Failed after: ${finalElapsedTime}s`,
             `🔍 Check the error details above`,
             `🔄 You can try importing again`
           ],
-          canClose: true
+          canClose: true,
+          // Stop the timer
+          startTime: null,
+          elapsedTime: finalElapsedTime
         }));
 
         // Auto scroll to show error
@@ -449,7 +468,9 @@ const YoutubeImport = () => {
       setTimeout(() => {
         setImportProgress(prev => ({
           ...prev,
-          canClose: true
+          canClose: true,
+          // Ensure timer is stopped
+          startTime: null
         }));
       }, 3000);
     },
@@ -473,7 +494,9 @@ const YoutubeImport = () => {
       setTimeout(() => {
         setImportProgress(prev => ({
           ...prev,
-          canClose: true
+          canClose: true,
+          // Ensure timer is stopped
+          startTime: null
         }));
       }, 3000);
     }
