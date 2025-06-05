@@ -933,6 +933,8 @@ const YoutubeImport = () => {
           <TabsTrigger value="channels">Channels</TabsTrigger>
           <TabsTrigger value="videos" disabled={!selectedChannelId}>Videos</TabsTrigger>
           <TabsTrigger value="add">Add New</TabsTrigger>
+        </Tabs```text
+
         </TabsList>
 
         <TabsContent value="channels">
@@ -1817,9 +1819,11 @@ const YoutubeImport = () => {
             progress: 0,
             processedCount: 0,
             totalCount: 0,
-            importedCount: ```text
-0,
-            skippedCount: 0,
+            importedCount: 0,
+            skipped
+This commit removes emojis from console.log statements to prevent syntax errors.
+```text
+Count: 0,
             logs: [],
             canClose: false,
             startTime: null,
@@ -1962,7 +1966,7 @@ const YoutubeImport = () => {
             )}
           </div>
 
-          
+
 {importProgress.progress === 100 && (
               <AlertDialogFooter className="mt-6">
                 <Button 
@@ -2063,7 +2067,7 @@ const YoutubeImport = () => {
               <Select 
                 value={selectedCategoryForImport || "no-category"} 
                 onValueChange={(value) => {
-                  console.log(`📂 Category selection changed to: ${value}`);
+                  console.log(`Category selection changed to: ${value}`);
                   setSelectedCategoryForImport(value === "no-category" ? undefined : value);
                 }}
               >
