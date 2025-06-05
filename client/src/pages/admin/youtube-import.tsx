@@ -762,18 +762,32 @@ const YoutubeImport = () => {
       importedCount: 0,
       skippedCount: 0,
       logs: [],
-      canClose: false
+      canClose: false,
+      startTime: null,
+      elapsedTime: 0
     });
 
+    // Reset category selection to default
+    setSelectedCategoryForImport(undefined);
     setShowImportDialog(true);
   };
 
   const handleStartImport = () => {
     if (importChannelId) {
+      console.log(`🎯 Starting import with category: ${selectedCategoryForImport}`);
+      
+      // Ensure we pass the correct category ID
+      let categoryIdToPass = null;
+      if (selectedCategoryForImport && selectedCategoryForImport !== "no-category") {
+        categoryIdToPass = selectedCategoryForImport;
+      }
+      
+      console.log(`📋 Final category ID to pass: ${categoryIdToPass}`);
+      
       importChannelVideosMutation.mutate({ 
         channelId: importChannelId, 
         limit: importLimit,
-        categoryId: selectedCategoryForImport && selectedCategoryForImport !== "no-category" ? selectedCategoryForImport : null
+        categoryId: categoryIdToPass
       });
     }
   };
@@ -2032,7 +2046,10 @@ const YoutubeImport = () => {
               </label>
               <Select 
                 value={selectedCategoryForImport || "no-category"} 
-                onValueChange={setSelectedCategoryForImport}
+                onValueChange={(value) => {
+                  console.log(`📂 Category selection changed to: ${value}`);
+                  setSelectedCategoryForImport(value === "no-category" ? undefined : value);
+                }}
               >
                 <SelectTrigger>
                   <SelectValue placeholder="Select category" />
@@ -2046,6 +2063,11 @@ const YoutubeImport = () => {
                   ))}
                 </SelectContent>
               </Select>
+              {selectedCategoryForImport && selectedCategoryForImport !== "no-category" && (
+                <p className="text-xs text-green-600 mt-1">
+                  ✅ Selected: {blogCategories?.find(c => c.id === selectedCategoryForImport)?.name}
+                </p>
+              )}
             </div>
           </div>
 

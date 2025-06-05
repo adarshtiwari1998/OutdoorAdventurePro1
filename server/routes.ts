@@ -1344,6 +1344,42 @@ app.get(`${apiPrefix}/admin/youtube/videos`, async (req, res) => {
         try {
           console.log(`\n🔄 Processing video ${i + 1}/${videosToImport.length}: ${video.title}`);
 
+          // Parse category ID properly
+          let parsedCategoryId = null;
+          if (categoryId) {
+            if (typeof categoryId === 'string') {
+              // Check if it's a header category (format: "header_X")
+              if (categoryId.startsWith('header_')) {
+                const headerIdStr = categoryId.replace('header_', '');
+                const headerConfigId = parseInt(headerIdStr);
+                
+                if (!isNaN(headerConfigId)) {
+                  // Get the header config to find or create corresponding blog category
+                  const headerConfig = await db.query.headerConfigs.findFirst({
+                    where: eq(schema.headerConfigs.id, headerConfigId)
+                  });
+                  
+                  if (headerConfig) {
+                    // Ensure there's a corresponding blog category
+                    const blogCategory = await storage.ensureBlogCategoryFromHeader(headerConfig.category);
+                    parsedCategoryId = blogCategory.id;
+                    console.log(`📁 Mapped header category "${categoryId}" to blog category ID: ${parsedCategoryId}`);
+                  }
+                }
+              } else {
+                // Regular numeric string
+                const parsed = parseInt(categoryId);
+                if (!isNaN(parsed)) {
+                  parsedCategoryId = parsed;
+                }
+              }
+            } else if (typeof categoryId === 'number' && !isNaN(categoryId)) {
+              parsedCategoryId = categoryId;
+            }
+          }
+
+          console.log(`📁 Final category ID for video "${video.title}": ${parsedCategoryId}`);
+
           // Step 1: Import video metadata first
           const savedVideo = await storage.createYoutubeVideo({
             videoId: video.id,
@@ -1352,15 +1388,7 @@ app.get(`${apiPrefix}/admin/youtube/videos`, async (req, res) => {
             thumbnail: video.thumbnailUrl,
             publishedAt: video.publishedAt,
             channelId: channel.id, // This is already a number from the channel object
-            categoryId: (() => {
-              if (!categoryId) return null;
-              if (typeof categoryId === 'number' && !isNaN(categoryId)) return categoryId;
-              if (typeof categoryId === 'string') {
-                const parsed = parseInt(categoryId);
-                return !isNaN(parsed) ? parsed : null;
-              }
-              return null;
-            })(),
+            categoryId: parsedCategoryId,
             transcript: null,
             importStatus: 'processing',
             videoType: video.videoType,
