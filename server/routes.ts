@@ -1271,7 +1271,7 @@ app.get(`${apiPrefix}/admin/youtube/videos`, async (req, res) => {
       res.status(201).json(newChannel);
     } catch (error) {
       console.error("Error adding YouTube channel:", error);
-      
+
       // Handle database constraint errors
       if (error.code === '23505' && error.constraint === 'youtube_channels_channel_id_unique') {
         return res.status(409).json({ 
@@ -1279,7 +1279,7 @@ app.get(`${apiPrefix}/admin/youtube/videos`, async (req, res) => {
           type: "duplicate_channel"
         });
       }
-      
+
       res.status(500).json({ message: "Failed to add YouTube channel" });
     }
   });
@@ -1378,13 +1378,13 @@ app.get(`${apiPrefix}/admin/youtube/videos`, async (req, res) => {
               if (categoryId.startsWith('header_')) {
                 const headerIdStr = categoryId.replace('header_', '');
                 const headerConfigId = parseInt(headerIdStr);
-                
+
                 if (!isNaN(headerConfigId)) {
                   // Get the header config to find or create corresponding blog category
                   const headerConfig = await db.query.headerConfigs.findFirst({
                     where: eq(schema.headerConfigs.id, headerConfigId)
                   });
-                  
+
                   if (headerConfig) {
                     // Ensure there's a corresponding blog category
                     const blogCategory = await storage.ensureBlogCategoryFromHeader(headerConfig.category);
@@ -1603,32 +1603,32 @@ Status: Transcript extraction failed during import. Video may have captions that
 
       // Handle both string and numeric category IDs, including header categories
       let parsedCategoryId: number | null = null;
-      
+
       if (typeof categoryId === 'string') {
         // Check if it's a header category (format: "header_X")
         if (categoryId.startsWith('header_')) {
           const headerIdStr = categoryId.replace('header_', '');
           const headerConfigId = parseInt(headerIdStr);
-          
+
           if (isNaN(headerConfigId)) {
             console.error(`Failed to parse header category ID "${categoryId}"`);
             return res.status(400).json({ message: "Valid category ID is required" });
           }
-          
+
           // Get the header config to find or create corresponding blog category
           const headerConfig = await db.query.headerConfigs.findFirst({
             where: eq(schema.headerConfigs.id, headerConfigId)
           });
-          
+
           if (!headerConfig) {
             console.error(`Header config not found for ID: ${headerConfigId}`);
             return res.status(400).json({ message: "Header category not found" });
           }
-          
+
           // Ensure there's a corresponding blog category
           const blogCategory = await storage.ensureBlogCategoryFromHeader(headerConfig.category);
           parsedCategoryId = blogCategory.id;
-          
+
           console.log(`Mapped header category "${categoryId}" to blog category ID: ${parsedCategoryId}`);
         } else {
           // Regular numeric string
@@ -2512,6 +2512,82 @@ Status: Transcript extraction failed during import. Video may have captions that
     } catch (error) {
       console.error("Error creating favorite destination:", error);
       res.status(500).json({ message: "Failed to create favorite destination" });
+    }
+  });
+
+  // Update favorite destination
+  app.patch(`${apiPrefix}/admin/favorite-destinations/:id`, async (req, res) => {
+    try {
+      const { id } = req.params;
+      const [destination] = await db.update(schema.favoriteDestinations)
+        .set({
+          ...req.body,
+          updatedAt: new Date()
+        })
+        .where(eq(schema.favoriteDestinations.id, parseInt(id)))
+        .returning();
+      res.json(destination);
+    } catch (error) {
+      console.error("Error updating favorite destination:", error);
+      res.status(500).json({ message: "Failed to update favorite destination" });
+    }
+  });
+
+  // Delete favorite destination
+  app.delete(`${apiPrefix}/admin/favorite-destinations/:id`, async (req, res) => {
+    try {
+      const { id } = req.params;
+      await db.delete(schema.favoriteDestinations)
+        .where(eq(schema.favoriteDestinations.id, parseInt(id)));
+      res.json({ message: "Favorite destination deleted successfully" });
+    } catch (error) {
+      console.error("Error deleting favorite destination:", error);
+      res.status(500).json({ message: "Failed to delete favorite destination" });
+    }
+  });
+
+  // Reorder favorite destination
+  app.patch(`${apiPrefix}/admin/favorite-destinations/:id/reorder`, async (req, res) => {
+    try {
+      const { id } = req.params;
+      const { direction } = req.body;
+
+      const destination = await db.query.favoriteDestinations.findFirst({
+        where: eq(schema.favoriteDestinations.id, parseInt(id))
+      });
+
+      if (!destination) {
+        return res.status(404).json({ message: "Destination not found" });
+      }
+
+      const allDestinations = await db.query.favoriteDestinations.findMany({
+        orderBy: asc(schema.favoriteDestinations.order)
+      });
+
+      const currentIndex = allDestinations.findIndex(d => d.id === destination.id);
+
+      if (direction === 'up' && currentIndex > 0) {
+        const prevDestination = allDestinations[currentIndex - 1];
+        await db.update(schema.favoriteDestinations)
+          .set({ order: prevDestination.order })
+          .where(eq(schema.favoriteDestinations.id, destination.id));
+        await db.update(schema.favoriteDestinations)
+          .set({ order: destination.order })
+          .where(eq(schema.favoriteDestinations.id, prevDestination.id));
+      } else if (direction === 'down' && currentIndex < allDestinations.length - 1) {
+        const nextDestination = allDestinations[currentIndex + 1];
+        await db.update(schema.favoriteDestinations)
+          .set({ order: nextDestination.order })
+          .where(eq(schema.favoriteDestinations.id, destination.id));
+        await db.update(schema.favoriteDestinations)
+          .set({ order: destination.order })
+          .where(eq(schema.favoriteDestinations.id, nextDestination.id));
+      }
+
+      res.json({ message: "Destination reordered successfully" });
+    } catch (error) {
+      console.error("Error reordering favorite destination:", error);
+      res.status(500).json({ message: "Failed to reorder favorite destination" });
     }
   });
 

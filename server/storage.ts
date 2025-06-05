@@ -1809,5 +1809,72 @@ export const storage = {
       console.error(`Error getting active dashboard assets by type ${type}:`, error);
       throw error;
     }
+  },
+
+  // Favorite Destinations Management
+  async getFavoriteDestinations() {
+    try {
+      return await db.query.favoriteDestinations.findMany({
+        orderBy: asc(schema.favoriteDestinations.order),
+      });
+    } catch (error) {
+      console.error('Error getting favorite destinations:', error);
+      throw error;
+    }
+  },
+
+  async getFavoriteDestinationById(id: number) {
+    try {
+      return await db.query.favoriteDestinations.findFirst({
+        where: eq(schema.favoriteDestinations.id, id),
+      });
+    } catch (error) {
+      console.error(`Error getting favorite destination by ID ${id}:`, error);
+      throw error;
+    }
+  },
+
+  async createFavoriteDestination(destinationData: any) {
+    try {
+      const [destination] = await db.insert(schema.favoriteDestinations).values({
+        title: destinationData.title,
+        image: destinationData.image,
+        slug: destinationData.slug,
+        description: destinationData.description,
+        country: destinationData.country,
+        order: destinationData.order || 0,
+      }).returning();
+
+      return destination;
+    } catch (error) {
+      console.error('Error creating favorite destination:', error);
+      throw error;
+    }
+  },
+
+  async updateFavoriteDestination(id: number, destinationData: any) {
+    try {
+      const [updatedDestination] = await db.update(schema.favoriteDestinations)
+        .set({
+          ...destinationData,
+          updatedAt: new Date()
+        })
+        .where(eq(schema.favoriteDestinations.id, id))
+        .returning();
+
+      return updatedDestination;
+    } catch (error) {
+      console.error(`Error updating favorite destination ${id}:`, error);
+      throw error;
+    }
+  },
+
+  async deleteFavoriteDestination(id: number) {
+    try {
+      await db.delete(schema.favoriteDestinations).where(eq(schema.favoriteDestinations.id, id));
+    } catch (error) {
+      console.error(`Error deleting favorite destination ${id}:`, error);
+      throw error;
+    }
   }
 };

@@ -70,65 +70,107 @@ const FavoriteDestinations = () => {
   });
 
   const createMutation = useMutation({
-    mutationFn: async (data) => {
+    mutationFn: async (data: any) => {
       const response = await fetch('/api/admin/favorite-destinations', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(data),
       });
-      if (!response.ok) throw new Error('Failed to create destination');
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || 'Failed to create destination');
+      }
       return response.json();
     },
     onSuccess: () => {
-      queryClient.invalidateQueries(['/api/admin/favorite-destinations']);
+      queryClient.invalidateQueries({ queryKey: ['/api/admin/favorite-destinations'] });
       toast({ title: "Destination created successfully" });
       setIsDialogOpen(false);
       form.reset();
     },
+    onError: (error: Error) => {
+      toast({ 
+        title: "Error", 
+        description: error.message,
+        variant: "destructive"
+      });
+    },
   });
 
   const updateMutation = useMutation({
-    mutationFn: async ({ id, data }) => {
+    mutationFn: async ({ id, data }: { id: number; data: any }) => {
       const response = await fetch(`/api/admin/favorite-destinations/${id}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(data),
       });
-      if (!response.ok) throw new Error('Failed to update destination');
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || 'Failed to update destination');
+      }
       return response.json();
     },
     onSuccess: () => {
-      queryClient.invalidateQueries(['/api/admin/favorite-destinations']);
+      queryClient.invalidateQueries({ queryKey: ['/api/admin/favorite-destinations'] });
       toast({ title: "Destination updated successfully" });
       setIsDialogOpen(false);
       form.reset();
     },
+    onError: (error: Error) => {
+      toast({ 
+        title: "Error", 
+        description: error.message,
+        variant: "destructive"
+      });
+    },
   });
 
   const deleteMutation = useMutation({
-    mutationFn: async (id) => {
+    mutationFn: async (id: number) => {
       const response = await fetch(`/api/admin/favorite-destinations/${id}`, {
         method: 'DELETE',
       });
-      if (!response.ok) throw new Error('Failed to delete destination');
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || 'Failed to delete destination');
+      }
+      return response.json();
     },
     onSuccess: () => {
-      queryClient.invalidateQueries(['/api/admin/favorite-destinations']);
+      queryClient.invalidateQueries({ queryKey: ['/api/admin/favorite-destinations'] });
       toast({ title: "Destination deleted successfully" });
+    },
+    onError: (error: Error) => {
+      toast({ 
+        title: "Error", 
+        description: error.message,
+        variant: "destructive"
+      });
     },
   });
 
   const reorderMutation = useMutation({
-    mutationFn: async ({ id, direction }) => {
+    mutationFn: async ({ id, direction }: { id: number; direction: string }) => {
       const response = await fetch(`/api/admin/favorite-destinations/${id}/reorder`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ direction }),
       });
-      if (!response.ok) throw new Error('Failed to reorder destination');
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || 'Failed to reorder destination');
+      }
+      return response.json();
     },
     onSuccess: () => {
-      queryClient.invalidateQueries(['/api/admin/favorite-destinations']);
+      queryClient.invalidateQueries({ queryKey: ['/api/admin/favorite-destinations'] });
+    },
+    onError: (error: Error) => {
+      toast({ 
+        title: "Error", 
+        description: error.message,
+        variant: "destructive"
+      });
     },
   });
 
