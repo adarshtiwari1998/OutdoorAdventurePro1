@@ -398,8 +398,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const { categoryId, videoCount, isActive, title, description } = req.body;
 
+      // Safely parse categoryId - handle null, undefined, empty string, and "NaN"
+      let parsedCategoryId = null;
+      if (categoryId && categoryId !== "" && categoryId !== "NaN" && !isNaN(parseInt(categoryId))) {
+        parsedCategoryId = parseInt(categoryId);
+      }
+
       const settings = await storage.saveHomeVideoSettings({
-        categoryId: parseInt(categoryId),
+        categoryId: parsedCategoryId,
         videoCount,
         isActive,
         title,
