@@ -944,8 +944,7 @@ const YoutubeImport = () => {
                         <SelectItem value="imported">Imported</SelectItem>
                         <SelectItem value="failed">Failed</SelectItem>
                       </SelectContent>
-                    </Select```python
-<replit_final_file>
+                    </Select>
                   </div>
 
                   <div>
