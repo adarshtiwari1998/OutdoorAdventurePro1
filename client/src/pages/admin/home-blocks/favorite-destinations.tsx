@@ -80,7 +80,7 @@ const FavoriteDestinations = () => {
       return response.json();
     },
     onSuccess: () => {
-      queryClient.invalidateQueries(['/api/admin/favorite-destinations']);
+      queryClient.invalidateQueries({ queryKey: ['/api/admin/favorite-destinations'] });
       toast({ title: "Destination created successfully" });
       setIsDialogOpen(false);
       form.reset();
@@ -98,7 +98,7 @@ const FavoriteDestinations = () => {
       return response.json();
     },
     onSuccess: () => {
-      queryClient.invalidateQueries(['/api/admin/favorite-destinations']);
+      queryClient.invalidateQueries({ queryKey: ['/api/admin/favorite-destinations'] });
       toast({ title: "Destination updated successfully" });
       setIsDialogOpen(false);
       form.reset();
@@ -111,16 +111,24 @@ const FavoriteDestinations = () => {
         method: 'DELETE',
       });
       if (!response.ok) {
-        const errorData = await response.json().catch(() => ({}));
-        throw new Error(errorData.error || 'Failed to delete destination');
+        const errorText = await response.text();
+        console.error('Delete response error:', errorText);
+        throw new Error('Failed to delete destination');
       }
-      return response.json();
+      
+      // Check if response has content before parsing JSON
+      const contentType = response.headers.get('content-type');
+      if (contentType && contentType.includes('application/json')) {
+        return response.json();
+      }
+      return {}; // Return empty object if no JSON content
     },
     onSuccess: () => {
-      queryClient.invalidateQueries(['/api/admin/favorite-destinations']);
+      queryClient.invalidateQueries({ queryKey: ['/api/admin/favorite-destinations'] });
       toast({ title: "Destination deleted successfully" });
     },
     onError: (error) => {
+      console.error('Delete mutation error:', error);
       toast({ 
         title: "Error deleting destination", 
         description: error.message,
@@ -139,7 +147,7 @@ const FavoriteDestinations = () => {
       if (!response.ok) throw new Error('Failed to reorder destination');
     },
     onSuccess: () => {
-      queryClient.invalidateQueries(['/api/admin/favorite-destinations']);
+      queryClient.invalidateQueries({ queryKey: ['/api/admin/favorite-destinations'] });
     },
   });
 
