@@ -585,6 +585,31 @@ header {
     opacity: 1;
   }
 
+  /* External video preview boxes */
+  .video-preview-thumbnail {
+    backdrop-filter: blur(8px);
+    background: rgba(0, 0, 0, 0.8);
+  }
+
+  /* Custom scrollbar for external preview columns */
+  .video-preview-thumbnail::-webkit-scrollbar {
+    width: 4px;
+  }
+
+  .video-preview-thumbnail::-webkit-scrollbar-track {
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 2px;
+  }
+
+  .video-preview-thumbnail::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.3);
+    border-radius: 2px;
+  }
+
+  .video-preview-thumbnail::-webkit-scrollbar-thumb:hover {
+    background: rgba(255, 255, 255, 0.5);
+  }
+
   /* Video navigation indicator */
   .video-nav-indicator {
     backdrop-filter: blur(8px);

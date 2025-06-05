@@ -387,61 +387,40 @@ const ShortsAndVideosSection = ({ className = "" }: ShortsAndVideosSectionProps)
 
       {/* Video Modal */}
       <Dialog open={selectedVideoIndex !== null} onOpenChange={closeModal}>
-        <DialogContent className="max-w-6xl w-full h-[90vh] p-0 gap-0 md:max-w-6xl sm:max-w-full sm:h-full sm:m-0 sm:rounded-none">
+        <DialogContent className="max-w-5xl w-full h-[85vh] p-0 gap-0 md:max-w-5xl sm:max-w-full sm:h-full sm:m-0 sm:rounded-none">
+          {/* Custom Close Button */}
+          <button
+            onClick={closeModal}
+            className="absolute top-4 right-4 z-50 bg-black/50 hover:bg-black/70 text-white rounded-full p-2 transition-colors"
+          >
+            <X className="h-4 w-4" />
+          </button>
+
+          {/* Navigation Arrows - Desktop */}
+          <div className="hidden md:block">
+            {selectedVideoIndex !== null && selectedVideoIndex > 0 && (
+              <button
+                onClick={handlePreviousVideo}
+                className="absolute left-4 top-1/2 -translate-y-1/2 z-40 bg-black/50 hover:bg-black/70 text-white rounded-full p-3 transition-colors"
+              >
+                <ChevronLeft className="h-6 w-6" />
+              </button>
+            )}
+
+            {selectedVideoIndex !== null && selectedVideoIndex < combinedVideos.length - 1 && (
+              <button
+                onClick={handleNextVideo}
+                className="absolute right-4 top-1/2 -translate-y-1/2 z-40 bg-black/50 hover:bg-black/70 text-white rounded-full p-3 transition-colors"
+              >
+                <ChevronRight className="h-6 w-6" />
+              </button>
+            )}
+          </div>
+
           <div className="flex h-full md:flex-row flex-col"
                onTouchStart={handleTouchStart}
                onTouchMove={handleTouchMove}
                onTouchEnd={handleTouchEnd}>
-
-            {/* Custom Close Button */}
-            <button
-              onClick={closeModal}
-              className="absolute top-4 right-4 z-50 bg-black/50 hover:bg-black/70 text-white rounded-full p-2 transition-colors"
-            >
-              <X className="h-4 w-4" />
-            </button>
-
-            {/* Navigation Arrows - Desktop */}
-            <div className="hidden md:block">
-              {selectedVideoIndex !== null && selectedVideoIndex > 0 && (
-                <button
-                  onClick={handlePreviousVideo}
-                  className="absolute left-4 top-1/2 -translate-y-1/2 z-40 bg-black/50 hover:bg-black/70 text-white rounded-full p-3 transition-colors"
-                >
-                  <ChevronLeft className="h-6 w-6" />
-                </button>
-              )}
-
-              {selectedVideoIndex !== null && selectedVideoIndex < combinedVideos.length - 1 && (
-                <button
-                  onClick={handleNextVideo}
-                  className="absolute right-4 top-1/2 -translate-y-1/2 z-40 bg-black/50 hover:bg-black/70 text-white rounded-full p-3 transition-colors"
-                >
-                  <ChevronRight className="h-6 w-6" />
-                </button>
-              )}
-            </div>
-
-             {/* Left Side - Video Preview Thumbnails */}
-             <div className="hidden md:flex flex-col w-20 bg-gray-700 overflow-y-auto">
-              {combinedVideos.slice(0, selectedVideoIndex).map((video, index) => {
-                const actualIndex = index;
-                  return (
-                    
-                    <div
-                      key={video.id}
-                      className="video-preview-thumbnail w-16 h-12 bg-gray-800 rounded overflow-hidden cursor-pointer border-2 border-transparent hover:border-white/50"
-                      onClick={() => setSelectedVideoIndex(actualIndex)}
-                    >
-                      <img
-                        src={video.thumbnail}
-                        alt={video.title}
-                        className="w-full h-full object-cover"
-                      />
-                    </div>
-                  );
-                })}
-              </div>
 
             {/* Left side - Video Player */}
             <div className="flex-1 bg-black flex items-center justify-center md:h-full h-[60vh]">
@@ -458,29 +437,8 @@ const ShortsAndVideosSection = ({ className = "" }: ShortsAndVideosSectionProps)
               )}
             </div>
 
-            {/* Right Side - Video Preview Thumbnails */}
-            <div className="hidden md:flex flex-col w-20 bg-gray-700 overflow-y-auto">
-              {combinedVideos.slice(selectedVideoIndex != null ? selectedVideoIndex + 1 : 0).map((video, index) => {
-                  const actualIndex = selectedVideoIndex != null ? selectedVideoIndex + 1 + index : index;
-                  return (
-                    
-                    <div
-                      key={video.id}
-                      className="video-preview-thumbnail w-16 h-12 bg-gray-800 rounded overflow-hidden cursor-pointer border-2 border-transparent hover:border-white/50"
-                      onClick={() => setSelectedVideoIndex(actualIndex)}
-                    >
-                      <img
-                        src={video.thumbnail}
-                        alt={video.title}
-                        className="w-full h-full object-cover"
-                      />
-                    </div>
-                  );
-                })}
-              </div>
-
             {/* Right side - Video Info (Desktop) / Bottom section (Mobile) */}
-            <div className="md:w-96 w-full bg-white flex flex-col md:h-full h-[40vh]">
+            <div className="md:w-80 w-full bg-white flex flex-col md:h-full h-[40vh]">
               <div className="p-4 border-b md:block hidden">
                 <h3 className="text-lg font-semibold text-gray-900">
                   Video Details
@@ -592,6 +550,58 @@ const ShortsAndVideosSection = ({ className = "" }: ShortsAndVideosSectionProps)
           </div>
         </DialogContent>
       </Dialog>
+
+      {/* External Preview Boxes - Left Side */}
+      {selectedVideoIndex !== null && selectedVideoIndex > 0 && (
+        <div className="fixed left-6 top-1/2 -translate-y-1/2 z-40 hidden md:flex flex-col gap-3 max-h-[70vh] overflow-y-auto">
+          {combinedVideos.slice(Math.max(0, selectedVideoIndex - 3), selectedVideoIndex).map((video, index) => {
+            const actualIndex = Math.max(0, selectedVideoIndex - 3) + index;
+            return (
+              <div
+                key={video.id}
+                className="video-preview-thumbnail w-20 h-14 bg-gray-800 rounded-lg overflow-hidden cursor-pointer border-2 border-white/20 hover:border-white/60 transition-all duration-200 hover:scale-105 shadow-lg backdrop-blur-sm"
+                onClick={() => setSelectedVideoIndex(actualIndex)}
+                title={video.title}
+              >
+                <img
+                  src={video.thumbnail}
+                  alt={video.title}
+                  className="w-full h-full object-cover"
+                />
+                <div className="absolute inset-0 bg-black/30 flex items-center justify-center opacity-0 hover:opacity-100 transition-opacity">
+                  <Play className="h-4 w-4 text-white fill-current" />
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      )}
+
+      {/* External Preview Boxes - Right Side */}
+      {selectedVideoIndex !== null && selectedVideoIndex < combinedVideos.length - 1 && (
+        <div className="fixed right-6 top-1/2 -translate-y-1/2 z-40 hidden md:flex flex-col gap-3 max-h-[70vh] overflow-y-auto">
+          {combinedVideos.slice(selectedVideoIndex + 1, Math.min(combinedVideos.length, selectedVideoIndex + 4)).map((video, index) => {
+            const actualIndex = selectedVideoIndex + 1 + index;
+            return (
+              <div
+                key={video.id}
+                className="video-preview-thumbnail w-20 h-14 bg-gray-800 rounded-lg overflow-hidden cursor-pointer border-2 border-white/20 hover:border-white/60 transition-all duration-200 hover:scale-105 shadow-lg backdrop-blur-sm"
+                onClick={() => setSelectedVideoIndex(actualIndex)}
+                title={video.title}
+              >
+                <img
+                  src={video.thumbnail}
+                  alt={video.title}
+                  className="w-full h-full object-cover"
+                />
+                <div className="absolute inset-0 bg-black/30 flex items-center justify-center opacity-0 hover:opacity-100 transition-opacity">
+                  <Play className="h-4 w-4 text-white fill-current" />
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      )}
     </>
   );
 };
