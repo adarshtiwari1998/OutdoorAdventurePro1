@@ -211,7 +211,7 @@ const HomeVideos = () => {
                           </SelectTrigger>
                         </FormControl>
                         <SelectContent>
-                          {categories?.filter((category: any) => category.type === 'blog')?.map((category: any) => (
+                          {categories?.map((category: any) => (
                             <SelectItem key={category.id} value={category.id.toString()}>
                               {category.name}
                             </SelectItem>
