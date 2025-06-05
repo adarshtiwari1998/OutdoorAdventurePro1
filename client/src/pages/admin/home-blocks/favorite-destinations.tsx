@@ -80,7 +80,7 @@ const FavoriteDestinations = () => {
       return response.json();
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['/api/admin/favorite-destinations'] });
+      queryClient.invalidateQueries(['/api/admin/favorite-destinations']);
       toast({ title: "Destination created successfully" });
       setIsDialogOpen(false);
       form.reset();
@@ -98,7 +98,7 @@ const FavoriteDestinations = () => {
       return response.json();
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['/api/admin/favorite-destinations'] });
+      queryClient.invalidateQueries(['/api/admin/favorite-destinations']);
       toast({ title: "Destination updated successfully" });
       setIsDialogOpen(false);
       form.reset();
@@ -107,41 +107,14 @@ const FavoriteDestinations = () => {
 
   const deleteMutation = useMutation({
     mutationFn: async (id) => {
-      console.log(`Attempting to delete destination with ID: ${id}`);
       const response = await fetch(`/api/admin/favorite-destinations/${id}`, {
         method: 'DELETE',
       });
-      
-      if (!response.ok) {
-        const errorText = await response.text();
-        console.error('Delete response error:', errorText);
-        throw new Error(`Failed to delete destination: ${response.status} ${response.statusText}`);
-      }
-      
-      // Parse JSON response
-      const result = await response.json();
-      console.log('Delete response:', result);
-      
-      if (!result.success) {
-        throw new Error(result.error || 'Delete operation failed');
-      }
-      
-      return result;
+      if (!response.ok) throw new Error('Failed to delete destination');
     },
-    onSuccess: (data) => {
-      console.log('Delete mutation successful:', data);
-      // Force refetch the data
-      queryClient.invalidateQueries({ queryKey: ['/api/admin/favorite-destinations'] });
-      queryClient.refetchQueries({ queryKey: ['/api/admin/favorite-destinations'] });
+    onSuccess: () => {
+      queryClient.invalidateQueries(['/api/admin/favorite-destinations']);
       toast({ title: "Destination deleted successfully" });
-    },
-    onError: (error) => {
-      console.error('Delete mutation error:', error);
-      toast({ 
-        title: "Error deleting destination", 
-        description: error.message,
-        variant: "destructive"
-      });
     },
   });
 
@@ -155,7 +128,7 @@ const FavoriteDestinations = () => {
       if (!response.ok) throw new Error('Failed to reorder destination');
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['/api/admin/favorite-destinations'] });
+      queryClient.invalidateQueries(['/api/admin/favorite-destinations']);
     },
   });
 
