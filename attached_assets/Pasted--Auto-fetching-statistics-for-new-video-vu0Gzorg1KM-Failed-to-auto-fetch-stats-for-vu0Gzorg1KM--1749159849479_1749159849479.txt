@@ -1,0 +1,94 @@
+ Auto-fetching statistics for new video: vu0Gzorg1KM
+⚠️ Failed to auto-fetch stats for vu0Gzorg1KM: Error [ERR_MODULE_NOT_FOUND]: Cannot find module '/home/runner/workspace/services/youtubeService' imported from /home/runner/workspace/server/storage.ts
+    at finalizeResolution (node:internal/modules/esm/resolve:265:11)
+    at moduleResolve (node:internal/modules/esm/resolve:933:10)
+    at defaultResolve (node:internal/modules/esm/resolve:1169:11)
+    at nextResolve (node:internal/modules/esm/hooks:868:28)
+    at resolveBase (file:///home/runner/workspace/node_modules/tsx/dist/esm/index.mjs?1749158043176:2:3212)
+    at async resolveDirectory (file:///home/runner/workspace/node_modules/tsx/dist/esm/index.mjs?1749158043176:2:3578)
+    at async resolve (file:///home/runner/workspace/node_modules/tsx/dist/esm/index.mjs?1749158043176:2:4441)
+    at async nextResolve (node:internal/modules/esm/hooks:868:22)
+    at async Hooks.resolve (node:internal/modules/esm/hooks:306:24)
+    at async handleMessage (node:internal/modules/esm/worker:196:18) {
+  code: 'ERR_MODULE_NOT_FOUND',
+  url: 'file:///home/runner/workspace/services/youtubeService'
+}
+✅ Step 1/2: Video metadata imported (1/5)
+📄 Step 2/2: Fetching transcript for: India 🇮🇳 Vacation #vacationideas #indiatravel #travel (vu0Gzorg1KM)
+📄 Fetching transcript for: vu0Gzorg1KM
+🔗 YouTube API Request: videos with params: { part: 'snippet,contentDetails,statistics', id: 'vu0Gzorg1KM' }
+✅ YouTube API Response for videos: {
+  kind: 'youtube#videoListResponse',
+  etag: 'E8rDIYkEvkR7tq-HcDeLyff1G14',
+  items: [
+    {
+      kind: 'youtube#video',
+      etag: '0W1z9HUB0HjfZ5lJOJhQIx2Eb_Q',
+      id: 'vu0Gzorg1KM',
+      snippet: [Object],
+      contentDetails: [Object],
+      statistics: [Object]
+    }
+  ],
+  pageInfo: { totalResults: 1, resultsPerPage: 1 }
+}
+🎬 Detected SHORT: India 🇮🇳 Vacation #vacationideas #indiatravel #travel (33s, hasIndicator: false)
+📋 Video: "India 🇮🇳 Vacation #vacationideas #indiatravel #travel" (33s, short)
+⏳ Waiting 3.04s before transcript request...
+🔄 Strategy 1/3: Direct extraction for video: vu0Gzorg1KM
+❌ Strategy Direct failed: No transcript data from direct method
+🔄 Strategy 2/3: Language-specific (en) for video: vu0Gzorg1KM
+❌ Strategy Language failed: [YoutubeTranscript] 🚨 No transcripts are available in en this video (vu0Gzorg1KM). Available languages: hi
+🔄 Strategy 3/3: Auto-generated captions for video: vu0Gzorg1KM
+❌ All extraction strategies failed for video vu0Gzorg1KM
+❌ Step 2/2: Error fetching transcript for India 🇮🇳 Vacation #vacationideas #indiatravel #travel: Error: All extraction strategies failed: [YoutubeTranscript] 🚨 No transcripts are available in en this video (vu0Gzorg1KM). Available languages: hi
+    at <anonymous> (/home/runner/workspace/server/routes.ts:1767:23)
+    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)
+⏳ Waiting 30 seconds before next video (error count: 1)...
+9:43:12 PM [express] GET /api/admin/dashboard-assets 304 in 665ms :: [{"id":13,"type":"favicon","nam…
+9:43:19 PM [express] GET /api/admin/dashboard-assets 304 in 665ms :: [{"id":13,"type":"favicon","nam…
+
+🔄 Processing video 2/5: The Buccaneer Beach & Golf Resort Full Review
+📁 Final category ID for video "The Buccaneer Beach & Golf Resort Full Review": 16
+📊 Auto-fetching statistics for new video: e4lt7DjVDJk
+⚠️ Failed to auto-fetch stats for e4lt7DjVDJk: Error [ERR_MODULE_NOT_FOUND]: Cannot find module '/home/runner/workspace/services/youtubeService' imported from /home/runner/workspace/server/storage.ts
+    at finalizeResolution (node:internal/modules/esm/resolve:265:11)
+    at moduleResolve (node:internal/modules/esm/resolve:933:10)
+    at defaultResolve (node:internal/modules/esm/resolve:1169:11)
+    at nextResolve (node:internal/modules/esm/hooks:868:28)
+    at resolveBase (file:///home/runner/workspace/node_modules/tsx/dist/esm/index.mjs?1749158043176:2:3212)
+    at async resolveDirectory (file:///home/runner/workspace/node_modules/tsx/dist/esm/index.mjs?1749158043176:2:3578)
+    at async resolve (file:///home/runner/workspace/node_modules/tsx/dist/esm/index.mjs?1749158043176:2:4441)
+    at async nextResolve (node:internal/modules/esm/hooks:868:22)
+    at async Hooks.resolve (node:internal/modules/esm/hooks:306:24)
+    at async handleMessage (node:internal/modules/esm/worker:196:18) {
+  code: 'ERR_MODULE_NOT_FOUND',
+  url: 'file:///home/runner/workspace/services/youtubeService'
+}
+✅ Step 1/2: Video metadata imported (2/5)
+📄 Step 2/2: Fetching transcript for: The Buccaneer Beach & Golf Resort Full Review (e4lt7DjVDJk)
+📄 Fetching transcript for: e4lt7DjVDJk
+🔗 YouTube API Request: videos with params: { part: 'snippet,contentDetails,statistics', id: 'e4lt7DjVDJk' }
+✅ YouTube API Response for videos: {
+  kind: 'youtube#videoListResponse',
+  etag: 'vDKLsz4gwM94lmwaBKdePrSPTnY',
+  items: [
+    {
+      kind: 'youtube#video',
+      etag: 'hlYwXb3TykaKuNsaveAuATCfaQw',
+      id: 'e4lt7DjVDJk',
+      snippet: [Object],
+      contentDetails: [Object],
+      statistics: [Object]
+    }
+  ],
+  pageInfo: { totalResults: 1, resultsPerPage: 1 }
+}
+🎥 Detected VIDEO: The Buccaneer Beach & Golf Resort Full Review (2183s)
+📋 Video: "The Buccaneer Beach & Golf Resort Full Review" (2183s, video)
+⏳ Waiting 2.17s before transcript request...
+🔄 Strategy 1/3: Direct extraction for video: e4lt7DjVDJk
+✅ Direct extraction successful: 804 transcript segments
+✅ Successfully extracted transcript: 31073 characters using Direct
+✅ Step 2/2: Real transcript fetched for: The Buccaneer Beach & Golf Resort Full Review
+⏳ Waiting 30 seconds before next video (error count: 1)...
