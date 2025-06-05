@@ -662,6 +662,7 @@ header {
   [data-radix-dialog-overlay] {
     background: rgba(0, 0, 0, 0.8);
     backdrop-filter: blur(4px);
+    pointer-events: auto;
   }
 
   /* Dialog content enhancements */
@@ -671,6 +672,12 @@ header {
     border: none !important;
     background: transparent !important;
     box-shadow: none !important;
+    pointer-events: none;
+  }
+
+  /* Re-enable pointer events for the actual modal content */
+  [data-radix-dialog-content] > div {
+    pointer-events: auto;
   }
 
   /* Video navigation indicator */

@@ -401,7 +401,7 @@ const ShortsAndVideosSection = ({ className = "" }: ShortsAndVideosSectionProps)
             {selectedVideoIndex !== null && selectedVideoIndex > 0 && (
               <button
                 onClick={handlePreviousVideo}
-                className="absolute -left-16 top-1/2 -translate-y-1/2 z-40 bg-black/70 hover:bg-black/90 text-white rounded-full p-3 transition-colors"
+                className="absolute -left-16 top-1/2 -translate-y-1/2 z-[80] bg-black/70 hover:bg-black/90 text-white rounded-full p-3 transition-colors"
               >
                 <ChevronLeft className="h-6 w-6" />
               </button>
@@ -410,7 +410,7 @@ const ShortsAndVideosSection = ({ className = "" }: ShortsAndVideosSectionProps)
             {selectedVideoIndex !== null && selectedVideoIndex < combinedVideos.length - 1 && (
               <button
                 onClick={handleNextVideo}
-                className="absolute -right-16 top-1/2 -translate-y-1/2 z-40 bg-black/70 hover:bg-black/90 text-white rounded-full p-3 transition-colors"
+                className="absolute -right-16 top-1/2 -translate-y-1/2 z-[80] bg-black/70 hover:bg-black/90 text-white rounded-full p-3 transition-colors"
               >
                 <ChevronRight className="h-6 w-6" />
               </button>
@@ -553,7 +553,7 @@ const ShortsAndVideosSection = ({ className = "" }: ShortsAndVideosSectionProps)
 
       {/* External Preview Boxes - Left Side */}
       {selectedVideoIndex !== null && selectedVideoIndex > 0 && (
-        <div className="fixed left-[calc(50vw-32rem-3rem)] top-1/2 -translate-y-1/2 z-[70] hidden xl:flex flex-col gap-3 max-h-[70vh] overflow-y-auto custom-scrollbar">
+        <div className="fixed left-[calc(50vw-32rem-3rem)] top-1/2 -translate-y-1/2 z-[60] hidden xl:flex flex-col gap-3 max-h-[70vh] overflow-y-auto custom-scrollbar">
           {combinedVideos.slice(Math.max(0, selectedVideoIndex - 3), selectedVideoIndex).map((video, index) => {
             const actualIndex = Math.max(0, selectedVideoIndex - 3) + index;
             return (
@@ -563,14 +563,12 @@ const ShortsAndVideosSection = ({ className = "" }: ShortsAndVideosSectionProps)
                 onClick={(e) => {
                   e.preventDefault();
                   e.stopPropagation();
-                  e.nativeEvent.stopImmediatePropagation();
                   setSelectedVideoIndex(actualIndex);
                   setShowFullDescription(false);
                 }}
                 onMouseDown={(e) => {
                   e.preventDefault();
                   e.stopPropagation();
-                  e.nativeEvent.stopImmediatePropagation();
                 }}
                 title={video.title}
               >
@@ -599,7 +597,7 @@ const ShortsAndVideosSection = ({ className = "" }: ShortsAndVideosSectionProps)
 
       {/* External Preview Boxes - Right Side */}
       {selectedVideoIndex !== null && selectedVideoIndex < combinedVideos.length - 1 && (
-        <div className="fixed right-[calc(50vw-32rem-3rem)] top-1/2 -translate-y-1/2 z-[70] hidden xl:flex flex-col gap-3 max-h-[70vh] overflow-y-auto custom-scrollbar">
+        <div className="fixed right-[calc(50vw-32rem-3rem)] top-1/2 -translate-y-1/2 z-[60] hidden xl:flex flex-col gap-3 max-h-[70vh] overflow-y-auto custom-scrollbar">
           {combinedVideos.slice(selectedVideoIndex + 1, Math.min(combinedVideos.length, selectedVideoIndex + 4)).map((video, index) => {
             const actualIndex = selectedVideoIndex + 1 + index;
             return (
@@ -609,14 +607,12 @@ const ShortsAndVideosSection = ({ className = "" }: ShortsAndVideosSectionProps)
                 onClick={(e) => {
                   e.preventDefault();
                   e.stopPropagation();
-                  e.nativeEvent.stopImmediatePropagation();
                   setSelectedVideoIndex(actualIndex);
                   setShowFullDescription(false);
                 }}
                 onMouseDown={(e) => {
                   e.preventDefault();
                   e.stopPropagation();
-                  e.nativeEvent.stopImmediatePropagation();
                 }}
                 title={video.title}
               >
