@@ -230,9 +230,24 @@ const YoutubeImport = () => {
         totalCount: 0,
         importedCount: 0,
         skippedCount: 0,
-        logs: [`🚀 Starting import of ${limit} videos...`],
+        logs: [
+          `🚀 Starting import of ${limit} videos...`,
+          `📡 Connecting to YouTube API...`,
+          `🎯 Target channel: ${channelId}`,
+          `⚙️ Preparing import workflow...`
+        ],
         canClose: false
       });
+
+      // Auto-scroll function
+      const autoScrollLogs = () => {
+        setTimeout(() => {
+          const logElement = document.getElementById('import-logs');
+          if (logElement) {
+            logElement.scrollTop = logElement.scrollHeight;
+          }
+        }, 100);
+      };
 
       // Small delay to show initial progress
       await new Promise(resolve => setTimeout(resolve, 500));
@@ -246,8 +261,9 @@ const YoutubeImport = () => {
           ...prev,
           currentStep: 'Fetching videos from YouTube API...',
           progress: 20,
-          logs: [...prev.logs, '📡 Connecting to YouTube API...']
+          logs: [...prev.logs, '📡 Making API request to YouTube...', '🔍 Searching for latest videos...']
         }));
+        autoScrollLogs();
 
         const response = await fetch(`/api/admin/youtube/channels/${channelId}/import`, {
           method: 'POST',
@@ -265,54 +281,85 @@ const YoutubeImport = () => {
         // Step 2: Process response
         setImportProgress(prev => ({
           ...prev,
-          currentStep: 'Processing videos...',
-          progress: 70,
-          logs: [...prev.logs, '⚙️ Processing video data...']
+          currentStep: 'Processing video metadata...',
+          progress: 50,
+          logs: [...prev.logs, '⚙️ Processing video data...', '🗃️ Saving to database...']
         }));
+        autoScrollLogs();
 
         const data = await response.json();
-        const importedVideos = data.videos; // Assuming the imported videos are returned in a "videos" array
+        const importedVideos = data.videos || []; 
+
+        // Update with actual counts
+        setImportProgress(prev => ({
+          ...prev,
+          currentStep: 'Video import phase completed',
+          progress: 70,
+          processedCount: data.count || 0,
+          importedCount: data.count || 0,
+          skippedCount: data.skipped || 0,
+          logs: [...prev.logs, 
+            `✅ Imported ${data.count || 0} videos successfully`,
+            `⏭️ Skipped ${data.skipped || 0} duplicate videos`,
+            `🎯 Starting transcript collection phase...`
+          ]
+        }));
+        autoScrollLogs();
 
         // Collect video IDs of successfully imported videos
         videoIdsForTranscripts = importedVideos.map((video: YoutubeVideo) => video.id);
         
-        setImportProgress(prev => ({
-          ...prev,
-          currentStep: 'Fetching Transcripts...',
-          progress: 80,
-          logs: [...prev.logs, '⚙️ Fetching transcripts']
-        }));
+        if (videoIdsForTranscripts.length > 0) {
+          setImportProgress(prev => ({
+            ...prev,
+            currentStep: 'Fetching transcripts...',
+            progress: 75,
+            logs: [...prev.logs, `📄 Processing transcripts for ${videoIdsForTranscripts.length} videos...`]
+          }));
+          autoScrollLogs();
 
-        // Step 3: Fetch Transcripts individually after videos are imported
-        for (const videoId of videoIdsForTranscripts) {
-          try {
-             setImportProgress(prev => ({
-              ...prev,
-              currentStep: `Fetching transcript for ${videoId}...`,
-              progress: 80 + (20 * (videoIdsForTranscripts.indexOf(videoId) + 1) / videoIdsForTranscripts.length),
-              logs: [...prev.logs, `🎬 Fetching transcript for video: ${videoId}`]
-            }));
-            const transcriptResponse = await fetch(`/api/admin/youtube/videos/${videoId}/transcript`, {method: 'POST'});
+          // Step 3: Fetch Transcripts individually after videos are imported
+          for (let i = 0; i < videoIdsForTranscripts.length; i++) {
+            const videoId = videoIdsForTranscripts[i];
+            try {
+              const currentProgress = 75 + (20 * (i + 1) / videoIdsForTranscripts.length);
+              setImportProgress(prev => ({
+                ...prev,
+                currentStep: `Fetching transcript ${i + 1}/${videoIdsForTranscripts.length}...`,
+                progress: currentProgress,
+                logs: [...prev.logs, `🎬 [${i + 1}/${videoIdsForTranscripts.length}] Processing transcript for video: ${videoId}`]
+              }));
+              autoScrollLogs();
 
-            if (!transcriptResponse.ok) {
-              const errorData = await transcriptResponse.json().catch(() => ({ message: 'Unknown error' }));
-              throw new Error(errorData.message || `HTTP ${transcriptResponse.status}`);
+              const transcriptResponse = await fetch(`/api/admin/youtube/videos/${videoId}/transcript`, {method: 'POST'});
+
+              if (!transcriptResponse.ok) {
+                const errorData = await transcriptResponse.json().catch(() => ({ message: 'Unknown error' }));
+                throw new Error(errorData.message || `HTTP ${transcriptResponse.status}`);
+              }
+
+              const transcriptData = await transcriptResponse.json();
+              
+              setImportProgress(prev => ({
+                ...prev,
+                logs: [...prev.logs, `✅ Transcript successful for video: ${videoId}`]
+              }));
+              autoScrollLogs();
+
+            } catch (transcriptError) {
+              setImportProgress(prev => ({
+                ...prev,
+                logs: [...prev.logs, `❌ Transcript failed for video ${videoId}: ${transcriptError instanceof Error ? transcriptError.message : String(transcriptError)}`]
+              }));
+              autoScrollLogs();
             }
-
-            const transcriptData = await transcriptResponse.json();
-
-          } catch (transcriptError) {
-             setImportProgress(prev => ({
-              ...prev,
-              logs: [...prev.logs, `❌ Transcript Error for video ${videoId}: ${transcriptError instanceof Error ? transcriptError.message : String(transcriptError)}`]
-            }));
           }
         }
 
         // Step 4: Complete
         setImportProgress(prev => ({
           ...prev,
-          currentStep: 'Import completed!',
+          currentStep: 'Import completed successfully!',
           progress: 100,
           processedCount: data.total || 0,
           totalCount: data.total || 0,
@@ -320,21 +367,42 @@ const YoutubeImport = () => {
           skippedCount: data.skipped || 0,
           logs: [
             ...prev.logs,
-            `✅ Import completed!`,
-            `📊 Summary: ${data.count || 0} imported, ${data.skipped || 0} skipped`
+            `🎉 Import workflow completed!`,
+            `📊 Final Summary:`,
+            `   • ${data.count || 0} videos imported`,
+            `   • ${data.skipped || 0} videos skipped`,
+            `   • ${videoIdsForTranscripts.length} transcripts processed`,
+            `✅ All operations completed successfully!`
           ],
           canClose: true
         }));
+        autoScrollLogs();
 
         return data;
       } catch (error) {
+        const errorMessage = error instanceof Error ? error.message : String(error);
         setImportProgress(prev => ({
           ...prev,
           currentStep: 'Import failed',
           progress: 0,
-          logs: [...prev.logs, `❌ Error: ${error instanceof Error ? error.message : String(error)}`],
+          logs: [
+            ...prev.logs, 
+            `💥 IMPORT FAILED!`,
+            `❌ Error: ${errorMessage}`,
+            `🔍 Check the error details above`,
+            `🔄 You can try importing again`
+          ],
           canClose: true
         }));
+        
+        // Auto scroll to show error
+        setTimeout(() => {
+          const logElement = document.getElementById('import-logs');
+          if (logElement) {
+            logElement.scrollTop = logElement.scrollHeight;
+          }
+        }, 100);
+        
         throw error;
       }
     },
@@ -1534,9 +1602,12 @@ const YoutubeImport = () => {
           setShowImportDialog(false);
         }
       }}>
-        <AlertDialogContent className="max-w-2xl">
+        <AlertDialogContent className="max-w-4xl max-h-[80vh]">
           <AlertDialogHeader>
-            <AlertDialogTitle>Importing Videos from YouTube</AlertDialogTitle>
+            <AlertDialogTitle className="flex items-center gap-2">
+              <Youtube className="h-5 w-5 text-red-500" />
+              Importing Videos from YouTube
+            </AlertDialogTitle>
             <AlertDialogDescription>
               Please wait while we fetch and process the videos...
             </AlertDialogDescription>
@@ -1546,18 +1617,105 @@ const YoutubeImport = () => {
             {importProgress.isImporting && (
               <div className="space-y-4">
                 <div className="flex items-center justify-between">
-                  <span className="text-sm font-medium">{importProgress.currentStep}</span>
-                  <span className="text-sm text-muted-foreground">{importProgress.progress}%</span>
+                  <span className="text-sm font-medium flex items-center gap-2">
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                    {importProgress.currentStep}
+                  </span>
+                  <span className="text-sm text-muted-foreground font-mono">
+                    {importProgress.progress}%
+                  </span>
                 </div>
-                <Progress value={importProgress.progress} className="h-2" />
-                {importProgress.processedCount > 0 && (
-                  <div className="text-sm text-muted-foreground">
-                    Videos: {importProgress.importedCount} imported, {importProgress.skippedCount} skipped
+                <Progress value={importProgress.progress} className="h-3" />
+                
+                {/* Summary Stats */}
+                <div className="grid grid-cols-3 gap-4 p-3 bg-gray-50 dark:bg-gray-900 rounded-lg">
+                  <div className="text-center">
+                    <div className="text-sm text-muted-foreground">Processed</div>
+                    <div className="text-lg font-bold">{importProgress.processedCount}</div>
+                  </div>
+                  <div className="text-center">
+                    <div className="text-sm text-muted-foreground">Imported</div>
+                    <div className="text-lg font-bold text-green-600">{importProgress.importedCount}</div>
+                  </div>
+                  <div className="text-center">
+                    <div className="text-sm text-muted-foreground">Skipped</div>
+                    <div className="text-lg font-bold text-orange-600">{importProgress.skippedCount}</div>
+                  </div>
+                </div>
+
+                {/* Live Log Viewer */}
+                <div className="border rounded-lg">
+                  <div className="flex items-center justify-between p-3 border-b bg-gray-50 dark:bg-gray-900">
+                    <h4 className="text-sm font-medium flex items-center gap-2">
+                      <FileText className="h-4 w-4" />
+                      Live Import Log
+                    </h4>
+                    <div className="flex items-center gap-2">
+                      <div className="flex items-center gap-1">
+                        <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
+                        <span className="text-xs text-muted-foreground">Live</span>
+                      </div>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => {
+                          const logElement = document.getElementById('import-logs');
+                          if (logElement) {
+                            logElement.scrollTop = logElement.scrollHeight;
+                          }
+                        }}
+                      >
+                        <ChevronDown className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  </div>
+                  <div 
+                    id="import-logs"
+                    className="p-3 h-48 overflow-y-auto bg-black text-green-400 font-mono text-xs leading-relaxed scrollbar-thin scrollbar-thumb-gray-600 scrollbar-track-gray-800"
+                  >
+                    {importProgress.logs.length === 0 ? (
+                      <div className="text-gray-500">Waiting for log output...</div>
+                    ) : (
+                      importProgress.logs.map((log, index) => (
+                        <div key={index} className="mb-1 break-words">
+                          <span className="text-gray-500 mr-2">
+                            [{new Date().toLocaleTimeString()}]
+                          </span>
+                          <span 
+                            className={
+                              log.includes('❌') || log.includes('Error') ? 'text-red-400' :
+                              log.includes('✅') || log.includes('Success') ? 'text-green-400' :
+                              log.includes('⚠️') || log.includes('Warning') ? 'text-yellow-400' :
+                              log.includes('🔄') || log.includes('Processing') ? 'text-blue-400' :
+                              log.includes('📄') || log.includes('Fetching') ? 'text-cyan-400' :
+                              log.includes('🎬') || log.includes('Video') ? 'text-purple-400' :
+                              'text-green-400'
+                            }
+                          >
+                            {log}
+                          </span>
+                        </div>
+                      ))
+                    )}
+                  </div>
+                </div>
+
+                {/* Special Status Messages */}
+                {importProgress.currentStep.includes('transcript') && (
+                  <div className="flex items-center gap-2 p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
+                    <Clock className="h-4 w-4 text-blue-600" />
+                    <span className="text-sm text-blue-600">
+                      🎯 Fetching transcripts individually to avoid rate limits...
+                    </span>
                   </div>
                 )}
-                {importProgress.currentStep.includes('transcript') && (
-                  <div className="text-sm text-blue-600">
-                    🎯 Fetching transcripts individually to avoid rate limits...
+
+                {importProgress.progress === 100 && (
+                  <div className="flex items-center gap-2 p-3 bg-green-50 dark:bg-green-900/20 rounded-lg">
+                    <CheckCircle2 className="h-4 w-4 text-green-600" />
+                    <span className="text-sm text-green-600">
+                      Import completed successfully!
+                    </span>
                   </div>
                 )}
               </div>
