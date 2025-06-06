@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { useQuery, useQueryClient, useMutation } from "@tanstack/react-query";
 import { useForm } from "react-hook-form";
@@ -15,7 +16,6 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import { useToast } from "@/hooks/use-toast";
 import { Textarea } from "@/components/ui/textarea";
 import { Edit, Trash2, Video, Loader2 } from "lucide-react";
-
 
 const categoryVideoSettingsSchema = z.object({
   category: z.string().min(1, "Category is required"),
@@ -191,6 +191,14 @@ const CategoryVideos = () => {
       description: setting.description || "",
       videoType: setting.videoType || "all",
     });
+
+    // Scroll to form for better UX
+    setTimeout(() => {
+      document.getElementById('category-form')?.scrollIntoView({ 
+        behavior: 'smooth', 
+        block: 'start' 
+      });
+    }, 100);
   };
 
   const handleDelete = (category: string) => {
@@ -231,9 +239,18 @@ const CategoryVideos = () => {
     }
   };
 
+  // Group categories by type for better organization
+  const getCategoryDisplayText = (category: any) => {
+    const type = category.type || 'blog';
+    const typeLabel = type === 'activity' ? 'Activity' : 
+                     type === 'product' ? 'Product' : 
+                     type === 'header' ? 'Landing Page' : 'Blog';
+    return `${category.name} (${typeLabel} - ID: ${category.id})`;
+  };
+
   return (
       <div className="space-y-6">
-        <Card>
+        <Card id="category-form">
           <CardHeader>
             <CardTitle>
               {editingCategory ? `Edit ${editingCategory} Video Settings` : 'Add Category Video Settings'}
@@ -253,20 +270,22 @@ const CategoryVideos = () => {
                     </SelectTrigger>
                     <SelectContent className="max-h-60 overflow-y-auto">
                       {/* Header categories (landing pages) */}
-                      {availableCategories.map((config: any) => (
-                        <SelectItem key={config.category} value={config.category}>
-                          {config.category.charAt(0).toUpperCase() + config.category.slice(1)} (Landing Page)
-                        </SelectItem>
-                      ))}
+                      <optgroup>
+                        {availableCategories.map((config: any) => (
+                          <SelectItem key={config.category} value={config.category}>
+                            {config.category.charAt(0).toUpperCase() + config.category.slice(1)} (Landing Page)
+                          </SelectItem>
+                        ))}
+                      </optgroup>
                       
-                      {/* All other categories */}
+                      {/* All other categories grouped by type */}
                       {categories?.filter((cat: any) => 
                         !availableCategories.some((header: any) => 
                           header.category.toLowerCase() === cat.name.toLowerCase()
                         )
                       ).map((category: any) => (
                         <SelectItem key={category.id} value={category.id.toString()}>
-                          {category.name} (ID: {category.id})
+                          {getCategoryDisplayText(category)}
                         </SelectItem>
                       ))}
                     </SelectContent>
