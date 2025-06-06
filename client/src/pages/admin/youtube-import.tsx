@@ -349,7 +349,7 @@ const YoutubeImport = () => {
 
   const importChannelVideosMutation = useMutation({
     mutationFn: async ({ channelId, limit, categoryId }: { channelId: string, limit: number, categoryId?: string }) => {
-      console.log(`🎬 Importing ${limit} videos for channel: ${channelId}`);
+      console.log(`Importing ${limit} videos for channel: ${channelId}`);
 
       // Reset progress and start immediately
       const startTime = new Date();
@@ -362,10 +362,10 @@ const YoutubeImport = () => {
         importedCount: 0,
         skippedCount: 0,
         logs: [
-          `🚀 Starting import of ${limit} videos...`,
-          `📡 Connecting to YouTube API...`,
-          `🎯 Target channel: ${channelId}`,
-          `⚙️ Preparing import workflow...`
+          `Starting import of ${limit} videos...`,
+          `Connecting to YouTube API...`,
+          `Target channel: ${channelId}`,
+          `Preparing import workflow...`
         ],
         canClose: false,
         startTime,
@@ -761,14 +761,14 @@ const YoutubeImport = () => {
   };
 
   const onChannelSelect = (channelId: string) => {
-    console.log(`🎯 Selecting channel: ${channelId}`);
+    console.log(`Selecting channel: ${channelId}`);
     setSelectedChannelId(channelId);
     setActiveTab("videos");
     // set the category
   };
 
   const handleImportFromChannel = (channelId: string) => {
-    console.log(`🚀 Starting import for channel: ${channelId}`);
+    console.log(`Starting import for channel: ${channelId}`);
     setImportChannelId(channelId);
 
     // Reset import progress state
@@ -793,7 +793,7 @@ const YoutubeImport = () => {
 
   const handleStartImport = () => {
     if (importChannelId) {
-      console.log(`🎯 Starting import with category: ${selectedCategoryForImport}`);
+      console.log(`Starting import with category: ${selectedCategoryForImport}`);
 
       // Ensure we pass the correct category ID
       let categoryIdToPass = null;
@@ -801,7 +801,7 @@ const YoutubeImport = () => {
         categoryIdToPass = selectedCategoryForImport;
       }
 
-      console.log(`📋 Final category ID to pass: ${categoryIdToPass}`);
+      console.log(`Final category ID to pass: ${categoryIdToPass}`);
 
       importChannelVideosMutation.mutate({ 
         channelId: importChannelId, 
@@ -2121,7 +2121,7 @@ const YoutubeImport = () => {
               <Select 
                 value={selectedCategoryForImport || "no-category"} 
                 onValueChange={(value) => {
-                  console.log(`🎯 Category selection changed to: ${value}`);
+                  console.log(`Category selection changed to: ${value}`);
                   setSelectedCategoryForImport(value === "no-category" ? undefined : value);
                 }}
               >
@@ -2139,7 +2139,7 @@ const YoutubeImport = () => {
               </Select>
               {selectedCategoryForImport && selectedCategoryForImport !== "no-category" && (
                 <p className="text-xs text-green-600 mt-1">
-                  ✅ Selected: {blogCategories?.find(c => c.id === selectedCategoryForImport)?.name}
+                  Selected: {blogCategories?.find(c => c.id === selectedCategoryForImport)?.name}
                 </p>
               )}
             </div>
