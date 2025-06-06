@@ -934,7 +934,8 @@ const YoutubeImport = () => {
 
       <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
         <TabsList className="mb-4">
-          <TabsTrigger value="channels">Channels</TabsTrigger          <TabsTrigger value="videos" disabled={!selectedChannelId}>Videos</TabsTrigger>
+          <TabsTrigger value="channels">Channels</TabsTrigger>
+          <TabsTrigger value="videos" disabled={!selectedChannelId}>Videos</TabsTrigger>
           <TabsTrigger value="add">Add New</TabsTrigger>
         </TabsList>
 
