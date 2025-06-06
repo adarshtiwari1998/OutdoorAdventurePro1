@@ -193,7 +193,7 @@
   .w-18 {
     width: 4.5rem; /* 72px */
   }
-
+  
   .h-18 {
     height: 4.5rem; /* 72px */
   }
@@ -241,14 +241,12 @@
 
 /* Header smooth transitions */
 header {
-  transition: transform 0.05s cubic-bezier(0.4, 0, 0.2, 1), 
-              background-color 0.05s cubic-bezier(0.4, 0, 0.2, 1),
-              backdrop-filter 0.05s cubic-bezier(0.4, 0, 0.2, 1);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   will-change: transform, background-color, backdrop-filter;
 }
 
 .header-transition {
-  transition: all 0.05s cubic-bezier(0.4, 0, 0.2, 1);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .header-hidden {
@@ -268,9 +266,7 @@ header {
 
 /* Enhanced smooth scrolling for header - Google-like */
 .smooth-header-transition {
-  transition: transform 0.04s cubic-bezier(0.4, 0.0, 0.2, 1),
-              background-color 0.04s cubic-bezier(0.4, 0.0, 0.2, 1),
-              backdrop-filter 0.04s cubic-bezier(0.4, 0.0, 0.2, 1);
+  transition: all 0.2s cubic-bezier(0.4, 0.0, 0.2, 1);
   backface-visibility: hidden;
   transform-style: preserve-3d;
   position: relative;
