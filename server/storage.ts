@@ -271,14 +271,57 @@ export const storage = {
   },
 
   // YouTube Videos
-  async getYoutubeVideosByChannel(channelId: string) {
+  async getYoutubeVideosByChannel(channelId: string, limit?: number) {
     try {
-      return await db.query.youtubeVideos.findMany({
-        where: eq(youtubeVideos.channelId, parseInt(channelId)),
-        orderBy: desc(youtubeVideos.publishedAt),
-      });
+      const query = {
+        where: eq(schema.youtubeVideos.channelId, parseInt(channelId)),
+        with: {
+          channel: {
+            columns: { name: true, channelId: true }
+          },
+          category: {
+            columns: { name: true }
+          }
+        },
+        orderBy: [desc(schema.youtubeVideos.publishedAt)],
+        ...(limit && { limit })
+      };
+
+      const videos = await db.query.youtubeVideos.findMany(query);
+
+      return videos.map(video => ({
+        ...video,
+        channelName: video.channel?.name || 'Unknown Channel'
+      }));
     } catch (error) {
-      console.error(`Error getting YouTube videos for channel ${channelId}:`, error);
+      console.error("Error fetching YouTube videos by channel:", error);
+      throw error;
+    }
+  },
+
+  async getAdminYoutubeVideos(limit?: number) {
+    try {
+      const query = {
+        with: {
+          channel: {
+            columns: { name: true, channelId: true }
+          },
+          category: {
+            columns: { name: true }
+          }
+        },
+        orderBy: [desc(schema.youtubeVideos.publishedAt)],
+        ...(limit && { limit })
+      };
+
+      const videos = await db.query.youtubeVideos.findMany(query);
+
+      return videos.map(video => ({
+        ...video,
+        channelName: video.channel?.name || 'Unknown Channel'
+      }));
+    } catch (error) {
+      console.error("Error fetching admin YouTube videos:", error);
       throw error;
     }
   },
@@ -903,7 +946,8 @@ export const storage = {
             id: "102",
             title: "Seasonal Fishing Spots in North America",
             excerpt: "A comprehensive guide to the best fishing locations throughout the year, organized by season and target species.",
-            featuredImage: "https://images.unsplash.com/photo-1499242611767-cf8b9e9d4b19?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80",
+            featuredImage: "https://images.unsplash.com/photo-1499242611767-cf8b9e9d4b19?ixlib=rb-4.0.3&auto=format&fit=crop&w=800<previous_generation>```text
+&q=80",
             category: {
               name: "Fishing",
               slug: "fishing",
@@ -1873,8 +1917,7 @@ export const storage = {
       };
     } catch (error) {
       console.error('Error getting home video settings:', error);
-      throw error;
-    }
+      throw error;    }
   },
 
   async saveHomeVideoSettings(settingsData: any) {

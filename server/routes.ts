@@ -876,7 +876,7 @@ export async function registerRoutes(app: Express): Promise {
       console.error(`Error deleting slider ${req.params.id}:`, error);
       res.status(500).json({message: "Failed to delete slider" });
     }
-  });
+    });
 
   // Process YouTube URL for slider videos
   app.post(`${apiPrefix}/admin/process-youtube-url`, async (req, res) => {
@@ -1531,7 +1531,8 @@ app.delete(`${apiPrefix}/admin/wordpress/credentials`, async (req, res) => {
   });
 app.get(`${apiPrefix}/admin/youtube/videos`, async (req, res) => {
     try {
-      const { channelId } = req.query;
+      const { channelId, limit } = req.query;
+      const limitNum = limit ? parseInt(limit as string) : undefined;
 
       let whereCondition;
       if (channelId) {
@@ -1545,6 +1546,7 @@ app.get(`${apiPrefix}/admin/youtube/videos`, async (req, res) => {
           category: true,
           channel: true, // Include channel information
         },
+        limit: limitNum,
       });
 
       res.json(videos);

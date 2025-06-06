@@ -229,7 +229,7 @@ const YoutubeImport = () => {
     queryFn: async ({ queryKey }) => {
       const [, params] = queryKey;
       console.log(`🎬 Fetching videos for channel:`, params);
-      const response = await fetch(`/api/admin/youtube/videos?channelId=${params.channelId}`);
+      const response = await fetch(`/api/admin/youtube/videos?channelId=${params.channelId}&limit=1000`);
       if (!response.ok) {
         const error = await response.text();
         console.error(`❌ Error fetching videos:`, error);
@@ -1355,63 +1355,57 @@ const YoutubeImport = () => {
                           </TableCell>
                           <TableCell>
                             {video.categoryId ? (
-                              <div className="flex items-center gap-2">
-                                <Badge variant="outline">
-                                  {blogCategories?.find(cat => cat.id === video.categoryId.toString())?.name || 
-                                   video.category?.name || 
-                                   `Category ID: ${video.categoryId}`}
-                                </Badge>
-                                <Select 
-                                  value={video.categoryId.toString()} 
-                                  onValueChange={(categoryId) => {
-                                    if (categoryId && categoryId !== "" && categoryId !== "NaN" && categoryId !== video.categoryId.toString()) {
-                                      console.log('Individual category update:', { videoId: video.id, categoryId });
-                                      bulkUpdateCategoryMutation.mutate({
-                                        videoIds: [video.id],
-                                        categoryId: categoryId
-                                      });
-                                    }
-                                  }}
-                                >
-                                  <SelectTrigger className="w-32 h-7 text-xs">
-                                    <SelectValue placeholder="Change" />
-                                  </SelectTrigger>
-                                  <SelectContent>
-                                    {blogCategories?.map(category => (
-                                      <SelectItem key={category.id} value={category.id}>
-                                        {category.name}
-                                      </SelectItem>
-                                    ))}
-                                  </SelectContent>
-                                </Select>
-                              </div>
+                              <Select 
+                                value={video.categoryId.toString()} 
+                                onValueChange={(categoryId) => {
+                                  if (categoryId && categoryId !== "" && categoryId !== "NaN" && categoryId !== video.categoryId.toString()) {
+                                    console.log('Individual category update:', { videoId: video.id, categoryId });
+                                    bulkUpdateCategoryMutation.mutate({
+                                      videoIds: [video.id],
+                                      categoryId: categoryId
+                                    });
+                                  }
+                                }}
+                              >
+                                <SelectTrigger className="w-40 h-8 text-sm">
+                                  <SelectValue>
+                                    {blogCategories?.find(cat => cat.id === video.categoryId.toString())?.name || 
+                                     video.category?.name || 
+                                     `Category ID: ${video.categoryId}`}
+                                  </SelectValue>
+                                </SelectTrigger>
+                                <SelectContent>
+                                  {blogCategories?.filter(cat => !cat.id.toString().startsWith('header_')).map(category => (
+                                    <SelectItem key={category.id} value={category.id}>
+                                      {category.name}
+                                    </SelectItem>
+                                  ))}
+                                </SelectContent>
+                              </Select>
                             ) : (
-                              <div className="flex items-center gap-2">
-                                <span className="text-muted-foreground text-sm">No Category</span>
-                                <Select 
-                                  value="" 
-                                  onValueChange={(categoryId) => {
-                                    if (categoryId && categoryId !== "" && categoryId !== "NaN") {
-                                      console.log('Individual category assignment:', { videoId: video.id, categoryId });
-                                      bulkUpdateCategoryMutation.mutate({
-                                        videoIds: [video.id],
-                                        categoryId: categoryId
-                                      });
-                                    }
-                                  }}
-                                >
-                                  <SelectTrigger className="w-32 h-7 text-xs">
-                                    <SelectValue placeholder="Assign" />
-                                  </SelectTrigger>
-                                  <SelectContent>
-                                    {blogCategories?.map(category => (
-                                      <SelectItem key={category.id} value={category.id}>
-                                        {category.name}
-                                      </SelectItem>
-                                    ))}
-                                  </SelectContent>
-                                </Select>
-                              </div>
+                              <Select 
+                                value="" 
+                                onValueChange={(categoryId) => {
+                                  if (categoryId && categoryId !== "" && categoryId !== "NaN") {
+                                    console.log('Individual category assignment:', { videoId: video.id, categoryId });
+                                    bulkUpdateCategoryMutation.mutate({
+                                      videoIds: [video.id],
+                                      categoryId: categoryId
+                                    });
+                                  }
+                                }}
+                              >
+                                <SelectTrigger className="w-40 h-8 text-sm">
+                                  <SelectValue placeholder="Select Category" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                  {blogCategories?.filter(cat => !cat.id.toString().startsWith('header_')).map(category => (
+                                    <SelectItem key={category.id} value={category.id}>
+                                      {category.name}
+                                    </SelectItem>
+                                  ))}
+                                </SelectContent>
+                              </Select>
                             )}
                           </TableCell>
                           <TableCell>
