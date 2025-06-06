@@ -45,6 +45,7 @@ import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Loader2 } from "lucide-react";
 import { Link } from "wouter";
 import type { LucideIcon } from "lucide-react";
+import CategoryVideos from "@/pages/admin/landing-pages/category-videos";
 
 interface AdminMenuItemProps {
   icon: LucideIcon;
