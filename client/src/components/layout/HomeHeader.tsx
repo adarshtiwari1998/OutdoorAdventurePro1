@@ -1,7 +1,3 @@
-The HomeHeader component is modified to fix the scroll behavior and add a navigation menu in the second row when the header is fixed.
-```
-
-```replit_final_file
 import { useState, useEffect, useRef } from "react";
 import { Link, useLocation } from "wouter";
 import { useMobile } from "@/hooks/use-mobile";
