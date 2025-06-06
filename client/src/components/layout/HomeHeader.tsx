@@ -233,41 +233,47 @@ const HomeHeader = () => {
       {/* Activity Circles Section - Top */}
       <div className={`w-full transition-all duration-300 ${!showMainHeader && isScrolled ? 'hidden' : ''}`}>
         <div className="w-full px-4">
-          <div className="py-4 space-y-4">
-            {/* Home Logo and Text - Left aligned */}
-            <div className="flex items-center justify-start">
-              <Link href="/" className="flex items-center space-x-3">
-                <img 
-                  src={headerConfig.logoSrc} 
-                  alt={headerConfig.logoText} 
-                  className="h-16 w-16 object-cover rounded-full"
-                />
-                <span className="font-heading font-bold text-2xl text-theme">
-                  {headerConfig.logoText}
-                </span>
-              </Link>
-            </div>
-
-            {/* Activity Circles - Centered in separate row */}
-            <div className="flex items-center justify-center gap-4">
-              {activities?.slice(0, 6).map((activity) => (
-                <Link 
-                  key={activity.id} 
-                  href={`/${activity.category}`}
-                  className="flex flex-col items-center group"
-                > 
-                  <div 
-                    className="w-16 h-16 rounded-full overflow-hidden border-2 border-transparent group-hover:border-theme transition-all duration-200"
-                    style={{ borderColor: activity.primaryColor }}
-                  >
-                    <img 
-                      src={activity.logoSrc} 
-                      alt={activity.logoText} 
-                      className="w-full h-full object-cover"
-                    />
-                  </div>
+          <div className="py-4">
+            {/* Single row: Main Logo on left, Activity Circles centered */}
+            <div className="flex items-center justify-between">
+              {/* Home Logo and Text - Left side */}
+              <div className="flex items-center">
+                <Link href="/" className="flex items-center space-x-3">
+                  <img 
+                    src={headerConfig.logoSrc} 
+                    alt={headerConfig.logoText} 
+                    className="h-16 w-16 object-cover rounded-full"
+                  />
+                  <span className="font-heading font-bold text-2xl text-theme whitespace-nowrap">
+                    {headerConfig.logoText}
+                  </span>
                 </Link>
-              ))}
+              </div>
+
+              {/* Activity Circles - Center */}
+              <div className="flex items-center justify-center gap-4 flex-1">
+                {activities?.slice(0, 6).map((activity) => (
+                  <Link 
+                    key={activity.id} 
+                    href={`/${activity.category}`}
+                    className="flex flex-col items-center group"
+                  > 
+                    <div 
+                      className="w-16 h-16 rounded-full overflow-hidden border-2 border-transparent group-hover:border-theme transition-all duration-200"
+                      style={{ borderColor: activity.primaryColor }}
+                    >
+                      <img 
+                        src={activity.logoSrc} 
+                        alt={activity.logoText} 
+                        className="w-full h-full object-cover"
+                      />
+                    </div>
+                  </Link>
+                ))}
+              </div>
+
+              {/* Empty space for balance */}
+              <div className="w-0"></div>
             </div>
           </div>
         </div>
