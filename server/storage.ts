@@ -925,7 +925,7 @@ export const storage = {
               name: "Fishing",
               slug: "fishing",
             },
-            ```text
+           
 author:{
               name: "Robert Streams",
               avatar: "https://ui-avatars.com/api/?name=Robert+Streams&background=random",
