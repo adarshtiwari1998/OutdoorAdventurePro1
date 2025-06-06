@@ -871,12 +871,9 @@ export async function registerRoutes(app: Express): Promise {
     try {
       const { id } = req.params;
       await storage.deleteSlider(parseInt(id));
-      res.json({ success: true });
-    } catch (error) {
-      console.error(`Error deleting slider ${req.params.id}:`, error);
-      res.status(500).json({message:`Failed to delete slider" });
+      res.status(500).json({ message: "Failed to delete slider" });
     }
-    });
+  });
 
   // Process YouTube URL for slider videos
   app.post(`${apiPrefix}/admin/process-youtube-url`, async (req, res) => {
@@ -1758,11 +1755,11 @@ app.get(`${apiPrefix}/admin/youtube/videos`, async (req, res) => {
             channelId: channel.id, // This is already a number from the channel object
             categoryId: parsedCategoryId,
             transcript: null,
-            ```text
-importStatus: 'processing',
+            importStatus: 'processing',
             videoType: video.videoType,
             duration: video.duration,
-            viewCount: video.viewCount || 0,
+            viewCount: video.text
+viewCount || 0,
             likeCount: video.likeCount || 0,
             commentCount: video.commentCount || 0
           });
@@ -1927,7 +1924,7 @@ Status: Transcript extraction failed during import. Video may have captions that
     }
   });
 
-  
+
 app.delete(`${apiPrefix}/admin/youtube/videos/:id`, async (req, res) => {
     try {
       await storage.deleteYoutubeVideo(parseInt(req.params.id));
@@ -2664,7 +2661,6 @@ app.delete(`${apiPrefix}/admin/youtube/videos/:id`, async (req, res) => {
         return res.status(404).json({ message: "Sidebar configuration not found" });
       }
 
-      //```text
       // Delete config (will cascade delete items)
       await db.delete(schema.sidebarConfigs)
         .where(eq(schema.sidebarConfigs.id, sidebarConfigId));
