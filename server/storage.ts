@@ -2454,58 +2454,5 @@ export const storage = {
     }
   },
 
-  async getCategoryVideoSettings(category: string) {
-    try {
-      const result = await db.select()
-        .from(schema.categoryVideoSettings)
-        .where(eq(schema.categoryVideoSettings.category, category))
-        .limit(1);
-      return result[0] || null;
-    } catch (error) {
-      console.error(`Error getting category video settings for ${category}:`, error);
-      throw error;
-    }
-  },
-
-  async getVideosByCategory(categoryId: number, limit: number = 8, videoType: string = 'all') {
-    try {
-      console.log(`Getting videos for category ${categoryId} with limit ${limit} and videoType ${videoType}`);
-      
-      let query = db.select({
-        id: schema.videos.id,
-        videoId: schema.videos.videoId,
-        title: schema.videos.title,
-        description: schema.videos.description,
-        thumbnail: schema.videos.thumbnail,
-        publishedAt: schema.videos.publishedAt,
-        videoType: schema.videos.videoType,
-        duration: schema.videos.duration,
-        channelName: schema.videos.channelName,
-        viewCount: schema.videos.viewCount,
-        likeCount: schema.videos.likeCount,
-        commentCount: schema.videos.commentCount,
-      })
-      .from(schema.videos)
-      .where(eq(schema.videos.categoryId, categoryId));
-
-      // Filter by video type if specified
-      if (videoType === 'video') {
-        query = query.where(eq(schema.videos.videoType, 'video'));
-      } else if (videoType === 'short') {
-        query = query.where(eq(schema.videos.videoType, 'short'));
-      }
-
-      const videos = await query
-        .orderBy(desc(schema.videos.publishedAt))
-        .limit(limit);
-
-      console.log(`Found ${videos.length} videos for category ${categoryId} with type ${videoType}`);
-      return videos;
-    } catch (error) {
-      console.error(`Error getting videos by category ${categoryId}:`, error);
-      throw error;
-    }
-  },
-
   // Dashboard Assets routes
 };
