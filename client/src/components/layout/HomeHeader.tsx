@@ -302,43 +302,73 @@ const HomeHeader = () => {
 
             {/* Mobile Layout */}
             {isMobile && (
-              <div className="px-4 py-4">
-                {/* Logo Row - Left aligned */}
-                <div className="flex items-center justify-start mb-4">
-                  <Link href="/" className="flex items-center space-x-3">
+              <div className="px-3 py-3">
+                {/* First Row - Logo on left, Activity circles on right */}
+                <div className="flex items-center justify-between mb-3">
+                  <Link href="/" className="flex items-center space-x-2 flex-shrink-0">
                     <img 
                       src={headerConfig.logoSrc} 
                       alt={headerConfig.logoText} 
-                      className="h-14 w-14 object-cover rounded-full"
+                      className="h-10 w-10 object-cover rounded-full"
                     />
-                    <span className="font-heading font-bold text-lg text-theme">
-                      {headerConfig.logoText}
+                    <span className="font-heading font-bold text-sm text-theme">
+                      {headerConfig.logoText.split(' ').slice(0, 2).join(' ')}
                     </span>
                   </Link>
+
+                  {/* Activity Circles - Compact on right */}
+                  <div className="overflow-x-auto scrollbar-hide flex-1 ml-2">
+                    <div className="flex items-center justify-end gap-2" style={{ minWidth: 'max-content' }}>
+                      {activities?.slice(0, 6).map((activity) => (
+                        <Link 
+                          key={activity.id} 
+                          href={`/${activity.category}`}
+                          className="group flex-shrink-0"
+                        > 
+                          <div 
+                            className="w-9 h-9 rounded-full overflow-hidden border border-transparent group-hover:border-theme transition-all duration-200 shadow-sm"
+                            style={{ borderColor: activity.primaryColor }}
+                          >
+                            <img 
+                              src={activity.logoSrc} 
+                              alt={activity.logoText} 
+                              className="w-full h-full object-cover"
+                            />
+                          </div>
+                        </Link>
+                      ))}
+                    </div>
+                  </div>
                 </div>
 
-                {/* Activity Circles Row with Horizontal Scroll - Centered */}
-                <div className="overflow-x-auto scrollbar-hide">
-                  <div className="flex items-center justify-center gap-3 pb-2" style={{ minWidth: 'max-content' }}>
-                    {activities?.map((activity) => (
-                      <Link 
-                        key={activity.id} 
-                        href={`/${activity.category}`}
-                        className="flex flex-col items-center group flex-shrink-0"
-                      > 
-                        <div 
-                          className="w-12 h-12 rounded-full overflow-hidden border border-transparent group-hover:border-theme transition-all duration-200 shadow-md"
-                          style={{ borderColor: activity.primaryColor }}
-                        >
-                          <img 
-                            src={activity.logoSrc} 
-                            alt={activity.logoText} 
-                            className="w-full h-full object-cover"
-                          />
-                        </div>
-                      </Link>
-                    ))}
+                {/* Second Row - Search bar with cart and menu */}
+                <div className="flex items-center gap-2">
+                  <div className="flex-1">
+                    <div className="relative">
+                      <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={16} />
+                      <input
+                        type="text"
+                        placeholder="Search destinations, activities..."
+                        className="w-full pl-9 pr-4 py-2 border border-gray-300 rounded-full focus:outline-none focus:ring-2 focus:ring-theme focus:border-transparent text-sm bg-gray-50"
+                      />
+                    </div>
                   </div>
+                  
+                  <Link href="/cart" className="relative flex-shrink-0">
+                    <ShoppingCart className="text-gray-700 hover:text-theme transition" size={20} />
+                    {(typeof cartCount === 'number' && cartCount > 0) && (
+                      <span className="absolute -top-1 -right-1 bg-theme text-white text-xs rounded-full h-4 w-4 flex items-center justify-center">
+                        {cartCount > 9 ? '9+' : cartCount}
+                      </span>
+                    )}
+                  </Link>
+                  
+                  <button 
+                    className="text-gray-700 hover:text-theme transition p-1 flex-shrink-0" 
+                    onClick={toggleMobileMenu}
+                  >
+                    <Menu size={20} />
+                  </button>
                 </div>
               </div>
             )}
@@ -447,53 +477,51 @@ const HomeHeader = () => {
                 </div>
               )}
 
-              {/* Mobile Scrolled Layout - Google Style */}
+              {/* Mobile Scrolled Layout - Compact Single Row */}
               {isMobile && (
-                <div className="flex items-center justify-between py-1">
-                  {/* Left side - Logo and Activity Circles with Scroll */}
-                  <div className="flex items-center gap-3 flex-1 min-w-0">
-                    <Link href="/" className="flex items-center space-x-2 flex-shrink-0">
-                      <img 
-                        src={headerConfig.logoSrc} 
-                        alt={headerConfig.logoText} 
-                        className="h-12 w-12 object-cover rounded-full"
-                      />
-                      <span className="font-heading font-bold text-base text-theme whitespace-nowrap">
-                        {headerConfig.logoText.split(' ')[0]}
-                      </span>
-                    </Link>
+                <div className="flex items-center justify-between py-2">
+                  {/* Logo - Compact */}
+                  <Link href="/" className="flex items-center space-x-1 flex-shrink-0">
+                    <img 
+                      src={headerConfig.logoSrc} 
+                      alt={headerConfig.logoText} 
+                      className="h-8 w-8 object-cover rounded-full"
+                    />
+                    <span className="font-heading font-bold text-xs text-theme whitespace-nowrap">
+                      {headerConfig.logoText.split(' ')[0]}
+                    </span>
+                  </Link>
 
-                    {/* Activity Circles with Horizontal Scroll */}
-                    <div className="overflow-x-auto scrollbar-hide flex-1">
-                      <div className="flex items-center justify-center gap-2 pb-1" style={{ minWidth: 'max-content' }}>
-                        {activities?.slice(0, 6).map((activity) => (
-                          <Link 
-                            key={activity.id} 
-                            href={`/${activity.category}`}
-                            className="group flex-shrink-0"
-                          > 
-                            <div 
-                              className="w-8 h-8 rounded-full overflow-hidden border border-transparent group-hover:border-theme transition-all duration-200 shadow-sm"
-                              style={{ borderColor: activity.primaryColor }}
-                            >
-                              <img 
-                                src={activity.logoSrc} 
-                                alt={activity.logoText} 
-                                className="w-full h-full object-cover"
-                              />
-                            </div>
-                          </Link>
-                        ))}
-                      </div>
+                  {/* Activity Circles - Center */}
+                  <div className="overflow-x-auto scrollbar-hide flex-1 mx-2">
+                    <div className="flex items-center justify-center gap-1" style={{ minWidth: 'max-content' }}>
+                      {activities?.slice(0, 6).map((activity) => (
+                        <Link 
+                          key={activity.id} 
+                          href={`/${activity.category}`}
+                          className="group flex-shrink-0"
+                        > 
+                          <div 
+                            className="w-7 h-7 rounded-full overflow-hidden border border-transparent group-hover:border-theme transition-all duration-200 shadow-sm"
+                            style={{ borderColor: activity.primaryColor }}
+                          >
+                            <img 
+                              src={activity.logoSrc} 
+                              alt={activity.logoText} 
+                              className="w-full h-full object-cover"
+                            />
+                          </div>
+                        </Link>
+                      ))}
                     </div>
                   </div>
 
                   {/* Right side - Actions */}
-                  <div className="flex items-center space-x-2 flex-shrink-0 ml-2">
+                  <div className="flex items-center space-x-2 flex-shrink-0">
                     <Link href="/cart" className="relative">
-                      <ShoppingCart className="text-gray-700 hover:text-theme transition" size={20} />
+                      <ShoppingCart className="text-gray-700 hover:text-theme transition" size={18} />
                       {(typeof cartCount === 'number' && cartCount > 0) && (
-                        <span className="absolute -top-1 -right-1 bg-theme text-white text-xs rounded-full h-4 w-4 flex items-center justify-center">
+                        <span className="absolute -top-1 -right-1 bg-theme text-white text-xs rounded-full h-3 w-3 flex items-center justify-center text-[10px]">
                           {cartCount > 9 ? '9+' : cartCount}
                         </span>
                       )}
@@ -502,7 +530,7 @@ const HomeHeader = () => {
                       className="text-gray-700 hover:text-theme transition p-1" 
                       onClick={toggleMobileMenu}
                     >
-                      <Menu size={20} />
+                      <Menu size={18} />
                     </button>
                   </div>
                 </div>
@@ -576,40 +604,7 @@ const HomeHeader = () => {
                 </div>
               )}
 
-              {/* Mobile Normal Layout - Google Style Single Row */}
-              {isMobile && (
-                <div className="flex items-center justify-between">
-                  {/* Search Bar - Takes most space */}
-                  <div className="flex-1 mr-3">
-                    <div className="relative">
-                      <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={18} />
-                      <input
-                        type="text"
-                        placeholder="Search destinations, activities..."
-                        className="w-full pl-10 pr-4 py-2.5 border border-gray-300 rounded-full focus:outline-none focus:ring-2 focus:ring-theme focus:border-transparent text-sm bg-gray-50"
-                      />
-                    </div>
-                  </div>
-
-                  {/* Right Actions */}
-                  <div className="flex items-center space-x-3 flex-shrink-0">
-                    <Link href="/cart" className="relative">
-                      <ShoppingCart className="text-gray-700 hover:text-theme transition" size={22} />
-                      {(typeof cartCount === 'number' && cartCount > 0) && (
-                        <span className="absolute -top-1 -right-1 bg-theme text-white text-xs rounded-full h-4 w-4 flex items-center justify-center">
-                          {cartCount > 9 ? '9+' : cartCount}
-                        </span>
-                      )}
-                    </Link>
-                    <button 
-                      className="text-gray-700 hover:text-theme transition p-1" 
-                      onClick={toggleMobileMenu}
-                    >
-                      <Menu size={22} />
-                    </button>
-                  </div>
-                </div>
-              )}
+              
             </div>
           )}
         </div>
