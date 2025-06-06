@@ -3225,6 +3225,24 @@ app.get(`${apiPrefix}/admin/tips/:id`, async (req, res) => {
     }
   });
 
+  app.post(`${apiPrefix}/admin/youtube/channels/auto-assign-categories`, async (req, res) => {
+    try {
+      console.log(`🔄 Starting auto-assignment of channel categories...`);
+
+      const result = await storage.autoAssignChannelCategories();
+
+      res.json({
+        success: true,
+        channelsUpdated: result.channelsUpdated,
+        results: result.results,
+        message: `Successfully auto-assigned categories to ${result.channelsUpdated} channels based on their video categories.`
+      });
+    } catch (error) {
+      console.error("Error auto-assigning channel categories:", error);
+      res.status(500).json({ message: "Failed to auto-assign channel categories" });
+    }
+  });
+
   // Intelligent retry system with circuit breaker pattern for YouTube transcript fetching.
   app.post(`${apiPrefix}/admin/youtube/videos/retry-transcripts`, async (req, res) => {
     try {

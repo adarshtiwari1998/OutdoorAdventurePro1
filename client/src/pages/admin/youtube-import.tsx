@@ -56,6 +56,10 @@ type YoutubeChannel = {
   importedVideoCount: number;
   lastImport: string | null;
   categoryId?:number
+  category?: {
+    id: string;
+    name: string;
+  }
 };
 
 type YoutubeVideo = {
@@ -68,6 +72,10 @@ type YoutubeVideo = {
   channelId: string;
   channelName: string;
   categoryId?: string;
+  category?: {
+    id: string;
+    name: string;
+  }
   importStatus: "pending" | "imported" | "failed";
   blogPostId?: string;
   hasBlogPostMatch: boolean;
@@ -749,6 +757,32 @@ const YoutubeImport = () => {
     },
   });
 
+  const autoAssignCategoriesMutation = useMutation({
+    mutationFn: async () => {
+      const response = await fetch('/api/admin/youtube/channels/auto-assign-categories', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' }
+      });
+      if (!response.ok) throw new Error('Failed to auto-assign categories');
+      return response.json();
+    },
+    onSuccess: (data) => {
+      toast({
+        title: "Auto-Assignment Complete",
+        description: data.message,
+        variant: "default",
+      });
+      queryClient.invalidateQueries({ queryKey: ['/api/admin/youtube/channels'] });
+    },
+    onError: (error) => {
+      toast({
+        title: "Auto-Assignment Failed",
+        description: error.message,
+        variant: "destructive",
+      });
+    }
+  });
+
   const updateChannelCategoryMutation = useMutation({
     mutationFn: async ({ channelId, categoryId }: { channelId: string; categoryId: number }) => {
       return apiRequest('PATCH', `/api/admin/youtube/channels/${channelId}/category`, { categoryId });
@@ -939,6 +973,7 @@ const YoutubeImport = () => {
           <TableCell><Skeleton className="h-5 w-16" /></TableCell>
           <TableCell><Skeleton className="h-5 w-16" /></TableCell>
           <TableCell><Skeleton className="h-5 w-24" /></TableCell>
+          <TableCell><Skeleton className="h-5 w-24" /></TableCell>
           <TableCell className="text-right"><Skeleton className="h-8 w-24 ml-auto" /></TableCell>
         </TableRow>
       ))}
@@ -966,6 +1001,24 @@ const YoutubeImport = () => {
     <div className="container mx-auto px-4 py-10">
       <div className="flex justify-between items-center mb-8">
         <h1 className="text-3xl font-heading font-bold">Youtube Import</h1>
+        <div className="flex gap-2">
+                <Button 
+                  onClick={() => syncCountsMutation.mutate()}
+                  disabled={syncCountsMutation.isPending}
+                  size="sm"
+                  variant="outline"
+                >
+                  {syncCountsMutation.isPending ? "Syncing..." : "Sync Counts"}
+                </Button>
+                <Button 
+                  onClick={() => autoAssignCategoriesMutation.mutate()}
+                  disabled={autoAssignCategoriesMutation.isPending}
+                  size="sm"
+                  variant="outline"
+                >
+                  {autoAssignCategoriesMutation.isPending ? "Auto-Assigning..." : "Auto-Assign Categories"}
+                </Button>
+              </div>
       </div>
 
       <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
@@ -986,17 +1039,18 @@ const YoutubeImport = () => {
             <CardContent>
               <div className="admin-table-container channels-table">
                 <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>Channel Name</TableHead>
-                      <TableHead>Channel ID</TableHead>
-                      <TableHead>Subscribers</TableHead>
-                      <TableHead>Total Videos</TableHead>
-                      <TableHead>Imported Videos</TableHead>
-                      <TableHead>Last Import</TableHead>
-                      <TableHead className="text-right">Actions</TableHead>
-                    </TableRow>
-                  </TableHeader>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Channel Name</TableHead>
+                    <TableHead>Channel ID</TableHead>
+                    <TableHead>Subscribers</TableHead>
+                    <TableHead>Total Videos</TableHead>
+                    <TableHead>Imported Videos</TableHead>
+                    <TableHead>Last Import</TableHead>
+                    <TableHead>Category</TableHead>
+                    <TableHead>Actions</TableHead>
+                  </TableRow>
+                </TableHeader>
                   <TableBody>
                     {channelsLoading ? (
                       renderChannelSkeleton()
@@ -1009,57 +1063,28 @@ const YoutubeImport = () => {
                     ) : (
                       channels?.map((channel) => (
                         <TableRow key={channel.id}>
-                          <TableCell>
-                            <div 
-                              className="font-medium cursor-pointer hover:text-primary"
-                              onClick={() => onChannelSelect(channel.id.toString())}
-                            >
-                              {channel.name}
-                            </div>
-                          </TableCell>
-                          <TableCell>
-                            <code className="bg-gray-100 px-2 py-1 rounded text-xs font-mono">
-                              {channel.channelId}
-                            </code>
-                          </TableCell>
-                          <TableCell>{channel.subscribers.toLocaleString()}</TableCell>
-                          <TableCell>{channel.videoCount}</TableCell>
-                          <TableCell>
-                            <Badge variant="secondary">
-                              {channel.importedVideoCount || 0}
-                            </Badge>
-                          </TableCell>
-                          <TableCell>
-                            {channel.lastImport 
-                              ? format(new Date(channel.lastImport), 'MMM d, yyyy') 
-                              : 'Never'
-                            }
-                          </TableCell>
-                          <TableCell>
-                            <Select 
-                              value={channel.categoryId ? channel.categoryId.toString() : ""} 
-                              onValueChange={(categoryId) => {
-                                if (categoryId && categoryId !== "" && categoryId !== "NaN") {
-                                  console.log('Update/Assign channel category:', { channelId: channel.id, categoryId });
-                                  updateChannelCategoryMutation.mutate({
-                                    channelId: channel.id,
-                                    categoryId: parseInt(categoryId)
-                                  });
-                                }
-                              }}
-                            >
-                              <SelectTrigger className="w-40 h-8 text-sm">
-                                <SelectValue placeholder="Select Category" />
-                              </SelectTrigger>
-                              <SelectContent className="max-h-60 overflow-y-auto">
-                                {blogCategories?.map(category => (
-                                  <SelectItem key={category.id} value={category.id.toString()}>
-                                    {category.name} ({category.type || 'blog'})
-                                  </SelectItem>
-                                ))}
-                              </SelectContent>
-                            </Select>
-                          </TableCell>
+                      <TableCell className="font-medium">{channel.name}</TableCell>
+                      <TableCell className="text-xs font-mono">{channel.channelId}</TableCell>
+                      <TableCell>{channel.subscribers?.toLocaleString()}</TableCell>
+                      <TableCell>{channel.videoCount?.toLocaleString()}</TableCell>
+                      <TableCell>
+                        <Badge variant="secondary">{channel.importedVideoCount}</Badge>
+                      </TableCell>
+                      <TableCell className="text-sm text-gray-600">
+                        {channel.lastImport 
+                          ? new Date(channel.lastImport).toLocaleDateString()
+                          : "Never"
+                        }
+                      </TableCell>
+                      <TableCell>
+                        {channel.category ? (
+                          <Badge variant="outline" className="text-xs">
+                            {channel.category.name}
+                          </Badge>
+                        ) : (
+                          <span className="text-gray-400 text-xs">No Category</span>
+                        )}
+                      </TableCell>
                           <TableCell className="text-right">
                             <Button 
                               variant="outline" 
@@ -1747,7 +1772,8 @@ const YoutubeImport = () => {
               <CardHeader>
                 <CardTitle>Add Youtube Channel</CardTitle>
                 <CardDescription>
-                  Connect a Youtube channel to import videos from.
+                  Connect a Youtube channel to import```text
+videos from.
                 </CardDescription>
               </CardHeader>
               <CardContent>
