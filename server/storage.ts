@@ -2452,6 +2452,8 @@ export const storage = {
       console.error(`Error deleting category video settings for ${category}:`, error);
       throw error;
     }
+  },hrow error;
+    }
   },
 
   // Dashboard Assets routes

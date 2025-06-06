@@ -962,6 +962,163 @@ export async function registerRoutes(app: Express): Promise {
     }
   });
 
+  // Category Video Settings API routes
+  app.get(`${apiPrefix}/admin/category-video-settings`, async (req, res) => {
+    try {
+      const settings = await storage.getAllCategoryVideoSettings();
+      res.json(settings);
+    } catch (error) {
+      console.error("Error fetching category video settings:", error);
+      res.status(500).json({ message: "Failed to fetch category video settings" });
+    }
+  });
+
+  app.get(`${apiPrefix}/admin/category-video-settings/:category`, async (req, res) => {
+    try {
+      const { category } = req.params;
+      const settings = await storage.getCategoryVideoSettings(category);
+      res.json(settings);
+    } catch (error) {
+      console.error(`Error fetching category video settings for ${req.params.category}:`, error);
+      res.status(500).json({ message: "Failed to fetch category video settings" });
+    }
+  });
+
+  app.post(`${apiPrefix}/admin/category-video-settings`, async (req, res) => {
+    try {
+      const { category, categoryId, videoCount, isActive, title, description, videoType } = req.body;
+
+      console.log('Received category video settings:', { category, categoryId, videoCount, isActive, title, description, videoType });
+
+      // Handle both regular category IDs and header category IDs
+      let parsedCategoryId = null;
+      if (categoryId !== null && categoryId !== undefined && categoryId !== "" && categoryId !== "NaN") {
+        if (typeof categoryId === 'number') {
+          parsedCategoryId = categoryId;
+        } else if (typeof categoryId === 'string') {
+          // Check if it's a header category (format: "header_X")
+          if (categoryId.startsWith('header_')) {
+            console.log(`⚠️ WARNING: Received header category ID "${categoryId}" - this should use regular category IDs`);
+            const headerIdStr = categoryId.replace('header_', '');
+            const headerConfigId = parseInt(headerIdStr);
+
+            if (!isNaN(headerConfigId)) {
+              // Get the header config to find or create corresponding blog category
+              const headerConfig = await db.query.headerConfigs.findFirst({
+                where: eq(schema.headerConfigs.id, headerConfigId)
+              });
+
+              if (headerConfig) {
+                // Ensure there's a corresponding blog category
+                const blogCategory = await storage.ensureBlogCategoryFromHeader(headerConfig.category);
+                parsedCategoryId = blogCategory.id;
+                console.log(`🔄 Mapped header category "${categoryId}" to blog category ID: ${parsedCategoryId}`);
+              }
+            }
+          } else {
+            // Regular numeric string
+            const parsed = parseInt(categoryId);
+            if (!isNaN(parsed)) {
+              parsedCategoryId = parsed;
+              console.log(`✅ Using regular category ID: ${parsedCategoryId}`);
+            }
+          }
+        }
+      }
+
+      console.log('Parsed categoryId:', parsedCategoryId);
+
+      const settings = await storage.saveCategoryVideoSettings({
+        category,
+        categoryId: parsedCategoryId,
+        videoCount,
+        isActive,
+        title,
+        description,
+        videoType: videoType || 'all'
+      });
+
+      console.log('Saved category video settings:', settings);
+      res.json(settings);
+    } catch (error) {
+      console.error("Error saving category video settings:", error);
+      res.status(500).json({ message: "Failed to save category video settings" });
+    }
+  });
+
+  app.delete(`${apiPrefix}/admin/category-video-settings/:category`, async (req, res) => {
+    try {
+      const { category } = req.params;
+      await storage.deleteCategoryVideoSettings(category);
+      res.json({ message: "Category video settings deleted successfully" });
+    } catch (error) {
+      console.error(`Error deleting category video settings for ${req.params.category}:`, error);
+      res.status(500).json({ message: "Failed to delete category video settings" });
+    }
+  });
+
+  app.get(`${apiPrefix}/admin/category-video-preview/:category`, async (req, res) => {
+    try {
+      const { category } = req.params;
+      const { categoryId, videoCount, videoType } = req.query;
+
+      console.log('Category video preview request - category:', category, 'categoryId:', categoryId, 'videoCount:', videoCount, 'videoType:', videoType);
+
+      if (!categoryId || categoryId === "undefined" || categoryId === "null" || categoryId === "" || categoryId === undefined) {
+        console.log('No valid categoryId provided, returning empty array');
+        return res.json([]);
+      }
+
+      // Handle both regular category IDs and header category IDs
+      let parsedCategoryId = null;
+      if (typeof categoryId === 'string') {
+        // Check if it's a header category (format: "header_X")
+        if (categoryId.startsWith('header_')) {
+          const headerIdStr = categoryId.replace('header_', '');
+          const headerConfigId = parseInt(headerIdStr);
+
+          if (!isNaN(headerConfigId)) {
+            // Get the header config to find or create corresponding blog category
+            const headerConfig = await db.query.headerConfigs.findFirst({
+              where: eq(schema.headerConfigs.id, headerConfigId)
+            });
+
+            if (headerConfig) {
+              // Ensure there's a corresponding blog category
+              const blogCategory = await storage.ensureBlogCategoryFromHeader(headerConfig.category);
+              parsedCategoryId = blogCategory.id;
+              console.log(`Mapped header category "${categoryId}" to blog category ID: ${parsedCategoryId}`);
+            }
+          }
+        } else {
+          // Regular numeric string
+          parsedCategoryId = parseInt(categoryId);
+        }
+      } else if (typeof categoryId === 'number') {
+        parsedCategoryId = categoryId;
+      }
+
+      if (isNaN(parsedCategoryId) || parsedCategoryId === null) {
+        console.log('Failed to parse categoryId, returning empty array');
+        return res.json([]);
+      }
+
+      console.log(`Looking for videos with category_id: ${parsedCategoryId}`);
+
+      const videos = await storage.getVideosByCategory(
+        parsedCategoryId, 
+        parseInt(videoCount as string) || 8,
+        videoType as string || 'all'
+      );
+
+      console.log(`Final result: ${videos.length} videos for category ${parsedCategoryId}`);
+      res.json(videos);
+    } catch (error) {
+      console.error("Error fetching category video preview:", error);
+      res.status(500).json({ message: "Failed to fetch category video preview" });
+    }
+  });
+
   // Categories routes
   app.get("/api/admin/categories", async (req: Request, res: Response) => {
     try {
