@@ -185,8 +185,19 @@ const AdvancedCarousel = ({ slides }: AdvancedCarouselProps) => {
                 // Check if it's a YouTube embed URL
                 slide.videoUrl.includes('youtube.com/embed') ? (
                   <iframe
-                    src={`${slide.videoUrl}?autoplay=${isPlaying ? 1 : 0}&mute=${isMuted ? 1 : 0}&loop=1&playlist=${slide.videoUrl.split('/').pop()?.split('?')[0]}&controls=0&showinfo=0&rel=0`}
-                    className="w-full h-full object-cover"
+                    src={`${slide.videoUrl}?autoplay=${isPlaying ? 1 : 0}&mute=${isMuted ? 1 : 0}&loop=1&playlist=${slide.videoUrl.split('/').pop()?.split('?')[0]}&controls=0&showinfo=0&rel=0&modestbranding=1&iv_load_policy=3`}
+                    className="w-full h-full"
+                    style={{
+                      position: 'absolute',
+                      top: '50%',
+                      left: '50%',
+                      width: '100vw',
+                      height: '100vh',
+                      transform: 'translate(-50%, -50%)',
+                      minWidth: '100%',
+                      minHeight: '100%',
+                      objectFit: 'cover'
+                    }}
                     allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
                     allowFullScreen
                     title={slide.title}
@@ -306,7 +317,7 @@ const AdvancedCarousel = ({ slides }: AdvancedCarouselProps) => {
         onClick={goToPrevSlide} 
         onMouseEnter={() => setHoveredArrow('left')}
         onMouseLeave={() => setHoveredArrow(null)}
-        className="absolute left-4 top-1/2 -translate-y-1/2 z-10 bg-black/30 hover:bg-theme text-white p-3 rounded-full transition-colors duration-300"
+        className="absolute left-4 top-1/2 -translate-y-1/2 z-30 bg-black/30 hover:bg-theme text-white p-3 rounded-full transition-colors duration-300"
         aria-label="Previous slide"
       >
         <ChevronLeft className="h-6 w-6" />
@@ -316,7 +327,7 @@ const AdvancedCarousel = ({ slides }: AdvancedCarouselProps) => {
         onClick={goToNextSlide} 
         onMouseEnter={() => setHoveredArrow('right')}
         onMouseLeave={() => setHoveredArrow(null)}
-        className="absolute right-4 top-1/2 -translate-y-1/2 z-10 bg-black/30 hover:bg-theme text-white p-3 rounded-full transition-colors duration-300"
+        className="absolute right-4 top-1/2 -translate-y-1/2 z-30 bg-black/30 hover:bg-theme text-white p-3 rounded-full transition-colors duration-300"
         aria-label="Next slide"
       >
         <ChevronRight className="h-6 w-6" />
@@ -324,7 +335,7 @@ const AdvancedCarousel = ({ slides }: AdvancedCarouselProps) => {
 
       {/* Arrow Hover Previews */}
       {hoveredArrow && (
-        <div className={`absolute top-1/2 -translate-y-1/2 z-15 transition-all duration-300 ${
+        <div className={`absolute top-1/2 -translate-y-1/2 z-50 transition-all duration-300 ${
           hoveredArrow === 'left' ? 'left-16' : 'right-16'
         }`}>
           <div className="w-48 h-28 rounded-lg overflow-hidden border-2 border-white/60 shadow-lg">
@@ -341,7 +352,7 @@ const AdvancedCarousel = ({ slides }: AdvancedCarouselProps) => {
             </div>
           </div>
         </div>
-      )}
+      )}</div_str>
       
       {/* Thumbnails/Indicators at the bottom */}
       <div className="absolute bottom-6 left-0 right-0 flex justify-center z-10 px-4">
