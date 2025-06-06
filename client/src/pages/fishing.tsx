@@ -14,12 +14,13 @@ import FeaturedProducts from "@/components/sections/FeaturedProducts";
 import BlogSection from "@/components/sections/BlogSection";
 import NewsletterSection from "@/components/sections/NewsletterSection";
 import AdventureTipsSlider from "@/components/sections/AdventureTipsSlider";
+import CategoryVideoSection from "@/components/sections/CategoryVideoSection";
 
 const Fishing = () => {
   const { data: fishingActivities, isLoading, error } = useQuery<ActivityProps[]>({
     queryKey: ['/api/activities/category/fishing'],
   });
-  
+
   const { data: headerConfig } = useQuery<{ bannerText?: string }>({
     queryKey: ['/api/header-configs/category/fishing'],
   });
@@ -63,19 +64,19 @@ const Fishing = () => {
           { icon: <Compass size={24} />, text: "All Seasons Availability" },
         ]}
       />
-      
+
       {/* Search Box Below Hero Section */}
       <div className="container mx-auto px-4 pt-6 pb-0">
         <SearchBox />
       </div>
-      
+
       <div className="container mx-auto px-4 py-16">
         <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-8">
           {/* Main Content - Takes 3/4 width on desktop */}
           <div className="md:col-span-2 lg:col-span-3 order-2 md:order-1">
             <section id="fishing-spots">
               <h2 className="font-heading font-bold text-2xl md:text-3xl mb-8">Top Fishing Destinations</h2>
-              
+
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
                 {isLoading ? (
                   renderSkeletons()
@@ -96,7 +97,7 @@ const Fishing = () => {
                 )}
               </div>
             </section>
-            
+
             <section className="mt-16 bg-card rounded-lg p-8 shadow-md">
               <div className="flex flex-col md:flex-row items-center gap-8">
                 <div className="md:w-1/2">
@@ -136,7 +137,7 @@ const Fishing = () => {
               </div>
             </section>
           </div>
-          
+
           {/* Sidebar - Takes 1/4 width on desktop */}
           <div className="md:col-span-1 lg:col-span-1 order-1 md:order-2">
             <div className="sticky top-24">
@@ -145,7 +146,7 @@ const Fishing = () => {
           </div>
         </div>
       </div>
-      
+
       {/* Plan Your Trip */}
       <section className="py-16 bg-neutral-light">
         <div className="container mx-auto px-4">
@@ -158,7 +159,7 @@ const Fishing = () => {
               From selecting the right gear to finding the best fishing spots, we've got you covered with expert advice for a successful day on the water.
             </p>
           </div>
-          
+
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             <Card className="bg-white shadow-md hover:shadow-lg transition">
               <div className="aspect-video relative overflow-hidden">
@@ -194,7 +195,7 @@ const Fishing = () => {
                 </Link>
               </CardContent>
             </Card>
-            
+
             <Card className="bg-white shadow-md hover:shadow-lg transition">
               <div className="aspect-video relative overflow-hidden">
                 <img 
@@ -229,7 +230,7 @@ const Fishing = () => {
                 </Link>
               </CardContent>
             </Card>
-            
+
             <Card className="bg-white shadow-md hover:shadow-lg transition">
               <div className="aspect-video relative overflow-hidden">
                 <img 
@@ -267,12 +268,13 @@ const Fishing = () => {
           </div>
         </div>
       </section>
-      
+
       {/* Latest Adventure Tips Slider */}
       <AdventureTipsSlider category="fishing" />
-      
+
       <FeaturedProducts />
-      <BlogSection />
+      <CategoryVideoSection category="fishing" />
+
       <NewsletterSection />
     </>
   );

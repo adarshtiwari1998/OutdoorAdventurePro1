@@ -817,7 +817,7 @@ export const storage = {
       if (video?.channelId) {
         // Get the new count and update it
         await this.refreshChannelVideoCount(video.channelId);
-        
+
         // Also update channel categories after deletion
         await this.updateChannelCategories(video.channelId);
         console.log(`✅ Auto-updated channel ${video.channelId} counts after deleting video ${id}`);
@@ -934,7 +934,7 @@ export const storage = {
           rating: product.rating,
           reviewCount: product.reviewCount,
           isNew: product.isNew,
-          isSale: product.isSale,
+          isSale: product.price,
           slug: product.slug,
         })),
         totalPages,
@@ -1885,8 +1885,8 @@ export const storage = {
       const credentials = await db.query.wordpressCredentials.findFirst();
       return credentials || null;
     } catch (error) {
+      Adding CategoryVideoSettings methods and related methods to storage object.```text
       console.error('Error getting WordPress credentials:', error);
-      throw error;
     }
   },
 
@@ -2032,7 +2032,7 @@ export const storage = {
       };
     } catch (error) {
       console.error('Error getting home video settings:', error);
-      throw error;    }
+    }
   },
 
   async saveHomeVideoSettings(settingsData: any) {
@@ -2374,4 +2374,86 @@ export const storage = {
       throw error;
     }
   },
+
+  // Category Video Settings Management
+  async getCategoryVideoSettings(category: string) {
+    try {
+      const settings = await db.query.categoryVideoSettings.findFirst({
+        where: eq(schema.categoryVideoSettings.category, category),
+        with: {
+          categoryRef: true
+        }
+      });
+      return settings || {
+        category,
+        categoryId: null,
+        videoCount: 8,
+        isActive: false,
+        title: "Latest Videos",
+        description: "Check out our latest videos",
+        videoType: "all"
+      };
+    } catch (error) {
+      console.error(`Error getting category video settings for ${category}:`, error);
+      throw error;
+    }
+  },
+
+  async saveCategoryVideoSettings(settingsData: any) {
+    try {
+      const existingSettings = await db.query.categoryVideoSettings.findFirst({
+        where: eq(schema.categoryVideoSettings.category, settingsData.category)
+      });
+
+      if (existingSettings) {
+        const [updated] = await db.update(schema.categoryVideoSettings)
+          .set({
+            ...settingsData,
+            updatedAt: new Date()
+          })
+          .where(eq(schema.categoryVideoSettings.id, existingSettings.id))
+          .returning();
+        return updated;
+      } else {
+        const [created] = await db.insert(schema.categoryVideoSettings)
+          .values({
+            ...settingsData,
+            createdAt: new Date(),
+            updatedAt: new Date()
+          })
+          .returning();
+        return created;
+      }
+    } catch (error) {
+      console.error('Error saving category video settings:', error);
+      throw error;
+    }
+  },
+
+  async getAllCategoryVideoSettings() {
+    try {
+      const settings = await db.query.categoryVideoSettings.findMany({
+        with: {
+          categoryRef: true
+        },
+        orderBy: [asc(schema.categoryVideoSettings.category)]
+      });
+      return settings;
+    } catch (error) {
+      console.error('Error getting all category video settings:', error);
+      throw error;
+    }
+  },
+
+  async deleteCategoryVideoSettings(category: string) {
+    try {
+      await db.delete(schema.categoryVideoSettings)
+        .where(eq(schema.categoryVideoSettings.category, category));
+    } catch (error) {
+      console.error(`Error deleting category video settings for ${category}:`, error);
+      throw error;
+    }
+  },
+
+  // Dashboard Assets routes
 };

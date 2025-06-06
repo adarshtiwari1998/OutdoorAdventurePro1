@@ -15,6 +15,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Mountain, Sun, Trees, Wind, Map, Compass } from "lucide-react";
+import CategoryVideoSection from "@/components/sections/CategoryVideoSection";
 
 const Outdoors = () => {
   const { data: topActivities, isLoading, error } = useQuery<ActivityProps[]>({
@@ -59,19 +60,19 @@ const Outdoors = () => {
           { icon: <Trees size={24} />, text: "Nature Preservation" },
         ]}
       />
-      
+
       {/* Search Box Below Hero Section */}
       <div className="container mx-auto px-4 pt-6 pb-0">
         <SearchBox />
       </div>
-      
+
       <div className="container mx-auto px-4 py-16">
         <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-8">
           {/* Main Content - Takes 3/4 width on desktop */}
           <div className="md:col-span-2 lg:col-span-3 order-2 md:order-1">
             <section id="activities">
               <h2 className="font-heading font-bold text-2xl md:text-3xl mb-8">Top Outdoor Activities</h2>
-              
+
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
                 {isLoading ? (
                   renderSkeletons()
@@ -92,10 +93,10 @@ const Outdoors = () => {
                 )}
               </div>
             </section>
-            
+
             <section className="mt-16 bg-white p-8 rounded-lg shadow-md">
               <h2 className="font-heading font-bold text-2xl md:text-3xl mb-8 text-center">Outdoor Activity Categories</h2>
-              
+
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
                 <div className="p-6 border border-neutral rounded-lg text-center">
                   <div className="w-16 h-16 mx-auto mb-4 bg-primary text-white rounded-full flex items-center justify-center">
@@ -104,7 +105,7 @@ const Outdoors = () => {
                   <h3 className="font-heading font-bold text-lg mb-2">Mountain Adventures</h3>
                   <p className="text-neutral-dark">Explore peaks, trails, and valleys with guided tours and independent adventures.</p>
                 </div>
-                
+
                 <div className="p-6 border border-neutral rounded-lg text-center">
                   <div className="w-16 h-16 mx-auto mb-4 bg-primary text-white rounded-full flex items-center justify-center">
                     <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -114,7 +115,7 @@ const Outdoors = () => {
                   <h3 className="font-heading font-bold text-lg mb-2">Water Sports</h3>
                   <p className="text-neutral-dark">Dive into kayaking, canoeing, paddleboarding, and more lake and river adventures.</p>
                 </div>
-                
+
                 <div className="p-6 border border-neutral rounded-lg text-center">
                   <div className="w-16 h-16 mx-auto mb-4 bg-primary text-white rounded-full flex items-center justify-center">
                     <Trees className="h-8 w-8" />
@@ -122,7 +123,7 @@ const Outdoors = () => {
                   <h3 className="font-heading font-bold text-lg mb-2">Forest Exploration</h3>
                   <p className="text-neutral-dark">Discover wildlife, plant species, and tranquil environments in nature preserves.</p>
                 </div>
-                
+
                 <div className="p-6 border border-neutral rounded-lg text-center">
                   <div className="w-16 h-16 mx-auto mb-4 bg-primary text-white rounded-full flex items-center justify-center">
                     <Wind className="h-8 w-8" />
@@ -133,7 +134,7 @@ const Outdoors = () => {
               </div>
             </section>
           </div>
-          
+
           {/* Sidebar - Takes 1/4 width on desktop */}
           <div className="md:col-span-1 lg:col-span-1 order-1 md:order-2">
             <div className="sticky top-24">
@@ -142,7 +143,7 @@ const Outdoors = () => {
           </div>
         </div>
       </div>
-      
+
       {/* Plan Your Trip */}
       <section className="py-16 bg-neutral-light">
         <div className="container mx-auto px-4">
@@ -155,7 +156,7 @@ const Outdoors = () => {
               From selecting the right gear to finding the best locations, we've got you covered with expert advice for a memorable outdoor experience.
             </p>
           </div>
-          
+
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             <Card className="bg-white shadow-md hover:shadow-lg transition">
               <div className="aspect-video relative overflow-hidden">
@@ -191,7 +192,7 @@ const Outdoors = () => {
                 </Link>
               </CardContent>
             </Card>
-            
+
             <Card className="bg-white shadow-md hover:shadow-lg transition">
               <div className="aspect-video relative overflow-hidden">
                 <img 
@@ -226,7 +227,7 @@ const Outdoors = () => {
                 </Link>
               </CardContent>
             </Card>
-            
+
             <Card className="bg-white shadow-md hover:shadow-lg transition">
               <div className="aspect-video relative overflow-hidden">
                 <img 
@@ -264,11 +265,12 @@ const Outdoors = () => {
           </div>
         </div>
       </section>
-      
+
       {/* Latest Adventure Tips Slider */}
       <AdventureTipsSlider category="outdoors" />
-      
-      <FeaturedProducts />
+
+      <CategoryVideoSection category="outdoors" />
+
       <BlogSection />
       <NewsletterSection />
     </>

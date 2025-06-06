@@ -693,3 +693,35 @@ export const insertHomeVideoSettingsSchema = createInsertSchema(homeVideoSetting
 
 export type InsertHomeVideoSettings = z.infer<typeof insertHomeVideoSettingsSchema>;
 export type HomeVideoSettings = typeof homeVideoSettings.$inferSelect;
+
+// Category Video Settings
+export const categoryVideoSettings = pgTable("category_video_settings", {
+  id: serial("id").primaryKey(),
+  category: text("category").notNull().unique(),
+  categoryId: integer("category_id").references(() => categories.id),
+  videoCount: integer("video_count").default(8),
+  isActive: boolean("is_active").default(true),
+  title: text("title").default("Latest Videos"),
+  description: text("description"),
+  videoType: text("video_type").default("all").notNull(), // 'all', 'video', 'short'
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+
+export const categoryVideoSettingsRelations = relations(categoryVideoSettings, ({ one }) => ({
+  categoryRef: one(categories, {
+    fields: [categoryVideoSettings.categoryId],
+    references: [categories.id],
+  }),
+}));
+
+export const insertCategoryVideoSettingsSchema = createInsertSchema(categoryVideoSettings, {
+  title: (schema) => schema.min(1, "Title is required"),
+  videoCount: (schema) => schema.min(1, "Must show at least 1 video").max(20, "Maximum 20 videos"),
+  videoType: (schema) => schema.refine(val => ['all', 'video', 'short'].includes(val), {
+    message: "Video type must be one of: all, video, short"
+  }),
+});
+
+export type InsertCategoryVideoSettings = z.infer<typeof insertCategoryVideoSettingsSchema>;
+export type CategoryVideoSettings = typeof categoryVideoSettings.$inferSelect;

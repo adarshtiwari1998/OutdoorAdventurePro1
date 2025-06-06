@@ -15,15 +15,16 @@ import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Map, Compass, Mountain, Shield, Wrench, AlertTriangle } from "lucide-react";
 import { useCategoryTheme } from "@/hooks/use-category-theme";
+import CategoryVideoSection from "@/components/sections/CategoryVideoSection";
 
 const FourXFour = () => {
   // Apply category-specific theme for this page
   const { categoryStyle } = useCategoryTheme('four-x-four');
-  
+
   const { data: fourxfourActivities, isLoading, error } = useQuery<ActivityProps[]>({
     queryKey: ['/api/activities/category/four-x-four'],
   });
-  
+
   const { data: headerConfig } = useQuery<{ bannerText?: string }>({
     queryKey: ['/api/header-configs/category/four-x-four'],
   });
@@ -67,19 +68,19 @@ const FourXFour = () => {
           { icon: <Mountain size={24} />, text: "All Difficulty Levels" },
         ]}
       />
-      
+
       {/* Search Box Below Hero Section */}
       <div className="container mx-auto px-4 pt-6 pb-0">
         <SearchBox />
       </div>
-      
+
       <div className="container mx-auto px-4 py-16">
         <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-8">
           {/* Main Content - Takes 3/4 width on desktop */}
           <div className="md:col-span-2 lg:col-span-3 order-2 md:order-1">
             <section id="trails">
               <h2 className="font-heading font-bold text-2xl md:text-3xl mb-8">Epic 4x4 Adventures</h2>
-              
+
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
                 {isLoading ? (
                   renderSkeletons()
@@ -100,7 +101,7 @@ const FourXFour = () => {
                 )}
               </div>
             </section>
-            
+
             <section className="mt-16 bg-card rounded-lg p-8 shadow-md">
               <div className="flex flex-col md:flex-row items-center gap-8">
                 <div className="md:w-1/2">
@@ -135,7 +136,7 @@ const FourXFour = () => {
               </div>
             </section>
           </div>
-          
+
           {/* Sidebar - Takes 1/4 width on desktop */}
           <div className="md:col-span-1 lg:col-span-1 order-1 md:order-2">
             <div className="sticky top-24">
@@ -144,7 +145,7 @@ const FourXFour = () => {
           </div>
         </div>
       </div>
-      
+
       {/* Plan Your Trip */}
       <section className="py-16 bg-neutral-light">
         <div className="container mx-auto px-4">
@@ -157,7 +158,7 @@ const FourXFour = () => {
               From essential gear to trail navigation, we've got everything you need to conquer the toughest terrains and enjoy an unforgettable off-road experience.
             </p>
           </div>
-          
+
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             <Card className="bg-white shadow-md hover:shadow-lg transition">
               <div className="aspect-video relative overflow-hidden">
@@ -193,7 +194,7 @@ const FourXFour = () => {
                 </Link>
               </CardContent>
             </Card>
-            
+
             <Card className="bg-white shadow-md hover:shadow-lg transition">
               <div className="aspect-video relative overflow-hidden">
                 <img 
@@ -228,7 +229,7 @@ const FourXFour = () => {
                 </Link>
               </CardContent>
             </Card>
-            
+
             <Card className="bg-white shadow-md hover:shadow-lg transition">
               <div className="aspect-video relative overflow-hidden">
                 <img 
@@ -266,10 +267,12 @@ const FourXFour = () => {
           </div>
         </div>
       </section>
-      
+
       {/* Latest Adventure Tips Slider */}
       <AdventureTipsSlider category="offroad" />
-      
+
+      <CategoryVideoSection category="four-x-four" />
+
       <FeaturedProducts />
       <BlogSection />
       <NewsletterSection />

@@ -315,6 +315,21 @@ const AdminLayout = ({ children, title }: AdminLayoutProps) => {
               </div>
             </div>
 
+             {/* Landing and Category Blocks */}
+             <div>
+              <h3 className="px-3 py-2 text-xs font-semibold uppercase text-slate-500 dark:text-slate-400">
+                Landing and Category Blocks
+              </h3>
+              <div className="space-y-1">
+                <AdminMenuItem
+                  icon={Video}
+                  label="Category Videos"
+                  href="/admin/category-videos"
+                  isActive={location === '/admin/category-videos'}
+                />
+              </div>
+            </div>
+
             {/* Page Styling */}
             <div>
               <h3 className="px-3 py-2 text-xs font-semibold uppercase text-slate-500 dark:text-slate-400">

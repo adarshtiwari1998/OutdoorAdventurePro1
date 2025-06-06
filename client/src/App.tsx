@@ -28,6 +28,7 @@ import FavoriteDestinations from "@/pages/admin/home-blocks/favorite-destination
 import TipsManagement from "@/pages/admin/home-blocks/tips-management";
 import TravelersChoice from "@/pages/admin/home-blocks/travelers-choice";
 import HomeVideos from "@/pages/admin/home-blocks/home-videos";
+import CategoryVideos from "@/pages/admin/home-blocks/category-videos";
 import { ThemeProvider } from "@/contexts/ThemeContext";
 import { GlobalThemeProvider } from "@/contexts/GlobalThemeManager";
 import { AuthProvider } from "@/hooks/use-auth";
@@ -74,6 +75,7 @@ function Router() {
 
        <ProtectedRoute path="/admin/home-blocks/tips-management" component={TipsManagement} />
         <ProtectedRoute path="/admin/home-blocks/home-videos" component={HomeVideos} />
+         <ProtectedRoute path="/admin/home-blocks/category-videos" component={CategoryVideos} />
       <ProtectedRoute path="/admin/dashboard-assets" component={DashboardAssets} />
       {/* Landing page style routes */}
       <ProtectedRoute path="/admin/styles/home" component={LandingPageStyle} />

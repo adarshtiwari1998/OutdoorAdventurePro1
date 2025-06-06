@@ -1,17 +1,20 @@
 import { useQuery } from "@tanstack/react-query";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { MapPin, Clock, Users, Star } from "lucide-react";
+import MainLayout from "@/components/layout/MainLayout";
+import NewsletterSection from "@/components/sections/NewsletterSection";
+import Sidebar from "@/components/common/Sidebar";
+import CategoryVideoSection from "@/components/sections/CategoryVideoSection";
 import { Link } from "wouter";
 import EnhancedHeroSection from "@/components/common/EnhancedHeroSection";
-import Sidebar from "@/components/common/Sidebar";
 import SearchBox from "@/components/common/SearchBox";
 import FeaturedProducts from "@/components/sections/FeaturedProducts";
 import BlogSection from "@/components/sections/BlogSection";
-import NewsletterSection from "@/components/sections/NewsletterSection";
 import AdventureTipsSlider from "@/components/sections/AdventureTipsSlider";
 import { ActivityProps } from "@/components/common/ActivityCard";
 import ActivityCard from "@/components/common/ActivityCard";
-import { Card, CardContent } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Tent, Star, Map, Compass, Sun, Flame } from "lucide-react";
 import { useCategoryTheme } from "@/hooks/use-category-theme";
@@ -19,7 +22,7 @@ import { useCategoryTheme } from "@/hooks/use-category-theme";
 const Camping = () => {
   // Apply category-specific theme for this page
   const { categoryStyle } = useCategoryTheme('camping');
-  
+
   const { data: campingActivities, isLoading, error } = useQuery<ActivityProps[]>({
     queryKey: ['/api/activities/category/camping'],
   });
@@ -62,19 +65,19 @@ const Camping = () => {
           { icon: <Map size={24} />, text: "National Park Guides" },
         ]}
       />
-      
+
       {/* Search Box Below Hero Section */}
       <div className="container mx-auto px-4 pt-6 pb-0">
         <SearchBox />
       </div>
-      
+
       <div className="container mx-auto px-4 py-16">
         <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-8">
           {/* Main Content - Takes 3/4 width on desktop */}
           <div className="md:col-span-2 lg:col-span-3 order-2 md:order-1">
             <section id="campgrounds">
               <h2 className="font-heading font-bold text-2xl md:text-3xl mb-8">Top Camping Destinations</h2>
-              
+
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
                 {isLoading ? (
                   renderSkeletons()
@@ -95,10 +98,10 @@ const Camping = () => {
                 )}
               </div>
             </section>
-            
+
             <section className="mt-16 bg-white p-8 rounded-lg shadow-md">
               <h2 className="font-heading font-bold text-2xl md:text-3xl mb-8 text-center">Essential Camping Tips</h2>
-              
+
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
                 <div className="p-6 border border-neutral rounded-lg">
                   <div className="w-16 h-16 mx-auto mb-4 bg-primary text-white rounded-full flex items-center justify-center">
@@ -107,7 +110,7 @@ const Camping = () => {
                   <h3 className="font-heading font-bold text-lg mb-2 text-center">Check Weather Forecast</h3>
                   <p className="text-neutral-dark">Always check the weather forecast before heading out to properly prepare for conditions.</p>
                 </div>
-                
+
                 <div className="p-6 border border-neutral rounded-lg">
                   <div className="w-16 h-16 mx-auto mb-4 bg-primary text-white rounded-full flex items-center justify-center">
                     <Tent className="h-8 w-8" />
@@ -115,7 +118,7 @@ const Camping = () => {
                   <h3 className="font-heading font-bold text-lg mb-2 text-center">Pack Proper Clothing</h3>
                   <p className="text-neutral-dark">Bring layers suitable for both day and night temperatures, even in summer.</p>
                 </div>
-                
+
                 <div className="p-6 border border-neutral rounded-lg">
                   <div className="w-16 h-16 mx-auto mb-4 bg-primary text-white rounded-full flex items-center justify-center">
                     <Flame className="h-8 w-8" />
@@ -123,7 +126,7 @@ const Camping = () => {
                   <h3 className="font-heading font-bold text-lg mb-2 text-center">First Aid Kit</h3>
                   <p className="text-neutral-dark">Always bring a well-stocked first aid kit for emergencies and minor injuries.</p>
                 </div>
-                
+
                 <div className="p-6 border border-neutral rounded-lg">
                   <div className="w-16 h-16 mx-auto mb-4 bg-primary text-white rounded-full flex items-center justify-center">
                     <Compass className="h-8 w-8" />
@@ -134,7 +137,7 @@ const Camping = () => {
               </div>
             </section>
           </div>
-          
+
           {/* Sidebar - Takes 1/4 width on desktop */}
           <div className="md:col-span-1 lg:col-span-1 order-1 md:order-2">
             <div className="sticky top-24">
@@ -143,7 +146,7 @@ const Camping = () => {
           </div>
         </div>
       </div>
-      
+
       {/* Plan Your Trip */}
       <section className="py-16 bg-neutral-light">
         <div className="container mx-auto px-4">
@@ -156,7 +159,7 @@ const Camping = () => {
               From selecting the right gear to finding the perfect campsite, we've got you covered with expert advice for an unforgettable outdoor experience.
             </p>
           </div>
-          
+
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             <Card className="bg-white shadow-md hover:shadow-lg transition">
               <div className="aspect-video relative overflow-hidden">
@@ -192,7 +195,7 @@ const Camping = () => {
                 </Link>
               </CardContent>
             </Card>
-            
+
             <Card className="bg-white shadow-md hover:shadow-lg transition">
               <div className="aspect-video relative overflow-hidden">
                 <img 
@@ -227,7 +230,7 @@ const Camping = () => {
                 </Link>
               </CardContent>
             </Card>
-            
+
             <Card className="bg-white shadow-md hover:shadow-lg transition">
               <div className="aspect-video relative overflow-hidden">
                 <img 
@@ -265,12 +268,12 @@ const Camping = () => {
           </div>
         </div>
       </section>
-      
+
       {/* Latest Adventure Tips Slider */}
       <AdventureTipsSlider category="camping" />
-      
-      <FeaturedProducts />
-      <BlogSection />
+
+      <CategoryVideoSection category="camping" />
+
       <NewsletterSection />
     </>
   );

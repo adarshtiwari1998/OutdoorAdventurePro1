@@ -3,7 +3,7 @@ import { Link } from "wouter";
 import { ActivityProps } from "@/components/common/ActivityCard";
 import ActivityCard from "@/components/common/ActivityCard";
 import SearchBox from "@/components/common/SearchBox";
-import { Card, CardContent } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -27,6 +27,7 @@ import BlogCard from "@/components/common/BlogCard";
 import EnhancedHeroSection from "@/components/common/EnhancedHeroSection";
 import Sidebar from "@/components/common/Sidebar";
 import AdventureTipsSlider from "@/components/sections/AdventureTipsSlider";
+import CategoryVideoSection from "@/components/sections/CategoryVideoSection";
 
 const Hiking = () => {
   const { data: hikingActivities, isLoading, error } = useQuery<ActivityProps[]>({
@@ -86,12 +87,12 @@ const Hiking = () => {
           { icon: <Compass size={24} />, text: "Guided & Self-Guided Options" },
         ]}
       />
-      
+
       {/* Search Box Below Hero Section */}
       <div className="container mx-auto px-4 pt-6 pb-0">
         <SearchBox />
       </div>
-      
+
       <div className="container mx-auto px-4 py-16">
         <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-8">
           {/* Main Content - Takes 3/4 width on desktop */}
@@ -108,7 +109,7 @@ const Hiking = () => {
                   View All <ChevronRight size={16} />
                 </Link>
               </div>
-              
+
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
                 {isLoading ? (
                   renderSkeletons()
@@ -124,7 +125,7 @@ const Hiking = () => {
               </div>
             </section>
           </div>
-          
+
           {/* Sidebar - Takes 1/4 width on desktop */}
           <div className="md:col-span-1 lg:col-span-1 order-1 md:order-2">
             <div className="sticky top-24">
@@ -133,7 +134,7 @@ const Hiking = () => {
           </div>
         </div>
       </div>
-      
+
       {/* Block 2: Plan Your Trip */}
       <section className="py-16 bg-neutral-light">
         <div className="container mx-auto px-4">
@@ -146,7 +147,7 @@ const Hiking = () => {
               From choosing the right trail to packing essential gear, we've got you covered with expert advice for a safe and enjoyable hiking experience.
             </p>
           </div>
-          
+
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             <Card className="bg-white shadow-md hover:shadow-lg transition">
               <div className="aspect-video relative overflow-hidden">
@@ -182,7 +183,7 @@ const Hiking = () => {
                 </Link>
               </CardContent>
             </Card>
-            
+
             <Card className="bg-white shadow-md hover:shadow-lg transition">
               <div className="aspect-video relative overflow-hidden">
                 <img 
@@ -217,7 +218,7 @@ const Hiking = () => {
                 </Link>
               </CardContent>
             </Card>
-            
+
             <Card className="bg-white shadow-md hover:shadow-lg transition">
               <div className="aspect-video relative overflow-hidden">
                 <img 
@@ -255,10 +256,10 @@ const Hiking = () => {
           </div>
         </div>
       </section>
-      
+
       {/* Latest Adventure Tips Slider */}
       <AdventureTipsSlider category="hiking" />
-      
+
       {/* Block 3: Inspiration & Information */}
       <section className="py-16">
         <div className="container mx-auto px-4">
@@ -271,7 +272,7 @@ const Hiking = () => {
               Get inspired by hiking guides, trail reports, and outdoor wisdom from experienced hikers and nature enthusiasts.
             </p>
           </div>
-          
+
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
             <div className="lg:col-span-2">
               <div className="relative rounded-xl overflow-hidden h-96">
@@ -296,12 +297,12 @@ const Hiking = () => {
                 </div>
               </div>
             </div>
-            
+
             <div className="lg:col-span-1 space-y-4">
               <div className="bg-white rounded-xl shadow-md overflow-hidden">
                 <div className="p-4">
                   <Badge className="bg-accent/10 text-accent mb-2">Latest Articles</Badge>
-                  
+
                   <div className="space-y-4">
                     {hikingBlogPosts ? hikingBlogPosts.slice(0, 3).map((post) => (
                       <Link href={`/blog/${post.slug}`} key={post.id} className="block">
@@ -340,13 +341,13 @@ const Hiking = () => {
                       ))
                     )}
                   </div>
-                  
+
                   <Link href="/blog?category=hiking" className="block mt-4 text-primary hover:text-primary-dark text-sm font-medium">
                     View All Hiking Articles <ChevronRight size={14} className="inline" />
                   </Link>
                 </div>
               </div>
-              
+
               <div className="bg-primary/5 rounded-xl p-6">
                 <h3 className="font-heading font-bold text-lg mb-3 text-primary">Hiking Newsletter</h3>
                 <p className="text-sm text-neutral-dark mb-4">
@@ -365,7 +366,7 @@ const Hiking = () => {
           </div>
         </div>
       </section>
-      
+
       {/* Block 4: Related Products */}
       <section className="py-16 bg-neutral-light">
         <div className="container mx-auto px-4">
@@ -380,7 +381,7 @@ const Hiking = () => {
               Shop All <ShoppingBag size={16} />
             </Link>
           </div>
-          
+
           <div className="overflow-x-auto pb-4">
             <div className="inline-flex gap-6 min-w-max">
               {hikingProducts ? (
@@ -407,7 +408,7 @@ const Hiking = () => {
           </div>
         </div>
       </section>
-      
+
       {/* Block 5: Expert Advice */}
       <section className="py-16">
         <div className="container mx-auto px-4">
@@ -420,7 +421,7 @@ const Hiking = () => {
               Learn from experienced hikers who've walked thousands of miles on trails around the world.
             </p>
           </div>
-          
+
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             <Card className="bg-white shadow-md hover:shadow-lg transition">
               <div className="relative pt-8 px-8">
@@ -446,7 +447,7 @@ const Hiking = () => {
                 </div>
               </div>
             </Card>
-            
+
             <Card className="bg-white shadow-md hover:shadow-lg transition">
               <div className="relative pt-8 px-8">
                 <div className="absolute top-4 left-4">
@@ -471,7 +472,7 @@ const Hiking = () => {
                 </div>
               </div>
             </Card>
-            
+
             <Card className="bg-white shadow-md hover:shadow-lg transition">
               <div className="relative pt-8 px-8">
                 <div className="absolute top-4 left-4">
@@ -497,7 +498,7 @@ const Hiking = () => {
               </div>
             </Card>
           </div>
-          
+
           <div className="text-center mt-8">
             <Link href="/hiking/expert-advice">
               <Button variant="outline" className="bg-white">View All Expert Tips</Button>
@@ -505,7 +506,9 @@ const Hiking = () => {
           </div>
         </div>
       </section>
-      
+
+      <CategoryVideoSection category="hiking" />
+
       {/* Newsletter Signup */}
       <section className="py-16 bg-primary text-white">
         <div className="container mx-auto px-4">
@@ -516,7 +519,7 @@ const Hiking = () => {
             <p className="text-white/80 mb-6">
               Subscribe to receive trail updates, gear recommendations, and exclusive hiking guides delivered straight to your inbox.
             </p>
-            
+
             <div className="bg-white/10 backdrop-blur-sm rounded-lg p-6 max-w-xl mx-auto">
               <div className="flex flex-col md:flex-row gap-3">
                 <input 
@@ -530,7 +533,7 @@ const Hiking = () => {
                   className="flex-1 px-4 py-3 rounded-md bg-white/20 placeholder-white/60 text-white border border-white/30 focus:outline-none focus:ring-2 focus:ring-white/50"
                 />
               </div>
-              
+
               <div className="mt-4 flex flex-wrap gap-2 justify-center">
                 <label className="inline-flex items-center gap-2 text-sm">
                   <input type="checkbox" className="rounded text-secondary" />
@@ -549,11 +552,11 @@ const Hiking = () => {
                   <span>Exclusive Offers</span>
                 </label>
               </div>
-              
+
               <Button className="mt-4 bg-secondary hover:bg-secondary-dark text-white w-full">
                 Subscribe Now
               </Button>
-              
+
               <p className="text-xs text-white/60 mt-3">
                 By subscribing, you agree to our privacy policy and consent to receive marketing emails. You can unsubscribe at any time.
               </p>
