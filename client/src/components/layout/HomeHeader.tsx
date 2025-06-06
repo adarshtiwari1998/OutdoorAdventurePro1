@@ -1,3 +1,4 @@
+
 import { useState, useEffect, useRef } from "react";
 import { Link, useLocation } from "wouter";
 import { useMobile } from "@/hooks/use-mobile";
@@ -78,7 +79,7 @@ const HomeHeader = () => {
   const headerRef = useRef<HTMLElement>(null);
   const menuTimeoutRef = useRef<number | null>(null);
   const [isScrolled, setIsScrolled] = useState(false);
-const [showMainHeader, setShowMainHeader] = useState(true);
+  const [showMainHeader, setShowMainHeader] = useState(true);
 
   useEffect(() => {
     let lastScrollY = window.scrollY;
@@ -221,7 +222,7 @@ const [showMainHeader, setShowMainHeader] = useState(true);
   });
 
   return (
-    <header ref={headerRef} className={`bg-white shadow-md sticky top-0 z-50 ${!showMainHeader && isScrolled ? 'pt-0' : ''}`}>
+    <header ref={headerRef} className="bg-white shadow-md sticky top-0 z-50">
       {/* Banner announcement */}
       {headerConfig.bannerText && (
         <div className="py-1 px-4 text-center text-white bg-theme text-xs md:text-sm">
@@ -229,99 +230,12 @@ const [showMainHeader, setShowMainHeader] = useState(true);
         </div>
       )}
 
-      <div className="container mx-auto px-4">
-        <div className={`flex justify-between items-center py-4 transition-all duration-300 ${isScrolled ? 'hidden' : ''}`}>
-          {/* Logo */}
-          <Link href="/" className="flex items-center space-x-3">
-            <div className="w-20 h-20 rounded-full overflow-hidden">
-              <img 
-                src={headerConfig.logoSrc || '/logo.svg'} 
-                alt={headerConfig.logoText}
-                className="w-full h-full object-cover"
-              />
-            </div>
-            {/* <span className="font-heading font-bold text-xl md:text-2xl text-theme">
-              {headerConfig.logoText}
-            </span> */}
-          </Link>
-
-          {/* Main Navigation - Desktop */}
-          {!isMobile && (
-            <nav className="flex items-center space-x-8">
-              {headerConfig.menuItems.map((item) => (
-                <div 
-                  key={typeof item.id === 'string' ? item.id : `menu-${item.id}`}
-                  className="relative"
-                  onMouseEnter={() => {
-                    if (item.hasMegaMenu && typeof item.id === 'number') {
-                      handleMenuMouseEnter(item.id);
-                    }
-                  }}
-                  onMouseLeave={handleMenuMouseLeave}
-                >
-                  <Link 
-                    href={item.path} 
-                    className={`font-medium hover:text-theme transition flex items-center gap-1 ${activeMegaMenu === item.id ? 'text-theme' : ''}`}
-                    onClick={() => setActiveMegaMenu(null)}
-                  >
-                    {item.label}
-                    {item.hasMegaMenu && <ChevronDown size={16} />}
-                  </Link>
-                </div>
-              ))}
-            </nav>
-          )}
-
-          {/* Action Buttons */}
-          <div className="flex items-center space-x-4">
-            {!isMobile && (
-              <>
-                <button className="bg-transparent border border-theme text-theme hover:bg-theme hover:text-white transition rounded-full px-4 py-2 font-medium">
-                  Sign In
-                </button>
-                <button className="bg-orange-500 text-white hover:bg-theme-dark transition rounded-full px-5 py-2 font-medium">
-                  Join Now
-                </button>
-              </>
-            )}
-            <Link href="/cart" className="relative">
-              <ShoppingCart className="text-gray-700 hover:text-theme transition" size={24} />
-              {(typeof cartCount === 'number' && cartCount > 0) && (
-                <span className="absolute -top-2 -right-2 bg-theme text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">
-                  {cartCount > 9 ? '9+' : cartCount}
-                </span>
-              )}
-            </Link>
-            {isMobile && (
-              <button 
-                className="text-gray-700 hover:text-theme transition" 
-                onClick={toggleMobileMenu}
-              >
-                <Menu size={24} />
-              </button>
-            )}
-          </div>
-        </div>
-
-        {/* Activity Shortcuts */}
-        {!isMobile && (
-          <div className={`flex justify-between items-center container mx-auto px-4 transition-all duration-300 ease-in-out ${isScrolled ? 'fixed top-0 left-0 right-0 bg-white shadow-md z-50 py-2 opacity-100 translate-y-0' : 'mt-4 -translate-y-1 opacity-100'}`}>
-            <Link href="/" className="flex items-center">
-              {isScrolled && (
-                 <>
-              <div className="w-20 h-20 rounded-full overflow-hidden">        
-                <img 
-                  src={headerConfig.logoSrc} 
-                  alt={headerConfig.logoText}
-                  className="w-full h-full object-cover"
-                />
-              
-              </div>
-                </>
-                )}
-            </Link>
-            <div className="flex items-center gap-4 p-2">
-              <span className="font-heading font-bold text-xl md:text-2xl text-theme">
+      {/* Activity Circles Section - Top */}
+      <div className={`w-full transition-all duration-300 ${!showMainHeader && isScrolled ? 'hidden' : ''}`}>
+        <div className="w-full px-4">
+          <div className="flex justify-center items-center py-3">
+            <div className="flex items-center gap-4">
+              <span className="font-heading font-bold text-lg text-theme mr-4">
                 {headerConfig.logoText}
               </span>
               {activities?.slice(0, 6).map((activity) => (
@@ -331,7 +245,7 @@ const [showMainHeader, setShowMainHeader] = useState(true);
                   className="flex flex-col items-center group"
                 > 
                   <div 
-                    className="w-20 h-20 rounded-full overflow-hidden border-2 border-transparent group-hover:border-theme transition-all duration-200"
+                    className="w-12 h-12 rounded-full overflow-hidden border-2 border-transparent group-hover:border-theme transition-all duration-200"
                     style={{ borderColor: activity.primaryColor }}
                   >
                     <img 
@@ -340,37 +254,103 @@ const [showMainHeader, setShowMainHeader] = useState(true);
                       className="w-full h-full object-cover"
                     />
                   </div>
-                  {/* <span 
-                    className="mt-2 text-sm font-medium group-hover:font-semibold transition-all duration-200"
-                    style={{ color: activity.primaryColor }}
-                  >
-                    {activity.logoText}
-                  </span> */}
                 </Link>
               ))}
             </div>
-            <div className="flex items-center gap-4">
-              {isScrolled && (
+          </div>
+        </div>
+      </div>
+
+      {/* Navigation Section - Bottom */}
+      <div className={`w-full border-t border-gray-200 transition-all duration-300 ${isScrolled ? 'fixed top-0 left-0 right-0 bg-white shadow-md z-50 py-2' : 'py-3'}`}>
+        <div className="w-full px-4">
+          <div className="flex justify-between items-center">
+            {/* Logo - Only show when scrolled */}
+            {isScrolled && (
+              <Link href="/" className="flex items-center">
+                <div className="w-10 h-10 rounded-full overflow-hidden mr-3">
+                  <img 
+                    src={headerConfig.logoSrc} 
+                    alt={headerConfig.logoText}
+                    className="w-full h-full object-cover"
+                  />
+                </div>
+                <span className="font-heading font-bold text-sm text-theme">
+                  {headerConfig.logoText}
+                </span>
+              </Link>
+            )}
+
+            {/* Main Navigation - Desktop */}
+            {!isMobile && (
+              <nav className="flex items-center space-x-6">
+                {headerConfig.menuItems.map((item) => (
+                  <div 
+                    key={typeof item.id === 'string' ? item.id : `menu-${item.id}`}
+                    className="relative"
+                    onMouseEnter={() => {
+                      if (item.hasMegaMenu && typeof item.id === 'number') {
+                        handleMenuMouseEnter(item.id);
+                      }
+                    }}
+                    onMouseLeave={handleMenuMouseLeave}
+                  >
+                    <Link 
+                      href={item.path} 
+                      className={`font-medium hover:text-theme transition flex items-center gap-1 ${activeMegaMenu === item.id ? 'text-theme' : ''}`}
+                      onClick={() => setActiveMegaMenu(null)}
+                    >
+                      {item.label}
+                      {item.hasMegaMenu && <ChevronDown size={16} />}
+                    </Link>
+                  </div>
+                ))}
+              </nav>
+            )}
+
+            {/* Search Bar */}
+            <div className="flex-1 max-w-md mx-6">
+              <div className="relative">
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={18} />
+                <input
+                  type="text"
+                  placeholder="Search destinations, activities..."
+                  className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-full focus:outline-none focus:ring-2 focus:ring-theme focus:border-transparent text-sm"
+                />
+              </div>
+            </div>
+
+            {/* Action Buttons */}
+            <div className="flex items-center space-x-3">
+              {!isMobile && (
                 <>
-                  <button className="bg-transparent border border-theme text-theme hover:bg-theme hover:text-white transition rounded-full px-4 py-2 font-medium">
+                  <button className="bg-transparent border border-theme text-theme hover:bg-theme hover:text-white transition rounded-full px-4 py-2 font-medium text-sm">
                     Sign In
                   </button>
-                  <button className="bg-orange-500 text-white hover:bg-theme-dark transition rounded-full px-5 py-2 font-medium">
+                  <button className="bg-orange-500 text-white hover:bg-theme-dark transition rounded-full px-4 py-2 font-medium text-sm">
                     Join Now
                   </button>
                 </>
               )}
               <Link href="/cart" className="relative">
-                <ShoppingCart className="text-gray-700 hover:text-theme transition" size={24} />
+                <ShoppingCart className="text-gray-700 hover:text-theme transition" size={20} />
                 {(typeof cartCount === 'number' && cartCount > 0) && (
                   <span className="absolute -top-2 -right-2 bg-theme text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">
                     {cartCount > 9 ? '9+' : cartCount}
                   </span>
                 )}
               </Link>
+              {isMobile && (
+                <button 
+                  className="text-gray-700 hover:text-theme transition" 
+                  onClick={toggleMobileMenu}
+                >
+                  <Menu size={20} />
+                </button>
+              )}
             </div>
           </div>
-        )}
+        </div>
       </div>
 
       {/* Mobile Menu */}
