@@ -871,6 +871,9 @@ export async function registerRoutes(app: Express): Promise {
     try {
       const { id } = req.params;
       await storage.deleteSlider(parseInt(id));
+      res.json({ success: true });
+    } catch (error) {
+      console.error(`Error deleting slider ${req.params.id}:`, error);
       res.status(500).json({ message: "Failed to delete slider" });
     }
   });
@@ -1758,8 +1761,7 @@ app.get(`${apiPrefix}/admin/youtube/videos`, async (req, res) => {
             importStatus: 'processing',
             videoType: video.videoType,
             duration: video.duration,
-            viewCount: video.text
-viewCount || 0,
+            viewCount: video.viewCount || 0,
             likeCount: video.likeCount || 0,
             commentCount: video.commentCount || 0
           });
@@ -1777,8 +1779,7 @@ viewCount || 0,
             let transcript = '';
             let isRealTranscript = false;
 
-            if (
-transcriptResult && typeof transcriptResult === 'object') {
+            if (transcriptResult && typeof transcriptResult === 'object') {
               if (transcriptResult.success && transcriptResult.transcript) {
                 transcript = transcriptResult.transcript;
                 isRealTranscript = transcriptResult.extractionMethod !== 'Content Extract';
