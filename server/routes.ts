@@ -1512,67 +1512,11 @@ app.delete(`${apiPrefix}/admin/wordpress/credentials`, async (req, res) => {
   // YouTube management
   app.get(`${apiPrefix}/admin/youtube/channels`, async (req, res) => {
     try {
-      // Get channels with real-time imported video counts
-      const channels = await db.query.youtubeChannels.findMany({
-        with: {
-          category: true,
-        },
-        orderBy: [desc(schema.youtubeChannels.createdAt)]
-      });
-
-      // Update imported video counts in real-time
-      const channelsWithRealCounts = await Promise.all(
-        channels.map(async (channel) => {
-          // Count actual videos for this channel
-          const videoCount = await db.query.youtubeVideos.findMany({
-            where: eq(schema.youtubeVideos.channelId, channel.id),
-            columns: { id: true }
-          });
-
-          const actualCount = videoCount.length;
-
-          // Update the channel if count differs
-          if (actualCount !== channel.importedVideoCount) {
-            await db.update(schema.youtubeChannels)
-              .set({ importedVideoCount: actualCount })
-              .where(eq(schema.youtubeChannels.id, channel.id));
-          }
-
-          return {
-            ...channel,
-            importedVideoCount: actualCount
-          };
-        })
-      );
-
-      res.json(channelsWithRealCounts);
+      const channels = await storage.getAdminYoutubeChannels();
+      res.json(channels);
     } catch (error) {
       console.error("Error fetching admin YouTube channels:", error);
       res.status(500).json({ message: "Failed to fetch YouTube channels" });
-    }
-  });
-
-  // Add route to update channel category
-  app.patch(`${apiPrefix}/admin/youtube/channels/:id/category`, async (req, res) => {
-    try {
-      const { id } = req.params;
-      const { categoryId } = req.body;
-
-      if (!categoryId || isNaN(parseInt(categoryId))) {
-        return res.status(400).json({ message: "Valid category ID is required" });
-      }
-
-      await db.update(schema.youtubeChannels)
-        .set({ 
-          categoryId: parseInt(categoryId),
-          updatedAt: new Date()
-        })
-        .where(eq(schema.youtubeChannels.id, parseInt(id)));
-
-      res.json({ success: true });
-    } catch (error) {
-      console.error(`Error updating channel category for ${req.params.id}:`, error);
-      res.status(500).json({ message: "Failed to update channel category" });
     }
   });
 app.get(`${apiPrefix}/admin/youtube/videos`, async (req, res) => {
@@ -3222,24 +3166,6 @@ app.get(`${apiPrefix}/admin/tips/:id`, async (req, res) => {
     } catch (error) {
       console.error("Error syncing channel counts:", error);
       res.status(500).json({ message: "Failed to sync channel counts" });
-    }
-  });
-
-  app.post(`${apiPrefix}/admin/youtube/channels/auto-assign-categories`, async (req, res) => {
-    try {
-      console.log(`🔄 Starting auto-assignment of channel categories...`);
-
-      const result = await storage.autoAssignChannelCategories();
-
-      res.json({
-        success: true,
-        channelsUpdated: result.channelsUpdated,
-        results: result.results,
-        message: `Successfully auto-assigned categories to ${result.channelsUpdated} channels based on their video categories.`
-      });
-    } catch (error) {
-      console.error("Error auto-assigning channel categories:", error);
-      res.status(500).json({ message: "Failed to auto-assign channel categories" });
     }
   });
 

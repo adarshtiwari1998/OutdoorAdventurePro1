@@ -173,10 +173,7 @@ export const storage = {
   async getAdminYoutubeChannels() {
     try {
       return await db.query.youtubeChannels.findMany({
-        with: {
-          category: true,
-        },
-        orderBy: [desc(schema.youtubeChannels.createdAt)]
+        orderBy: desc(youtubeChannels.createdAt),
       });
     } catch (error) {
       console.error('Error getting admin YouTube channels:', error);
@@ -217,95 +214,6 @@ export const storage = {
     await db.update(schema.youtubeChannels)
       .set({ lastImport: new Date() })
       .where(eq(schema.youtubeChannels.id, channelId));
-  },
-
-  async autoAssignChannelCategories(): Promise<{ channelsUpdated: number, results: Array<{ channelId: number, channelName: string, assignedCategoryId: number, assignedCategoryName: string, videoCount: number }> }> {
-    console.log('🔄 Starting auto-assignment of channel categories based on video categories...');
-    
-    const results = [];
-    let channelsUpdated = 0;
-
-    // Get all channels
-    const channels = await db.query.youtubeChannels.findMany({
-      columns: { id: true, name: true }
-    });
-
-    for (const channel of channels) {
-      try {
-        // Get all videos for this channel with their categories
-        const videos = await db.query.youtubeVideos.findMany({
-          where: eq(schema.youtubeVideos.channelId, channel.id),
-          columns: { categoryId: true },
-          with: {
-            category: {
-              columns: { name: true }
-            }
-          }
-        });
-
-        if (videos.length === 0) {
-          console.log(`⏭️ Channel "${channel.name}" has no videos, skipping...`);
-          continue;
-        }
-
-        // Count videos by category
-        const categoryCounts = new Map<number, { count: number, name: string }>();
-        
-        videos.forEach(video => {
-          if (video.categoryId && video.category) {
-            const existing = categoryCounts.get(video.categoryId) || { count: 0, name: video.category.name };
-            categoryCounts.set(video.categoryId, { 
-              count: existing.count + 1, 
-              name: video.category.name 
-            });
-          }
-        });
-
-        if (categoryCounts.size === 0) {
-          console.log(`⏭️ Channel "${channel.name}" has no videos with categories, skipping...`);
-          continue;
-        }
-
-        // Find the most common category
-        let mostCommonCategoryId = 0;
-        let mostCommonCategoryName = '';
-        let maxCount = 0;
-
-        categoryCounts.forEach((data, categoryId) => {
-          if (data.count > maxCount) {
-            maxCount = data.count;
-            mostCommonCategoryId = categoryId;
-            mostCommonCategoryName = data.name;
-          }
-        });
-
-        // Update the channel with the most common category
-        await db.update(schema.youtubeChannels)
-          .set({ 
-            categoryId: mostCommonCategoryId,
-            updatedAt: new Date()
-          })
-          .where(eq(schema.youtubeChannels.id, channel.id));
-
-        console.log(`✅ Updated channel "${channel.name}" with category "${mostCommonCategoryName}" (${maxCount}/${videos.length} videos)`);
-        
-        results.push({
-          channelId: channel.id,
-          channelName: channel.name,
-          assignedCategoryId: mostCommonCategoryId,
-          assignedCategoryName: mostCommonCategoryName,
-          videoCount: maxCount
-        });
-        
-        channelsUpdated++;
-
-      } catch (error) {
-        console.error(`❌ Error processing channel "${channel.name}":`, error);
-      }
-    }
-
-    console.log(`📊 Auto-assignment complete: ${channelsUpdated} channels updated`);
-    return { channelsUpdated, results };
   },
 
   async updateYoutubeChannelImportedCount(channelId: number, additionalCount: number) {
