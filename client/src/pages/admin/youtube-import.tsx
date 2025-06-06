@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { useForm } from "react-hook-form";
+import { useForm } from "react";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { 
@@ -241,7 +241,7 @@ const YoutubeImport = () => {
     },
   });
 
-  const { data: blogCategories } = useQuery<{id: string, name: string}[]>({
+  const { data: blogCategories } = useQuery<{id: string, name: string, type: string}[]>({
     queryKey: ['/api/admin/blog/categories'],
   });
 
@@ -764,6 +764,7 @@ const YoutubeImport = () => {
     console.log(`🎯 Selecting channel: ${channelId}`);
     setSelectedChannelId(channelId);
     setActiveTab("videos");
+    // set the category
   };
 
   const handleImportFromChannel = (channelId: string) => {
@@ -933,6 +934,7 @@ const YoutubeImport = () => {
             <Skeleton className="h-3 w-32" />
           </TableCell>
           <TableCell><Skeleton className="h-5 w-24" /></TableCell>
+          ```
           <TableCell><Skeleton className="h-5 w-16" /></TableCell>
           <TableCell className="text-right"><Skeleton className="h-8 w-24 ml-auto" /></TableCell>
         </TableRow>
@@ -1090,11 +1092,7 @@ const YoutubeImport = () => {
                       <SelectContent className="max-h-60 overflow-y-auto">
                         <SelectItem value="all">All Categories</SelectItem>
                         <SelectItem value="no-category">No Category</SelectItem>
-                        {blogCategories?.filter(cat => {
-                          // Only exclude categories that are explicitly header types
-                          const isHeaderCategory = cat.id.toString().startsWith('header_') || cat.type === 'header';
-                          return !isHeaderCategory;
-                        }).map(category => (
+                        {blogCategories?.map(category => (
                           <SelectItem key={category.id} value={category.id.toString()}>
                             {category.name} ({category.type || 'blog'})
                           </SelectItem>
@@ -1186,11 +1184,7 @@ const YoutubeImport = () => {
                         <SelectValue placeholder="Select category" />
                       </SelectTrigger>
                       <SelectContent className="max-h-60 overflow-y-auto">
-                        {blogCategories?.filter(cat => {
-                          // Only exclude categories that are explicitly header types
-                          const isHeaderCategory = cat.id.toString().startsWith('header_') || cat.type === 'header';
-                          return !isHeaderCategory;
-                        }).map(category => (
+                        {blogCategories?.map(category => (
                           <SelectItem key={category.id} value={category.id.toString()}>
                             {category.name} ({category.type || 'blog'})
                           </SelectItem>
@@ -1227,11 +1221,7 @@ const YoutubeImport = () => {
                         <SelectValue placeholder="Select category" />
                       </SelectTrigger>
                       <SelectContent className="max-h-60 overflow-y-auto">
-                        {blogCategories?.filter(cat => {
-                          // Only exclude categories that are explicitly header types
-                          const isHeaderCategory = cat.id.toString().startsWith('header_') || cat.type === 'header';
-                          return !isHeaderCategory;
-                        }).map(category => (
+                        {blogCategories?.map(category => (
                           <SelectItem key={category.id} value={category.id.toString()}>
                             {category.name} ({category.type || 'blog'})
                           </SelectItem>
@@ -1387,12 +1377,8 @@ const YoutubeImport = () => {
                                   </SelectValue>
                                 </SelectTrigger>
                                 <SelectContent className="max-h-60 overflow-y-auto">
-                                  {blogCategories?.filter(cat => {
-                                    // Only exclude categories that are explicitly header types
-                                    const isHeaderCategory = cat.id.toString().startsWith('header_') || cat.type === 'header';
-                                    return !isHeaderCategory;
-                                  }).map(category => (
-                                    <SelectItem key={category.id} value={category.id}>
+                                  {blogCategories?.map(category => (
+                                    <SelectItem key={category.id} value={category.id.toString()}>
                                       {category.name} ({category.type || 'blog'})
                                     </SelectItem>
                                   ))}
@@ -1415,12 +1401,8 @@ const YoutubeImport = () => {
                                   <SelectValue placeholder="Select Category" />
                                 </SelectTrigger>
                                 <SelectContent className="max-h-60 overflow-y-auto">
-                                  {blogCategories?.filter(cat => {
-                                    // Only exclude categories that are explicitly header types
-                                    const isHeaderCategory = cat.id.toString().startsWith('header_') || cat.type === 'header';
-                                    return !isHeaderCategory;
-                                  }).map(category => (
-                                    <SelectItem key={category.id} value={category.id}>
+                                  {blogCategories?.map(category => (
+                                    <SelectItem key={category.id} value={category.id.toString()}>
                                       {category.name} ({category.type || 'blog'})
                                     </SelectItem>
                                   ))}
@@ -1540,11 +1522,7 @@ const YoutubeImport = () => {
                                           {...importForm.register("categoryId", { required: true })}
                                         >
                                           <option value="">Select a category</option>
-                                          {blogCategories?.filter(cat => {
-                            // Only exclude categories that are explicitly header types
-                            const isHeaderCategory = cat.id.toString().startsWith('header_') || cat.type === 'header';
-                            return !isHeaderCategory;
-                          }).map(category => (
+                                          {blogCategories?.map(category => (
                             <option key={category.id} value={category.id.toString()}>
                               {category.name}
                             </option>
@@ -1790,7 +1768,7 @@ const YoutubeImport = () => {
                           <p className="text-xs text-muted-foreground">
                             Channel name will be fetched automatically when URL/handle is resolved
                           </p>
-                        </FormItem>
+                        </FormItem>```
                       )}
                     />
                     <Button 
@@ -2152,11 +2130,7 @@ const YoutubeImport = () => {
                 </SelectTrigger>
                 <SelectContent className="max-h-60 overflow-y-auto">
                   <SelectItem value="no-category">No Category (import without category)</SelectItem>
-                  {blogCategories?.filter(cat => {
-                          // Only exclude categories that are explicitly header types
-                          const isHeaderCategory = cat.id.toString().startsWith('header_') || cat.type === 'header';
-                          return !isHeaderCategory;
-                        }).map(category => (
+                  {blogCategories?.map(category => (
                     <SelectItem key={category.id} value={category.id.toString()}>
                       {category.name} ({category.type || 'blog'})
                     </SelectItem>

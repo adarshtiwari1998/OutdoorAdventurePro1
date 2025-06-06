@@ -1053,23 +1053,13 @@ export async function registerRoutes(app: Express): Promise {
 
   app.get(`${apiPrefix}/admin/blog/categories`, async (req, res) => {
     try {
-      // Get blog categories
-      const blogCategories = await storage.getBlogCategories();
+      // Get ALL categories from the categories table
+      const allCategories = await db.query.categories.findMany({
+        orderBy: [schema.categories.type, schema.categories.name]
+      });
 
-      // Get header categories (these can also be used for blog posts)
-      const headerConfigs = await db.query.headerConfigs.findMany();
-
-      // Convert header configs to category format
-      const headerCategories = headerConfigs.map(config => ({
-        id: `header_${config.id}`,
-        name: config.category.charAt(0).toUpperCase() + config.category.slice(1),
-        slug: config.category,
-        type: 'header'
-      }));
-
-      // Combine both types of categories
-      const allCategories = [...blogCategories, ...headerCategories];
-
+      console.log(`📋 Fetched ${allCategories.length} total categories for admin`);
+      
       res.json(allCategories);
     } catch (error) {
       console.error("Error fetching blog categories:", error);
