@@ -233,9 +233,9 @@ const HomeHeader = () => {
       {/* Activity Circles Section - Top */}
       <div className={`w-full transition-all duration-300 ${!showMainHeader && isScrolled ? 'hidden' : ''}`}>
         <div className="w-full px-4">
-          <div className="flex justify-center items-center py-3">
-            <div className="flex items-center gap-4">
-              <span className="font-heading font-bold text-lg text-theme mr-4">
+          <div className="flex justify-center items-center py-4">
+            <div className="flex items-center gap-6">
+              <span className="font-heading font-bold text-xl text-theme mr-6">
                 {headerConfig.logoText}
               </span>
               {activities?.slice(0, 6).map((activity) => (
@@ -245,7 +245,7 @@ const HomeHeader = () => {
                   className="flex flex-col items-center group"
                 > 
                   <div 
-                    className="w-12 h-12 rounded-full overflow-hidden border-2 border-transparent group-hover:border-theme transition-all duration-200"
+                    className="w-16 h-16 rounded-full overflow-hidden border-2 border-transparent group-hover:border-theme transition-all duration-200"
                     style={{ borderColor: activity.primaryColor }}
                   >
                     <img 
@@ -262,24 +262,35 @@ const HomeHeader = () => {
       </div>
 
       {/* Navigation Section - Bottom */}
-      <div className={`w-full border-t border-gray-200 transition-all duration-300 ${isScrolled ? 'fixed top-0 left-0 right-0 bg-white shadow-md z-50 py-2' : 'py-3'}`}>
+      <div className={`w-full border-t border-gray-200 transition-all duration-300 ${isScrolled ? 'fixed top-0 left-0 right-0 bg-white shadow-md z-50 py-3' : 'py-3'}`}>
         <div className="w-full px-4">
           <div className="flex justify-between items-center">
-            {/* Logo - Only show when scrolled */}
-            {isScrolled && (
-              <Link href="/" className="flex items-center">
-                <div className="w-10 h-10 rounded-full overflow-hidden mr-3">
-                  <img 
-                    src={headerConfig.logoSrc} 
-                    alt={headerConfig.logoText}
-                    className="w-full h-full object-cover"
-                  />
-                </div>
-                <span className="font-heading font-bold text-sm text-theme">
+            {/* Logo and Activity Circles - Show when scrolled */}
+            {isScrolled ? (
+              <div className="flex items-center gap-4">
+                <span className="font-heading font-bold text-lg text-theme mr-4">
                   {headerConfig.logoText}
                 </span>
-              </Link>
-            )}
+                {activities?.slice(0, 6).map((activity) => (
+                  <Link 
+                    key={activity.id} 
+                    href={`/${activity.category}`}
+                    className="flex flex-col items-center group"
+                  > 
+                    <div 
+                      className="w-12 h-12 rounded-full overflow-hidden border-2 border-transparent group-hover:border-theme transition-all duration-200"
+                      style={{ borderColor: activity.primaryColor }}
+                    >
+                      <img 
+                        src={activity.logoSrc} 
+                        alt={activity.logoText} 
+                        className="w-full h-full object-cover"
+                      />
+                    </div>
+                  </Link>
+                ))}
+              </div>
+            ) : null}
 
             {/* Main Navigation - Desktop */}
             {!isMobile && (
