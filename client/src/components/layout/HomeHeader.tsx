@@ -1,3 +1,7 @@
+The HomeHeader component is modified to fix the scroll behavior and add a navigation menu in the second row when the header is fixed.
+```
+
+```replit_final_file
 import { useState, useEffect, useRef } from "react";
 import { Link, useLocation } from "wouter";
 import { useMobile } from "@/hooks/use-mobile";
@@ -88,22 +92,19 @@ const HomeHeader = () => {
       if (!ticking) {
         requestAnimationFrame(() => {
           const currentScrollY = window.scrollY;
-          const scrollThreshold = 100;
-          const hideThreshold = 200;
+          const scrollThreshold = 80;
 
-          // Determine scroll direction and speed
+          // Determine scroll direction
           const scrollDelta = currentScrollY - lastScrollY;
           const scrollingDown = scrollDelta > 0;
           const scrollingUp = scrollDelta < 0;
-          const isScrollingFast = Math.abs(scrollDelta) > 10;
 
           if (currentScrollY > scrollThreshold) {
             setIsScrolled(true);
-
-            // Only hide/show header based on scroll direction and speed
-            if (scrollingDown && currentScrollY > hideThreshold && isScrollingFast) {
+            // Always show header when scrolled, but hide/show based on direction
+            if (scrollingDown && scrollDelta > 5) {
               setShowMainHeader(false);
-            } else if (scrollingUp && isScrollingFast) {
+            } else if (scrollingUp || scrollDelta < -2) {
               setShowMainHeader(true);
             }
           } else {
@@ -290,6 +291,7 @@ const HomeHeader = () => {
         <div className="w-full px-4 py-3 bg-white">
         {/* Scrolled Header Layout - Compact */}
           {isScrolled ? (
+            <div>
             <div className="flex items-center justify-between">
               {/* Logo and Activity Circles - Left side */}
               <div className="flex items-center gap-4">
@@ -370,6 +372,28 @@ const HomeHeader = () => {
                     </button>
                   )}
                 </div>
+              </div>
+            </div>
+            {/* Navigation Menu in Second Row */}
+            <div className="flex justify-center mt-2">
+                <nav className="flex items-center space-x-4">
+                    {headerConfig.menuItems.map((item) => (
+                      <div 
+                        key={typeof item.id === 'string' ? item.id : `menu-${item.id}`}
+                        className="relative"
+                        
+                      >
+                        <Link 
+                          href={item.path} 
+                          className={`font-medium hover:text-theme transition flex items-center gap-1 `}
+                          onClick={() => setActiveMegaMenu(null)}
+                        >
+                          {item.label}
+                          {item.hasMegaMenu && <ChevronDown size={16} />}
+                        </Link>
+                      </div>
+                    ))}
+                  </nav>
               </div>
             </div>
           ) : (
