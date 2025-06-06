@@ -182,7 +182,22 @@ export const storage = {
 
     const categoryMap = new Map(categories.map(cat => [cat.id.toString(), cat.name]));
 
-    // Add category names to channels
+    // Get real-time video counts for all channels
+    const channelVideoCountsPromises = channels.map(async (channel) => {
+      const videoCount = await db.select({ count: sql<number>`count(*)` })
+        .from(schema.youtubeVideos)
+        .where(eq(schema.youtubeVideos.channelId, channel.id));
+
+      return {
+        channelId: channel.id,
+        realTimeCount: videoCount[0]?.count || 0
+      };
+    });
+
+    const channelVideoCounts = await Promise.all(channelVideoCountsPromises);
+    const videoCountMap = new Map(channelVideoCounts.map(c => [c.channelId, c.realTimeCount]));
+
+    // Add category names and real-time counts to channels
     const channelsWithCategories = channels.map(channel => {
       let categoryNames = [];
       let categoryIdsArray = [];
@@ -218,12 +233,16 @@ export const storage = {
       }
 
       const finalCategoryNames = categoryNames.length > 0 ? categoryNames.join(', ') : null;
+      const realTimeVideoCount = videoCountMap.get(channel.id) || 0;
+
       console.log(`✅ Final category name for "${channel.name}": ${finalCategoryNames || 'No categories'}`);
+      console.log(`📊 Real-time video count for "${channel.name}": ${realTimeVideoCount}`);
 
       return {
         ...channel,
         categoryNames: finalCategoryNames,
-        categoryIdsArray: categoryIdsArray
+        categoryIdsArray: categoryIdsArray,
+        importedVideoCount: realTimeVideoCount // Override with real-time count
       };
     });
 
@@ -427,8 +446,7 @@ export const storage = {
         updatedAt: new Date(),
       }).returning();
 
-      // Auto-update channel video count and categories when new video is added
-      await this.refreshChannelVideoCount(videoData.channelId);
+      // Auto-update channel categories when new video is added (counts are now real-time)
       if (videoData.categoryId) {
         await this.updateChannelCategories(videoData.channelId);
       }
@@ -783,14 +801,10 @@ export const storage = {
         columns: { channelId: true }
       });
 
-      // Delete the video
+      // Delete the video (counts are now calculated in real-time)
       await db.delete(youtubeVideos).where(eq(youtubeVideos.id, id));
-      
-      // Update the channel's imported video count automatically
-      if (video && video.channelId) {
-        await this.refreshChannelVideoCount(video.channelId);
-        console.log(`✅ Auto-updated video count for channel ${video.channelId} after deleting video ${id}`);
-      }
+
+      console.log(`✅ Video ${id} deleted - counts will be updated automatically on next page load`);}
     } catch (error) {
       console.error(`Error deleting YouTube video ${id}:`, error);
       throw error;
