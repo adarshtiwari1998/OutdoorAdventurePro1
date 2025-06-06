@@ -268,7 +268,7 @@ const HomeHeader = () => {
                           <img 
                             src={headerConfig.logoSrc} 
                             alt={headerConfig.logoText} 
-                            className="h-14 w-14 object-cover rounded-full shadow-lg"
+                            className="h-16 w-16 object-cover rounded-full shadow-lg"
                           />
                           <span className="font-heading font-bold text-xl text-theme whitespace-nowrap">
                             {headerConfig.logoText}
@@ -286,7 +286,7 @@ const HomeHeader = () => {
                                 className="group relative"
                               > 
                                 <div 
-                                  className="w-16 h-16 rounded-full overflow-hidden border-3 border-transparent group-hover:border-white group-hover:shadow-xl transition-all duration-300 transform group-hover:scale-110"
+                                  className="w-18 h-18 rounded-full overflow-hidden border-3 border-transparent group-hover:border-white group-hover:shadow-xl transition-all duration-300 transform group-hover:scale-110"
                                   style={{ 
                                     borderColor: activity.primaryColor,
                                     boxShadow: `0 4px 20px ${activity.primaryColor}30`

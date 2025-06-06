@@ -187,6 +187,17 @@
   .text-theme-light {
     color: hsl(var(--theme-primary-light));
   }
+
+
+  /* Custom size classes for activity circles */
+  .w-18 {
+    width: 4.5rem; /* 72px */
+  }
+  
+  .h-18 {
+    height: 4.5rem; /* 72px */
+  }
+
   .text-theme-dark {
     color: hsl(var(--theme-primary-dark));
   }
