@@ -1972,7 +1972,8 @@ export const storage = {
 
       console.log(`Sample of available videos:`, await db.query.youtubeVideos.findMany({
         columns: { 
-          id: true,          title: true, 
+          id: true,
+          title: true, 
           categoryId: true,
           videoType: true
         },
