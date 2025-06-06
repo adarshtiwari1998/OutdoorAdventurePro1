@@ -85,26 +85,24 @@ const HomeHeader = () => {
   useEffect(() => {
     const handleScroll = () => {
       const currentScrollY = window.scrollY;
-      const scrollThreshold = 80; // Faster trigger point
+      const scrollThreshold = 60;
 
       // Calculate scroll direction
       const scrollDelta = currentScrollY - lastScrollY;
       const scrollingDown = scrollDelta > 0;
       const scrollingUp = scrollDelta < 0;
 
-      // Immediate state updates without requestAnimationFrame delay
+      // Always set isScrolled based on threshold
       if (currentScrollY <= scrollThreshold) {
-        // At top - normal header
         setIsScrolled(false);
         setShowMainHeader(true);
       } else {
-        // Past threshold - fixed header mode
         setIsScrolled(true);
-
-        // Immediate header visibility based on scroll direction
-        if (scrollingDown && scrollDelta > 3) {
+        
+        // Only hide header when scrolling down fast enough
+        if (scrollingDown && scrollDelta > 2) {
           setShowMainHeader(false);
-        } else if (scrollingUp || scrollDelta <= 0) {
+        } else if (scrollingUp) {
           setShowMainHeader(true);
         }
       }
