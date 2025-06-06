@@ -317,9 +317,9 @@ const HomeHeader = () => {
                   </Link>
                 </div>
 
-                {/* Activity Circles Row with Horizontal Scroll - Left aligned */}
+                {/* Activity Circles Row with Horizontal Scroll - Centered */}
                 <div className="overflow-x-auto scrollbar-hide">
-                  <div className="flex items-center justify-start gap-3 pb-2" style={{ minWidth: 'max-content' }}>
+                  <div className="flex items-center justify-center gap-3 pb-2" style={{ minWidth: 'max-content' }}>
                     {activities?.map((activity) => (
                       <Link 
                         key={activity.id} 
@@ -465,7 +465,7 @@ const HomeHeader = () => {
 
                     {/* Activity Circles with Horizontal Scroll */}
                     <div className="overflow-x-auto scrollbar-hide flex-1">
-                      <div className="flex items-center gap-2 pb-1" style={{ minWidth: 'max-content' }}>
+                      <div className="flex items-center justify-center gap-2 pb-1" style={{ minWidth: 'max-content' }}>
                         {activities?.slice(0, 6).map((activity) => (
                           <Link 
                             key={activity.id} 
