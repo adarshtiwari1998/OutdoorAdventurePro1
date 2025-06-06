@@ -1922,21 +1922,24 @@ author:{
       });
 
       // Ensure category information is properly mapped
-      const videosWithCategories = videos.map(video => ({
-        ...video,
-        category: video.category ? {
-          id: video.category.id,
-          name: video.category.name,
-          slug: video.category.slug,
-          type: video.category.type
-        } : null,
-        channelName: video.channel?.name || 'Unknown Channel'
-      }));
+      const videosWithCategories = videos.map(video => {
+        console.log(`🔍 Video ${video.id}: categoryId=${video.categoryId}, category=${video.category?.name || 'null'}`);
+        return {
+          ...video,
+          category: video.category ? {
+            id: video.category.id,
+            name: video.category.name,
+            slug: video.category.slug,
+            type: video.category.type
+          } : null,
+          channelName: video.channel?.name || 'Unknown Channel'
+        };
+      });
 
       console.log(`✅ Found ${videosWithCategories.length} YouTube videos`);
       console.log(`📊 Sample videos with categories:`, videosWithCategories.slice(0, 3).map(v => ({
         id: v.id,
-        title: v.title,
+        title: v.title.substring(0, 50) + '...',
         categoryId: v.categoryId,
         category: v.category?.name || 'No Category'
       })));

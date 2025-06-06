@@ -1537,37 +1537,38 @@ app.delete(`${apiPrefix}/admin/wordpress/credentials`, async (req, res) => {
       let videos;
       if (channelId) {
         videos = await storage.getYoutubeVideosByChannel(channelId as string);
+        
+        // For channel-specific requests, we need to enrich manually
+        const enrichedVideos = await Promise.all(
+          videos.map(async (video) => {
+            const channel = await storage.getYoutubeChannelById(video.channelId);
+            const category = video.categoryId ? await storage.getBlogCategories().then(cats => 
+              cats.find(cat => cat.id === video.categoryId)
+            ) : null;
+
+            return {
+              ...video,
+              channel: channel ? {
+                id: channel.id,
+                name: channel.name,
+                channelId: channel.channelId
+              } : null,
+              category: category ? {
+                id: category.id,
+                name: category.name,
+                slug: category.slug
+              } : null,
+              channelName: channel?.name || 'Unknown Channel'
+            };
+          })
+        );
+        
+        res.json(enrichedVideos);
       } else {
-        // Fetch all videos from all channels
+        // Fetch all videos from all channels - already enriched by getAllYoutubeVideos
         videos = await storage.getAllYoutubeVideos();
+        res.json(videos);
       }
-
-      // Add channel and category information
-      const enrichedVideos = await Promise.all(
-        videos.map(async (video) => {
-          const channel = await storage.getYoutubeChannelById(video.channelId);
-          const category = video.categoryId ? await storage.getBlogCategories().then(cats => 
-            cats.find(cat => cat.id === video.categoryId)
-          ) : null;
-
-          return {
-            ...video,
-            channel: channel ? {
-              id: channel.id,
-              name: channel.name,
-              channelId: channel.channelId
-            } : null,
-            category: category ? {
-              id: category.id,
-              name: category.name,
-              slug: category.slug
-            } : null,
-            channelName: channel?.name || 'Unknown Channel'
-          };
-        })
-      );
-
-      res.json(enrichedVideos);
     } catch (error) {
       console.error("Error fetching YouTube videos:", error);
       res.status(500).json({ message: "Failed to fetch YouTube videos" });
