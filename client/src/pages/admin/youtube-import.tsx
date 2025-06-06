@@ -1093,7 +1093,6 @@ const YoutubeImport = () => {
                 )}
                 <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
                   <div>
-                  <div>
                     <label className="text-sm font-medium mb-1 block">Filter by Category</label>
                     <Select value={filterCategory} onValueChange={setFilterCategory}>
                       <SelectTrigger>
