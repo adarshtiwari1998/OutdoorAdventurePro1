@@ -27,7 +27,77 @@ const AdvancedCarousel = ({ slides }: AdvancedCarouselProps) => {
   const [isPlaying, setIsPlaying] = useState(true);
   const [isHovering, setIsHovering] = useState(false);
   const [hoveredArrow, setHoveredArrow] = useState<'left' | 'right' | null>(null);
+  const [gradientColors, setGradientColors] = useState<string>('rgba(0,0,0,0.8)');
   const videoRefs = useRef<(HTMLVideoElement | null)[]>(new Array(slides.length).fill(null));
+  
+  // Extract dominant colors from image for gradient background
+  const extractImageColors = async (imageUrl: string) => {
+    try {
+      const canvas = document.createElement('canvas');
+      const ctx = canvas.getContext('2d');
+      const img = new Image();
+      img.crossOrigin = 'anonymous';
+
+      return new Promise<string>((resolve) => {
+        img.onload = () => {
+          canvas.width = img.width;
+          canvas.height = img.height;
+          ctx?.drawImage(img, 0, 0);
+
+          const imageData = ctx?.getImageData(0, 0, canvas.width, canvas.height);
+          if (!imageData) {
+            resolve('rgba(0,0,0,0.8)');
+            return;
+          }
+
+          // Sample colors from different regions
+          const colors: number[][] = [];
+          const step = 50;
+
+          for (let y = 0; y < canvas.height; y += step) {
+            for (let x = 0; x < canvas.width; x += step) {
+              const index = (y * canvas.width + x) * 4;
+              colors.push([
+                imageData.data[index],     // R
+                imageData.data[index + 1], // G
+                imageData.data[index + 2]  // B
+              ]);
+            }
+          }
+
+          // Calculate average color
+          const avgColor = colors.reduce(
+            (acc, color) => [
+              acc[0] + color[0],
+              acc[1] + color[1],
+              acc[2] + color[2]
+            ],
+            [0, 0, 0]
+          ).map(c => Math.floor(c / colors.length));
+
+          // Create gradient with darker and lighter variations
+          const [r, g, b] = avgColor;
+          const darkerColor = `rgba(${Math.max(0, r-40)}, ${Math.max(0, g-40)}, ${Math.max(0, b-40)}, 0.9)`;
+          const lighterColor = `rgba(${Math.min(255, r+20)}, ${Math.min(255, g+20)}, ${Math.min(255, b+20)}, 0.7)`;
+
+          const gradient = `linear-gradient(135deg, ${darkerColor} 0%, ${lighterColor} 50%, rgba(0,0,0,0.8) 100%)`;
+          resolve(gradient);
+        };
+
+        img.onerror = () => resolve('rgba(0,0,0,0.8)');
+        img.src = imageUrl;
+      });
+    } catch (error) {
+      return 'rgba(0,0,0,0.8)';
+    }
+  };
+
+  // Update gradient when slide changes
+  useEffect(() => {
+    if (slides[activeSlide]) {
+      extractImageColors(slides[activeSlide].backgroundImage).then(setGradientColors);
+    }
+  }, [activeSlide, slides]);
   
   // Set up autoplay for the carousel
   useEffect(() => {
@@ -168,11 +238,38 @@ const AdvancedCarousel = ({ slides }: AdvancedCarouselProps) => {
 
   return (
     <div 
-      className="relative h-[650px] overflow-hidden bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900"
+      className="relative h-[650px] overflow-hidden"
       onMouseEnter={handleMouseEnter}
       onMouseLeave={handleMouseLeave}
     >
-      <div className="absolute inset-0 flex items-center justify-center">
+      {/* Netflix-style dynamic gradient background that fills entire container */}
+      <div 
+        className="netflix-gradient-bg gradient-transition"
+        style={{ 
+          background: gradientColors,
+          position: 'absolute',
+          top: '-50px',
+          left: '-50px',
+          right: '-50px',
+          bottom: '-50px',
+          filter: 'blur(120px)',
+          transform: 'scale(1.2)',
+          opacity: 0.8,
+          zIndex: 0
+        }}
+      />
+
+      {/* Additional background overlay for better coverage */}
+      <div 
+        className="absolute inset-0 gradient-transition"
+        style={{ 
+          background: `linear-gradient(135deg, ${gradientColors} 0%, rgba(0,0,0,0.9) 100%)`,
+          opacity: 0.6,
+          zIndex: 1
+        }}
+      />
+
+      <div className="absolute inset-0 flex items-center justify-center" style={{ zIndex: 2 }}>
         {slides.map((slide, index) => (
           <div 
             key={slide.id}
@@ -222,7 +319,8 @@ const AdvancedCarousel = ({ slides }: AdvancedCarouselProps) => {
                   className="w-full h-full object-cover"
                 />
               )}
-              <div className={`absolute inset-0 ${index === activeSlide ? 'bg-theme-overlay-gradient' : 'bg-gradient-to-r from-black/70 via-black/50 to-black/40'}`}></div>
+              {/* Overlay with reduced opacity to show gradient behind */}
+              <div className={`absolute inset-0 ${index === activeSlide ? 'bg-gradient-to-r from-black/60 via-black/40 to-transparent' : 'bg-gradient-to-r from-black/70 via-black/50 to-black/40'}`}></div>
             </div>
             
             {index === activeSlide && (
@@ -237,7 +335,7 @@ const AdvancedCarousel = ({ slides }: AdvancedCarouselProps) => {
                       ))}
                     </div>
                   )}
-                  <h1 className="font-heading font-bold text-4xl md:text-5xl lg:text-6xl mb-4 animate-fadeIn"
+                  <h1 className="font-heading font-bold text-4xl md:text-5xl lg:text-6xl mb-4 opacity-0 animate-fadeIn drop-shadow-2xl"
                     style={{animationDelay: '0.3s', animationFillMode: 'forwards'}}>
                     {slide.title}
                   </h1>
@@ -253,16 +351,16 @@ const AdvancedCarousel = ({ slides }: AdvancedCarouselProps) => {
                     </div>
                   )}
                   
-                  <p className="text-lg md:text-xl mb-8 animate-fadeIn max-w-lg"
+                  <p className="text-lg md:text-xl mb-8 opacity-0 animate-fadeIn max-w-lg drop-shadow-lg"
                     style={{animationDelay: '0.6s', animationFillMode: 'forwards'}}>
                     {slide.description}
                   </p>
                   
-                  <div className="flex gap-4 animate-fadeIn"
+                  <div className="flex gap-4 opacity-0 animate-fadeIn"
                     style={{animationDelay: '0.9s', animationFillMode: 'forwards'}}>
                     <a 
                       href={slide.ctaLink}
-                      className="bg-white text-black hover:bg-theme hover:text-white font-medium px-8 py-3 rounded-md transition inline-flex items-center"
+                      className="bg-white text-black hover:bg-theme hover:text-white font-medium px-8 py-3 rounded-md transition inline-flex items-center shadow-2xl"
                     >
                       <Play className="mr-2 h-5 w-5" />
                       {slide.ctaText}
