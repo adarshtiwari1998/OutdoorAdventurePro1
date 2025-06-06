@@ -1756,7 +1756,7 @@ const YoutubeImport = () => {
                     <FormField
                       control={channelForm.control}
                       name="channelId"
-                      render(({ field }) => (
+                      render={({ field }) => (
                         <FormItem>
                           <FormLabel>Channel ID</FormLabel>
                           <FormControl>
