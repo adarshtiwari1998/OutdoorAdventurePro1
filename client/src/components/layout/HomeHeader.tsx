@@ -108,7 +108,7 @@ const HomeHeader = () => {
 
           // Past threshold - enable fixed header behavior
           setIsScrolled(true);
-          
+
           // Show fixed header immediately when scrolling down past threshold
           if (scrollingDown && currentScrollY > scrollThreshold) {
             setShowMainHeader(true);
@@ -305,20 +305,20 @@ const HomeHeader = () => {
               <div className="px-3 py-3">
                 {/* First Row - Logo on left, Activity circles on right */}
                 <div className="flex items-center justify-between mb-3">
-                  <Link href="/" className="flex items-center space-x-2 flex-shrink-0">
+                  <Link href="/" className="flex items-center space-x-2 flex-shrink-0 min-w-0">
                     <img 
                       src={headerConfig.logoSrc} 
                       alt={headerConfig.logoText} 
-                      className="h-10 w-10 object-cover rounded-full"
+                      className="h-10 w-10 object-cover rounded-full flex-shrink-0"
                     />
-                    <span className="font-heading font-bold text-sm text-theme">
-                      {headerConfig.logoText.split(' ').slice(0, 2).join(' ')}
+                    <span className="font-heading font-bold text-sm text-theme truncate">
+                      {headerConfig.logoText}
                     </span>
                   </Link>
 
-                  {/* Activity Circles - Compact on right */}
-                  <div className="overflow-x-auto scrollbar-hide flex-1 ml-2">
-                    <div className="flex items-center justify-end gap-2" style={{ minWidth: 'max-content' }}>
+                  {/* Activity Circles - Vertical scroll on right */}
+                  <div className="max-h-20 overflow-y-auto scrollbar-hide flex-shrink-0 ml-2">
+                    <div className="flex flex-col gap-1 items-center">
                       {activities?.slice(0, 6).map((activity) => (
                         <Link 
                           key={activity.id} 
@@ -353,7 +353,7 @@ const HomeHeader = () => {
                       />
                     </div>
                   </div>
-                  
+
                   <Link href="/cart" className="relative flex-shrink-0">
                     <ShoppingCart className="text-gray-700 hover:text-theme transition" size={20} />
                     {(typeof cartCount === 'number' && cartCount > 0) && (
@@ -362,7 +362,7 @@ const HomeHeader = () => {
                       </span>
                     )}
                   </Link>
-                  
+
                   <button 
                     className="text-gray-700 hover:text-theme transition p-1 flex-shrink-0" 
                     onClick={toggleMobileMenu}
@@ -453,7 +453,7 @@ const HomeHeader = () => {
                       </div>
                     </div>
                   </div>
-                  
+
                   {/* Navigation Menu in Second Row */}
                   <div className="flex justify-center mt-2">
                     <nav className="flex items-center space-x-4">
@@ -481,20 +481,20 @@ const HomeHeader = () => {
               {isMobile && (
                 <div className="flex items-center justify-between py-2">
                   {/* Logo - Compact */}
-                  <Link href="/" className="flex items-center space-x-1 flex-shrink-0">
+                  <Link href="/" className="flex items-center space-x-1 flex-shrink-0 min-w-0">
                     <img 
                       src={headerConfig.logoSrc} 
                       alt={headerConfig.logoText} 
-                      className="h-8 w-8 object-cover rounded-full"
+                      className="h-8 w-8 object-cover rounded-full flex-shrink-0"
                     />
-                    <span className="font-heading font-bold text-xs text-theme whitespace-nowrap">
-                      {headerConfig.logoText.split(' ')[0]}
+                    <span className="font-heading font-bold text-xs text-theme truncate max-w-24">
+                      {headerConfig.logoText}
                     </span>
                   </Link>
 
-                  {/* Activity Circles - Center */}
-                  <div className="overflow-x-auto scrollbar-hide flex-1 mx-2">
-                    <div className="flex items-center justify-center gap-1" style={{ minWidth: 'max-content' }}>
+                  {/* Activity Circles - Center with vertical scroll */}
+                  <div className="max-h-12 overflow-y-auto scrollbar-hide flex-1 mx-2">
+                    <div className="flex flex-wrap items-center justify-center gap-1">
                       {activities?.slice(0, 6).map((activity) => (
                         <Link 
                           key={activity.id} 
@@ -604,7 +604,7 @@ const HomeHeader = () => {
                 </div>
               )}
 
-              
+
             </div>
           )}
         </div>
