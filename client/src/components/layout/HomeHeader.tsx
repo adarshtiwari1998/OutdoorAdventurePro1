@@ -316,9 +316,9 @@ const HomeHeader = () => {
                     </span>
                   </Link>
 
-                  {/* Activity Circles - Vertical scroll on right */}
-                  <div className="max-h-20 overflow-y-auto scrollbar-hide flex-shrink-0 ml-2">
-                    <div className="flex flex-col gap-1 items-center">
+                  {/* Activity Circles - Compact on right */}
+                  <div className="overflow-x-auto scrollbar-hide flex-1 ml-2">
+                    <div className="flex items-center justify-end gap-2" style={{ minWidth: 'max-content' }}>
                       {activities?.slice(0, 6).map((activity) => (
                         <Link 
                           key={activity.id} 
@@ -326,7 +326,7 @@ const HomeHeader = () => {
                           className="group flex-shrink-0"
                         > 
                           <div 
-                            className="w-9 h-9 rounded-full overflow-hidden border border-transparent group-hover:border-theme transition-all duration-200 shadow-sm"
+                            className="w-12 h-12 rounded-full overflow-hidden border-2 border-transparent group-hover:border-theme transition-all duration-200 shadow-md"
                             style={{ borderColor: activity.primaryColor }}
                           >
                             <img 
@@ -492,9 +492,9 @@ const HomeHeader = () => {
                     </span>
                   </Link>
 
-                  {/* Activity Circles - Center with vertical scroll */}
-                  <div className="max-h-12 overflow-y-auto scrollbar-hide flex-1 mx-2">
-                    <div className="flex flex-wrap items-center justify-center gap-1">
+                  {/* Activity Circles - Center */}
+                  <div className="overflow-x-auto scrollbar-hide flex-1 mx-2">
+                    <div className="flex items-center justify-center gap-1" style={{ minWidth: 'max-content' }}>
                       {activities?.slice(0, 6).map((activity) => (
                         <Link 
                           key={activity.id} 
