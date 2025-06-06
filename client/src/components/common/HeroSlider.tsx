@@ -17,6 +17,76 @@ interface HeroSliderProps {
 const HeroSlider = ({ slides }: HeroSliderProps) => {
   const [activeSlide, setActiveSlide] = useState(0);
   const [autoplayInterval, setAutoplayInterval] = useState<NodeJS.Timeout | null>(null);
+  const [gradientColors, setGradientColors] = useState<string>('rgba(0,0,0,0.8)');
+
+  // Extract dominant colors from image for gradient background
+  const extractImageColors = async (imageUrl: string) => {
+    try {
+      const canvas = document.createElement('canvas');
+      const ctx = canvas.getContext('2d');
+      const img = new Image();
+      img.crossOrigin = 'anonymous';
+      
+      return new Promise<string>((resolve) => {
+        img.onload = () => {
+          canvas.width = img.width;
+          canvas.height = img.height;
+          ctx?.drawImage(img, 0, 0);
+          
+          const imageData = ctx?.getImageData(0, 0, canvas.width, canvas.height);
+          if (!imageData) {
+            resolve('rgba(0,0,0,0.8)');
+            return;
+          }
+          
+          // Sample colors from different regions
+          const colors: number[][] = [];
+          const step = 50;
+          
+          for (let y = 0; y < canvas.height; y += step) {
+            for (let x = 0; x < canvas.width; x += step) {
+              const index = (y * canvas.width + x) * 4;
+              colors.push([
+                imageData.data[index],     // R
+                imageData.data[index + 1], // G
+                imageData.data[index + 2]  // B
+              ]);
+            }
+          }
+          
+          // Calculate average color
+          const avgColor = colors.reduce(
+            (acc, color) => [
+              acc[0] + color[0],
+              acc[1] + color[1],
+              acc[2] + color[2]
+            ],
+            [0, 0, 0]
+          ).map(c => Math.floor(c / colors.length));
+          
+          // Create gradient with darker and lighter variations
+          const [r, g, b] = avgColor;
+          const darkerColor = `rgba(${Math.max(0, r-40)}, ${Math.max(0, g-40)}, ${Math.max(0, b-40)}, 0.9)`;
+          const lighterColor = `rgba(${Math.min(255, r+20)}, ${Math.min(255, g+20)}, ${Math.min(255, b+20)}, 0.7)`;
+          
+          const gradient = `linear-gradient(135deg, ${darkerColor} 0%, ${lighterColor} 50%, rgba(0,0,0,0.8) 100%)`;
+          resolve(gradient);
+        };
+        
+        img.onerror = () => resolve('rgba(0,0,0,0.8)');
+        img.src = imageUrl;
+      });
+    } catch (error) {
+      return 'rgba(0,0,0,0.8)';
+    }
+  };
+
+  // Update gradient when slide changes
+  useEffect(() => {
+    if (slides[activeSlide]) {
+      extractImageColors(slides[activeSlide].backgroundImage).then(setGradientColors);
+    }
+  }, [activeSlide, slides]);
 
   // Set up autoplay
   useEffect(() => {
@@ -56,6 +126,17 @@ const HeroSlider = ({ slides }: HeroSliderProps) => {
 
   return (
     <section className="relative h-[600px] overflow-hidden">
+      {/* Dynamic gradient background */}
+      <div 
+        className="absolute inset-0 transition-all duration-1000 ease-in-out"
+        style={{ 
+          background: gradientColors,
+          filter: 'blur(100px)',
+          transform: 'scale(1.1)',
+          opacity: 0.7
+        }}
+      />
+      
       <div className="absolute inset-0 flex">
         {slides.map((slide, index) => (
           <div 
@@ -70,17 +151,18 @@ const HeroSlider = ({ slides }: HeroSliderProps) => {
                 alt={slide.title}
                 className="w-full h-full object-cover"
               />
-              <div className="absolute inset-0 bg-theme-overlay-gradient"></div>
+              {/* Overlay with reduced opacity to show gradient behind */}
+              <div className="absolute inset-0 bg-gradient-to-r from-black/60 via-black/40 to-transparent"></div>
             </div>
             
             <div className="relative z-10 h-full flex items-center">
               <div className="container mx-auto px-4">
                 <div className="max-w-xl text-white">
-                  <h1 className="font-heading font-bold text-4xl md:text-5xl lg:text-6xl mb-4 opacity-0 animate-fadeIn" 
+                  <h1 className="font-heading font-bold text-4xl md:text-5xl lg:text-6xl mb-4 opacity-0 animate-fadeIn drop-shadow-2xl" 
                     style={{animationDelay: '0.3s', animationFillMode: 'forwards'}}>
                     {slide.title}
                   </h1>
-                  <p className="text-lg md:text-xl mb-8 opacity-0 animate-fadeIn"
+                  <p className="text-lg md:text-xl mb-8 opacity-0 animate-fadeIn drop-shadow-lg"
                     style={{animationDelay: '0.6s', animationFillMode: 'forwards'}}>
                     {slide.description}
                   </p>
@@ -88,7 +170,7 @@ const HeroSlider = ({ slides }: HeroSliderProps) => {
                     style={{animationDelay: '0.9s', animationFillMode: 'forwards'}}>
                     <a 
                       href={slide.ctaLink}
-                      className="bg-theme hover:bg-theme-dark text-white font-medium px-8 py-3 rounded-full transition inline-flex items-center"
+                      className="bg-theme hover:bg-theme-dark text-white font-medium px-8 py-3 rounded-full transition inline-flex items-center shadow-2xl"
                     >
                       {slide.ctaText}
                       <ChevronRight className="ml-2 h-5 w-5" />

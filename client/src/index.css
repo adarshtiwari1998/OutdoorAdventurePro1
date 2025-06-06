@@ -223,6 +223,31 @@
       rgba(0, 0, 0, 0.4) 100%);
   }
 
+  /* Netflix-style dynamic gradient background */
+  .netflix-gradient-bg {
+    position: absolute;
+    top: -20%;
+    left: -20%;
+    right: -20%;
+    bottom: -20%;
+    filter: blur(80px);
+    opacity: 0.6;
+    transition: all 1s ease-in-out;
+    z-index: 1;
+  }
+
+  /* Enhanced text shadows for better readability */
+  .text-shadow-netflix {
+    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.8), 
+                 0 0 8px rgba(0, 0, 0, 0.6),
+                 0 0 16px rgba(0, 0, 0, 0.4);
+  }
+
+  /* Smooth gradient transitions */
+  .gradient-transition {
+    transition: background 1.5s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
   /* Animations for slider content */
   .animate-fadeIn {
     animation: fadeIn 0.8s ease-out forwards;
