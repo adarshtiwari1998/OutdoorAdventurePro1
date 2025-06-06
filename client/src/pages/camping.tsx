@@ -16,7 +16,7 @@ import AdventureTipsSlider from "@/components/sections/AdventureTipsSlider";
 import { ActivityProps } from "@/components/common/ActivityCard";
 import ActivityCard from "@/components/common/ActivityCard";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Tent, Star, Map, Compass, Sun, Flame } from "lucide-react";
+import { Tent, Map, Compass, Sun, Flame } from "lucide-react";
 import { useCategoryTheme } from "@/hooks/use-category-theme";
 
 const Camping = () => {

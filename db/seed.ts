@@ -379,6 +379,20 @@ async function seed() {
       created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
       updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
   );
+  
+  CREATE TABLE IF NOT EXISTS category_video_settings (
+      id SERIAL PRIMARY KEY,
+      category TEXT NOT NULL UNIQUE,
+      category_id INTEGER REFERENCES categories(id),
+      video_count INTEGER DEFAULT 8,
+      is_active BOOLEAN DEFAULT TRUE,
+      title TEXT DEFAULT 'Latest Videos',
+      description TEXT,
+      video_type TEXT DEFAULT 'all' NOT NULL,
+      created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+      updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+      CONSTRAINT category_video_settings_category_unique UNIQUE(category)
+  );
   `);
     console.log("Seeding database...");
 
