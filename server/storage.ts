@@ -283,17 +283,6 @@ export const storage = {
     }
   },
 
-  async getAllYoutubeVideos() {
-    try {
-      return await db.query.youtubeVideos.findMany({
-        orderBy: desc(youtubeVideos.publishedAt),
-      });
-    } catch (error) {
-      console.error('Error getting all YouTube videos:', error);
-      throw error;
-    }
-  },
-
   async getYoutubeVideoById(id: number) {
     try {
       return await db.query.youtubeVideos.findFirst({
@@ -936,7 +925,7 @@ export const storage = {
               slug: "fishing",
             },
             author:{
-              name: "Robert Streams",
+              name: "Robert Streams",<previous_generation>
               avatar: "https://ui-avatars.com/api/?name=Robert+Streams&background=random",
             },
             publishedAt: new Date(Date.now() - 21 * 24 * 60 * 60 * 1000).toISOString(),
