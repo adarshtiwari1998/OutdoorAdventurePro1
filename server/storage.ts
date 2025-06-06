@@ -427,6 +427,12 @@ export const storage = {
         updatedAt: new Date(),
       }).returning();
 
+      // Auto-update channel video count and categories when new video is added
+      await this.refreshChannelVideoCount(videoData.channelId);
+      if (videoData.categoryId) {
+        await this.updateChannelCategories(videoData.channelId);
+      }
+
       // Auto-fetch statistics for newly imported videos if not already provided
       if (!videoData.viewCount && process.env.AUTO_FETCH_STATS === 'true') {
         console.log(`📊 Auto-fetching statistics for new video: ${videoData.videoId}`);
@@ -444,6 +450,7 @@ export const storage = {
         }
       }
 
+      console.log(`✅ Auto-updated channel ${videoData.channelId} counts after adding new video`);
       return video;
     } catch (error) {
       console.error('Error creating YouTube video:', error);
@@ -628,9 +635,27 @@ export const storage = {
 
   async updateYoutubeVideosCategory(videoIds: number[], categoryId: number) {
     try {
-      await db.update(youtubeVideos)
-        .set({ categoryId })
+      // Get the videos first to know which channels need updating
+      const videos = await db.select({ channelId: youtubeVideos.channelId })
+        .from(youtubeVideos)
         .where(inArray(youtubeVideos.id, videoIds));
+
+      // Get unique channel IDs
+      const channelIds = [...new Set(videos.map(v => v.channelId).filter(Boolean))];
+
+      // Update the videos' category
+      await db.update(youtubeVideos)
+        .set({ categoryId, updatedAt: new Date() })
+        .where(inArray(youtubeVideos.id, videoIds));
+
+      // Update channel categories automatically
+      for (const channelId of channelIds) {
+        if (channelId) {
+          await this.updateChannelCategories(channelId);
+        }
+      }
+
+      console.log(`✅ Auto-updated categories for ${channelIds.length} channels after updating ${videoIds.length} videos`);
     } catch (error) {
       console.error('Error updating YouTube videos category:', error);
       throw error;
@@ -752,7 +777,20 @@ export const storage = {
 
   async deleteYoutubeVideo(id: number) {
     try {
+      // Get the video first to know which channel needs updating
+      const video = await db.query.youtubeVideos.findFirst({
+        where: eq(youtubeVideos.id, id),
+        columns: { channelId: true }
+      });
+
+      // Delete the video
       await db.delete(youtubeVideos).where(eq(youtubeVideos.id, id));
+      
+      // Update the channel's imported video count automatically
+      if (video && video.channelId) {
+        await this.refreshChannelVideoCount(video.channelId);
+        console.log(`✅ Auto-updated video count for channel ${video.channelId} after deleting video ${id}`);
+      }
     } catch (error) {
       console.error(`Error deleting YouTube video ${id}:`, error);
       throw error;
@@ -2275,14 +2313,14 @@ export const storage = {
       // Delete the videos
       await db.delete(youtubeVideos).where(inArray(youtubeVideos.id, ids));
 
-      // Update each affected channel's video count
+      // Update each affected channel's video count automatically
       for (const channelId of channelIds) {
         if (channelId) {
           await this.refreshChannelVideoCount(channelId);
         }
       }
 
-      console.log(`✅ Deleted ${ids.length} videos and updated ${channelIds.length} channel counts`);
+      console.log(`✅ Auto-updated video counts for ${channelIds.length} channels after deleting ${ids.length} videos`);
     } catch (error) {
       console.error("Error deleting YouTube videos:", error);
       throw error;

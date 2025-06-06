@@ -1930,28 +1930,17 @@ Status: Transcript extraction failed during import. Video may have captions that
     try {
       const { id } = req.params;
       
-      // Get the video first to know which channel needs updating
-      const video = await storage.getYoutubeVideoById(parseInt(id));
-      if (!video) {
-        return res.status(404).json({ message: "Video not found" });
-      }
-      
-      // Delete the video
+      // Delete the video (this will automatically update channel counts)
       await storage.deleteYoutubeVideo(parseInt(id));
       
-      // Update the channel's imported video count
-      if (video.channelId) {
-        await storage.refreshChannelVideoCount(video.channelId);
-      }
-      
-      res.json({ success: true });
+      res.json({ success: true, message: "Video deleted and channel counts updated automatically" });
     } catch (error) {
       console.error(`Error deleting YouTube video ${req.params.id}:`, error);
       res.status(500).json({ message: "Failed to delete YouTube video" });
     }
   });
 
-  // New endpoint to refresh all channel video counts
+  // Endpoint for manual refresh if needed (automatic updates handle most cases)
   app.post(`${apiPrefix}/admin/youtube/channels/refresh-counts`, async (req, res) => {
     try {
       const { channelId } = req.body;
@@ -1961,7 +1950,7 @@ Status: Transcript extraction failed during import. Video may have captions that
         await storage.refreshChannelVideoCount(parseInt(channelId));
         res.json({ 
           success: true, 
-          message: `Refreshed video count for channel ${channelId}` 
+          message: `Manually refreshed video count for channel ${channelId} (automatic updates usually handle this)` 
         });
       } else {
         // Refresh all channels
@@ -1975,7 +1964,7 @@ Status: Transcript extraction failed during import. Video may have captions that
         
         res.json({ 
           success: true, 
-          message: `Refreshed video counts for ${updatedCount} channels`,
+          message: `Manually refreshed video counts for ${updatedCount} channels (automatic updates usually handle this)`,
           updatedCount 
         });
       }
