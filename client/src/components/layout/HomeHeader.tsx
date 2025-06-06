@@ -12,6 +12,7 @@ import {
   Menu
 } from "lucide-react";
 import { Button } from "../ui/button";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "../ui/tooltip";
 
 // Define the header configuration interfaces (same as CategoryHeader)
 interface MegaMenuItem {
@@ -256,48 +257,65 @@ const HomeHeader = () => {
           <div className="w-full border-b border-gray-100">
             {/* Desktop Layout */}
             {!isMobile && (
-              <div className="px-4 py-6">
-                <div className="relative flex items-center justify-between">
-                  {/* Home Logo and Text - Left side */}
-                  <div className="flex items-center z-10">
-                    <Link href="/" className="flex items-center space-x-3">
-                      <img 
-                        src={headerConfig.logoSrc} 
-                        alt={headerConfig.logoText} 
-                        className="h-16 w-16 object-cover rounded-full"
-                      />
-                      <span className="font-heading font-bold text-2xl text-theme whitespace-nowrap">
-                        {headerConfig.logoText}
-                      </span>
-                    </Link>
-                  </div>
-
-                  {/* Activity Circles - Center */}
-                  <div className="absolute left-1/2 transform -translate-x-1/2 flex items-center justify-center gap-4">
-                    {activities?.slice(0, 6).map((activity) => (
-                      <Link 
-                        key={activity.id} 
-                        href={`/${activity.category}`}
-                        className="flex flex-col items-center group"
-                      > 
-                        <div 
-                          className="w-20 h-20 rounded-full overflow-hidden border-3 border-transparent group-hover:border-theme transition-all duration-200 shadow-lg"
-                          style={{ borderColor: activity.primaryColor }}
-                        >
-                          <img 
-                            src={activity.logoSrc} 
-                            alt={activity.logoText} 
-                            className="w-full h-full object-cover"
-                          />
-                        </div>
+              <TooltipProvider>
+                <div className="px-4 py-6">
+                  <div className="container mx-auto">
+                    {/* Home Logo and Text - Left side */}
+                    <div className="flex justify-start mb-4">
+                      <Link href="/" className="flex items-center space-x-3">
+                        <img 
+                          src={headerConfig.logoSrc} 
+                          alt={headerConfig.logoText} 
+                          className="h-16 w-16 object-cover rounded-full shadow-lg"
+                        />
+                        <span className="font-heading font-bold text-2xl text-theme whitespace-nowrap">
+                          {headerConfig.logoText}
+                        </span>
                       </Link>
-                    ))}
-                  </div>
+                    </div>
 
-                  {/* Right side placeholder for balance */}
-                  <div className="w-16"></div>
+                    {/* Activity Circles - Center Aligned */}
+                    <div className="flex items-center justify-center gap-6">
+                      {activities?.slice(0, 6).map((activity) => (
+                        <Tooltip key={activity.id}>
+                          <TooltipTrigger asChild>
+                            <Link 
+                              href={`/${activity.category}`}
+                              className="flex flex-col items-center group relative"
+                            > 
+                              <div 
+                                className="w-24 h-24 rounded-full overflow-hidden border-4 border-transparent group-hover:border-white group-hover:shadow-2xl transition-all duration-300 transform group-hover:scale-110"
+                                style={{ 
+                                  borderColor: activity.primaryColor,
+                                  boxShadow: `0 8px 32px ${activity.primaryColor}40`
+                                }}
+                              >
+                                <img 
+                                  src={activity.logoSrc} 
+                                  alt={activity.logoText} 
+                                  className="w-full h-full object-cover"
+                                />
+                              </div>
+                              {/* Glow effect on hover */}
+                              <div 
+                                className="absolute inset-0 rounded-full opacity-0 group-hover:opacity-30 transition-opacity duration-300 blur-xl"
+                                style={{ backgroundColor: activity.primaryColor }}
+                              />
+                            </Link>
+                          </TooltipTrigger>
+                          <TooltipContent 
+                            side="bottom" 
+                            className="bg-gray-900 text-white border-none shadow-xl"
+                            style={{ backgroundColor: activity.primaryColor }}
+                          >
+                            <p className="font-medium">{activity.logoText}</p>
+                          </TooltipContent>
+                        </Tooltip>
+                      ))}
+                    </div>
+                  </div>
                 </div>
-              </div>
+              </TooltipProvider>
             )}
 
             {/* Mobile Layout */}
@@ -389,99 +407,119 @@ const HomeHeader = () => {
             <div className="px-4 py-3">
               {/* Desktop Scrolled Layout */}
               {!isMobile && (
-                <div>
-                  <div className="flex items-center justify-between">
-                    {/* Logo and Activity Circles - Left side */}
-                    <div className="flex items-center gap-4">
-                      <Link href="/" className="flex items-center space-x-2">
-                        <img 
-                          src={headerConfig.logoSrc} 
-                          alt={headerConfig.logoText} 
-                          className="h-10 w-10 object-cover rounded-full"
-                        />
-                        <span className="font-heading font-bold text-lg text-theme whitespace-nowrap">
-                          {headerConfig.logoText}
-                        </span>
-                      </Link>
-
-                      {/* Activity Circles - Compact */}
-                      <div className="flex items-center justify-center gap-2 ml-4">
-                        {activities?.slice(0, 5).map((activity) => (
-                          <Link 
-                            key={activity.id} 
-                            href={`/${activity.category}`}
-                            className="group"
-                          > 
-                            <div 
-                              className="w-12 h-12 rounded-full overflow-hidden border-2 border-transparent group-hover:border-theme transition-all duration-200 shadow-md"
-                              style={{ borderColor: activity.primaryColor }}
-                            >
-                              <img 
-                                src={activity.logoSrc} 
-                                alt={activity.logoText} 
-                                className="w-full h-full object-cover"
-                              />
-                            </div>
-                          </Link>
-                        ))}
-                      </div>
-                    </div>
-
-                    {/* Right side - Search and Actions */}
-                    <div className="flex items-center space-x-4">
-                      {/* Search Bar */}
-                      <div className="flex-1 max-w-md">
-                        <div className="relative">
-                          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={16} />
-                          <input
-                            type="text"
-                            placeholder="Search destinations, activities..."
-                            className="w-full pl-8 pr-4 py-2 border border-gray-300 rounded-full focus:outline-none focus:ring-2 focus:ring-theme focus:border-transparent text-sm"
+                <TooltipProvider>
+                  <div className="container mx-auto">
+                    <div className="flex items-center justify-between">
+                      {/* Logo - Left side */}
+                      <div className="flex items-center">
+                        <Link href="/" className="flex items-center space-x-2">
+                          <img 
+                            src={headerConfig.logoSrc} 
+                            alt={headerConfig.logoText} 
+                            className="h-10 w-10 object-cover rounded-full shadow-md"
                           />
-                        </div>
-                      </div>
-
-                      {/* Action Buttons */}
-                      <div className="flex items-center space-x-2">
-                        <button className="bg-transparent border border-theme text-theme hover:bg-theme hover:text-white transition rounded-full px-3 py-1.5 font-medium text-sm">
-                          Sign In
-                        </button>
-                        <button className="bg-orange-500 text-white hover:bg-theme-dark transition rounded-full px-3 py-1.5 font-medium text-sm">
-                          Join Now
-                        </button>
-                        <Link href="/cart" className="relative">
-                          <ShoppingCart className="text-gray-700 hover:text-theme transition" size={18} />
-                          {(typeof cartCount === 'number' && cartCount > 0) && (
-                            <span className="absolute -top-2 -right-2 bg-theme text-white text-xs rounded-full h-4 w-4 flex items-center justify-center">
-                              {cartCount > 9 ? '9+' : cartCount}
-                            </span>
-                          )}
+                          <span className="font-heading font-bold text-lg text-theme whitespace-nowrap">
+                            {headerConfig.logoText}
+                          </span>
                         </Link>
                       </div>
-                    </div>
-                  </div>
 
-                  {/* Navigation Menu in Second Row */}
-                  <div className="flex justify-center mt-2">
-                    <nav className="flex items-center space-x-4">
-                      {headerConfig.menuItems.map((item) => (
-                        <div 
-                          key={typeof item.id === 'string' ? item.id : `menu-${item.id}`}
-                          className="relative"
-                        >
-                          <Link 
-                            href={item.path} 
-                            className="font-medium hover:text-theme transition flex items-center gap-1"
-                            onClick={() => setActiveMegaMenu(null)}
-                          >
-                            {item.label}
-                            {item.hasMegaMenu && <ChevronDown size={16} />}
+                      {/* Activity Circles - Center */}
+                      <div className="flex items-center justify-center gap-3">
+                        {activities?.slice(0, 6).map((activity) => (
+                          <Tooltip key={activity.id}>
+                            <TooltipTrigger asChild>
+                              <Link 
+                                href={`/${activity.category}`}
+                                className="group relative"
+                              > 
+                                <div 
+                                  className="w-14 h-14 rounded-full overflow-hidden border-3 border-transparent group-hover:border-white group-hover:shadow-xl transition-all duration-300 transform group-hover:scale-110"
+                                  style={{ 
+                                    borderColor: activity.primaryColor,
+                                    boxShadow: `0 4px 20px ${activity.primaryColor}30`
+                                  }}
+                                >
+                                  <img 
+                                    src={activity.logoSrc} 
+                                    alt={activity.logoText} 
+                                    className="w-full h-full object-cover"
+                                  />
+                                </div>
+                                {/* Glow effect on hover */}
+                                <div 
+                                  className="absolute inset-0 rounded-full opacity-0 group-hover:opacity-20 transition-opacity duration-300 blur-lg"
+                                  style={{ backgroundColor: activity.primaryColor }}
+                                />
+                              </Link>
+                            </TooltipTrigger>
+                            <TooltipContent 
+                              side="bottom" 
+                              className="bg-gray-900 text-white border-none shadow-xl text-sm"
+                              style={{ backgroundColor: activity.primaryColor }}
+                            >
+                              <p className="font-medium">{activity.logoText}</p>
+                            </TooltipContent>
+                          </Tooltip>
+                        ))}
+                      </div>
+
+                      {/* Right side - Search and Actions */}
+                      <div className="flex items-center space-x-4">
+                        {/* Search Bar */}
+                        <div className="flex-1 max-w-md">
+                          <div className="relative">
+                            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={16} />
+                            <input
+                              type="text"
+                              placeholder="Search destinations, activities..."
+                              className="w-full pl-8 pr-4 py-2 border border-gray-300 rounded-full focus:outline-none focus:ring-2 focus:ring-theme focus:border-transparent text-sm"
+                            />
+                          </div>
+                        </div>
+
+                        {/* Action Buttons */}
+                        <div className="flex items-center space-x-2">
+                          <button className="bg-transparent border border-theme text-theme hover:bg-theme hover:text-white transition rounded-full px-3 py-1.5 font-medium text-sm">
+                            Sign In
+                          </button>
+                          <button className="bg-orange-500 text-white hover:bg-theme-dark transition rounded-full px-3 py-1.5 font-medium text-sm">
+                            Join Now
+                          </button>
+                          <Link href="/cart" className="relative">
+                            <ShoppingCart className="text-gray-700 hover:text-theme transition" size={18} />
+                            {(typeof cartCount === 'number' && cartCount > 0) && (
+                              <span className="absolute -top-2 -right-2 bg-theme text-white text-xs rounded-full h-4 w-4 flex items-center justify-center">
+                                {cartCount > 9 ? '9+' : cartCount}
+                              </span>
+                            )}
                           </Link>
                         </div>
-                      ))}
-                    </nav>
+                      </div>
+                    </div>
+
+                    {/* Navigation Menu in Second Row */}
+                    <div className="flex justify-center mt-3 pt-2 border-t border-gray-100">
+                      <nav className="flex items-center space-x-6">
+                        {headerConfig.menuItems.map((item) => (
+                          <div 
+                            key={typeof item.id === 'string' ? item.id : `menu-${item.id}`}
+                            className="relative"
+                          >
+                            <Link 
+                              href={item.path} 
+                              className="font-medium hover:text-theme transition flex items-center gap-1 py-1"
+                              onClick={() => setActiveMegaMenu(null)}
+                            >
+                              {item.label}
+                              {item.hasMegaMenu && <ChevronDown size={16} />}
+                            </Link>
+                          </div>
+                        ))}
+                      </nav>
+                    </div>
                   </div>
-                </div>
+                </TooltipProvider>
               )}
 
               {/* Mobile Scrolled Layout - Compact Single Row */}
