@@ -233,9 +233,9 @@ const HomeHeader = () => {
       {/* Activity Circles Section - Top */}
       <div className={`w-full transition-all duration-300 ${!showMainHeader && isScrolled ? 'hidden' : ''}`}>
         <div className="w-full px-4">
-          <div className="flex justify-between items-center py-4">
-            {/* Home Logo on Left */}
-            <div className="flex items-center">
+          <div className="flex flex-col items-center py-4 space-y-4">
+            {/* Home Logo and Text - Centered */}
+            <div className="flex items-center justify-center">
               <Link href="/" className="flex items-center space-x-3">
                 <img 
                   src={headerConfig.logoSrc} 
@@ -248,8 +248,8 @@ const HomeHeader = () => {
               </Link>
             </div>
 
-            {/* Activity Circles on Right */}
-            <div className="flex items-center gap-4">
+            {/* Activity Circles - Centered */}
+            <div className="flex items-center justify-center gap-4">
               {activities?.slice(0, 6).map((activity) => (
                 <Link 
                   key={activity.id} 
@@ -274,114 +274,188 @@ const HomeHeader = () => {
       </div>
 
       {/* Navigation Section - Bottom */}
-      <div className={`w-full border-t border-gray-200 transition-all duration-300 ${isScrolled ? 'fixed top-0 left-0 right-0 bg-white shadow-md z-50 py-3' : 'py-3'}`}>
+      <div className={`w-full border-t border-gray-200 transition-all duration-300 ${isScrolled ? 'fixed top-0 left-0 right-0 bg-white shadow-md z-50 py-2' : 'py-3'}`}>
         <div className="w-full px-4">
-          <div className="flex justify-between items-center">
-            {/* Logo and Activity Circles - Show when scrolled */}
-            <div className="flex items-center gap-4">
-              {isScrolled && (
-                <>
-                  <Link href="/" className="flex items-center space-x-2">
-                    <img 
-                      src={headerConfig.logoSrc} 
-                      alt={headerConfig.logoText} 
-                      className="h-10 w-10 object-cover rounded-full"
-                    />
-                    <span className="font-heading font-bold text-lg text-theme">
-                      {headerConfig.logoText}
-                    </span>
-                  </Link>
-                  {activities?.slice(0, 6).map((activity) => (
-                    <Link 
-                      key={activity.id} 
-                      href={`/${activity.category}`}
-                      className="flex flex-col items-center group"
-                    > 
-                      <div 
-                        className="w-10 h-10 rounded-full overflow-hidden border-2 border-transparent group-hover:border-theme transition-all duration-200"
-                        style={{ borderColor: activity.primaryColor }}
-                      >
-                        <img 
-                          src={activity.logoSrc} 
-                          alt={activity.logoText} 
-                          className="w-full h-full object-cover"
-                        />
-                      </div>
-                    </Link>
-                  ))}
-                </>
-              )}
-            </div>
-
-            {/* Main Navigation - Desktop */}
-            {!isMobile && (
-              <nav className={`flex items-center space-x-6 ${isScrolled ? 'ml-auto' : ''}`}>
-                {headerConfig.menuItems.map((item) => (
-                  <div 
-                    key={typeof item.id === 'string' ? item.id : `menu-${item.id}`}
-                    className="relative"
-                    onMouseEnter={() => {
-                      if (item.hasMegaMenu && typeof item.id === 'number') {
-                        handleMenuMouseEnter(item.id);
-                      }
-                    }}
-                    onMouseLeave={handleMenuMouseLeave}
-                  >
-                    <Link 
-                      href={item.path} 
-                      className={`font-medium hover:text-theme transition flex items-center gap-1 ${activeMegaMenu === item.id ? 'text-theme' : ''}`}
-                      onClick={() => setActiveMegaMenu(null)}
+          {isScrolled ? (
+            /* Fixed Header Layout - Two rows */
+            <div className="flex flex-col space-y-2">
+              {/* First Row - Logo and Activity Circles */}
+              <div className="flex items-center justify-center gap-4">
+                <Link href="/" className="flex items-center space-x-2">
+                  <img 
+                    src={headerConfig.logoSrc} 
+                    alt={headerConfig.logoText} 
+                    className="h-8 w-8 object-cover rounded-full"
+                  />
+                  <span className="font-heading font-bold text-sm text-theme">
+                    {headerConfig.logoText}
+                  </span>
+                </Link>
+                {activities?.slice(0, 6).map((activity) => (
+                  <Link 
+                    key={activity.id} 
+                    href={`/${activity.category}`}
+                    className="flex flex-col items-center group"
+                  > 
+                    <div 
+                      className="w-8 h-8 rounded-full overflow-hidden border-2 border-transparent group-hover:border-theme transition-all duration-200"
+                      style={{ borderColor: activity.primaryColor }}
                     >
-                      {item.label}
-                      {item.hasMegaMenu && <ChevronDown size={16} />}
-                    </Link>
-                  </div>
+                      <img 
+                        src={activity.logoSrc} 
+                        alt={activity.logoText} 
+                        className="w-full h-full object-cover"
+                      />
+                    </div>
+                  </Link>
                 ))}
-              </nav>
-            )}
+              </div>
 
-            {/* Search Bar */}
-            <div className="flex-1 max-w-md mx-6">
-              <div className="relative">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={18} />
-                <input
-                  type="text"
-                  placeholder="Search destinations, activities..."
-                  className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-full focus:outline-none focus:ring-2 focus:ring-theme focus:border-transparent text-sm"
-                />
+              {/* Second Row - Navigation and Actions */}
+              <div className="flex justify-between items-center">
+                {/* Main Navigation - Desktop */}
+                {!isMobile && (
+                  <nav className="flex items-center space-x-6">
+                    {headerConfig.menuItems.map((item) => (
+                      <div 
+                        key={typeof item.id === 'string' ? item.id : `menu-${item.id}`}
+                        className="relative"
+                        onMouseEnter={() => {
+                          if (item.hasMegaMenu && typeof item.id === 'number') {
+                            handleMenuMouseEnter(item.id);
+                          }
+                        }}
+                        onMouseLeave={handleMenuMouseLeave}
+                      >
+                        <Link 
+                          href={item.path} 
+                          className={`font-medium hover:text-theme transition flex items-center gap-1 text-sm ${activeMegaMenu === item.id ? 'text-theme' : ''}`}
+                          onClick={() => setActiveMegaMenu(null)}
+                        >
+                          {item.label}
+                          {item.hasMegaMenu && <ChevronDown size={14} />}
+                        </Link>
+                      </div>
+                    ))}
+                  </nav>
+                )}
+
+                {/* Search Bar */}
+                <div className="flex-1 max-w-md mx-6">
+                  <div className="relative">
+                    <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={16} />
+                    <input
+                      type="text"
+                      placeholder="Search destinations, activities..."
+                      className="w-full pl-8 pr-4 py-1.5 border border-gray-300 rounded-full focus:outline-none focus:ring-2 focus:ring-theme focus:border-transparent text-xs"
+                    />
+                  </div>
+                </div>
+
+                {/* Action Buttons */}
+                <div className="flex items-center space-x-2">
+                  {!isMobile && (
+                    <>
+                      <button className="bg-transparent border border-theme text-theme hover:bg-theme hover:text-white transition rounded-full px-3 py-1 font-medium text-xs">
+                        Sign In
+                      </button>
+                      <button className="bg-orange-500 text-white hover:bg-theme-dark transition rounded-full px-3 py-1 font-medium text-xs">
+                        Join Now
+                      </button>
+                    </>
+                  )}
+                  <Link href="/cart" className="relative">
+                    <ShoppingCart className="text-gray-700 hover:text-theme transition" size={18} />
+                    {(typeof cartCount === 'number' && cartCount > 0) && (
+                      <span className="absolute -top-2 -right-2 bg-theme text-white text-xs rounded-full h-4 w-4 flex items-center justify-center text-xs">
+                        {cartCount > 9 ? '9+' : cartCount}
+                      </span>
+                    )}
+                  </Link>
+                  {isMobile && (
+                    <button 
+                      className="text-gray-700 hover:text-theme transition" 
+                      onClick={toggleMobileMenu}
+                    >
+                      <Menu size={18} />
+                    </button>
+                  )}
+                </div>
               </div>
             </div>
-
-            {/* Action Buttons */}
-            <div className="flex items-center space-x-3">
+          ) : (
+            /* Normal Layout - Single row */
+            <div className="flex justify-between items-center">
+              {/* Main Navigation - Desktop */}
               {!isMobile && (
-                <>
-                  <button className="bg-transparent border border-theme text-theme hover:bg-theme hover:text-white transition rounded-full px-4 py-2 font-medium text-sm">
-                    Sign In
-                  </button>
-                  <button className="bg-orange-500 text-white hover:bg-theme-dark transition rounded-full px-4 py-2 font-medium text-sm">
-                    Join Now
-                  </button>
-                </>
+                <nav className="flex items-center space-x-6">
+                  {headerConfig.menuItems.map((item) => (
+                    <div 
+                      key={typeof item.id === 'string' ? item.id : `menu-${item.id}`}
+                      className="relative"
+                      onMouseEnter={() => {
+                        if (item.hasMegaMenu && typeof item.id === 'number') {
+                          handleMenuMouseEnter(item.id);
+                        }
+                      }}
+                      onMouseLeave={handleMenuMouseLeave}
+                    >
+                      <Link 
+                        href={item.path} 
+                        className={`font-medium hover:text-theme transition flex items-center gap-1 ${activeMegaMenu === item.id ? 'text-theme' : ''}`}
+                        onClick={() => setActiveMegaMenu(null)}
+                      >
+                        {item.label}
+                        {item.hasMegaMenu && <ChevronDown size={16} />}
+                      </Link>
+                    </div>
+                  ))}
+                </nav>
               )}
-              <Link href="/cart" className="relative">
-                <ShoppingCart className="text-gray-700 hover:text-theme transition" size={20} />
-                {(typeof cartCount === 'number' && cartCount > 0) && (
-                  <span className="absolute -top-2 -right-2 bg-theme text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">
-                    {cartCount > 9 ? '9+' : cartCount}
-                  </span>
+
+              {/* Search Bar */}
+              <div className="flex-1 max-w-md mx-6">
+                <div className="relative">
+                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={18} />
+                  <input
+                    type="text"
+                    placeholder="Search destinations, activities..."
+                    className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-full focus:outline-none focus:ring-2 focus:ring-theme focus:border-transparent text-sm"
+                  />
+                </div>
+              </div>
+
+              {/* Action Buttons */}
+              <div className="flex items-center space-x-3">
+                {!isMobile && (
+                  <>
+                    <button className="bg-transparent border border-theme text-theme hover:bg-theme hover:text-white transition rounded-full px-4 py-2 font-medium text-sm">
+                      Sign In
+                    </button>
+                    <button className="bg-orange-500 text-white hover:bg-theme-dark transition rounded-full px-4 py-2 font-medium text-sm">
+                      Join Now
+                    </button>
+                  </>
                 )}
-              </Link>
-              {isMobile && (
-                <button 
-                  className="text-gray-700 hover:text-theme transition" 
-                  onClick={toggleMobileMenu}
-                >
-                  <Menu size={20} />
-                </button>
-              )}
+                <Link href="/cart" className="relative">
+                  <ShoppingCart className="text-gray-700 hover:text-theme transition" size={20} />
+                  {(typeof cartCount === 'number' && cartCount > 0) && (
+                    <span className="absolute -top-2 -right-2 bg-theme text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">
+                      {cartCount > 9 ? '9+' : cartCount}
+                    </span>
+                  )}
+                </Link>
+                {isMobile && (
+                  <button 
+                    className="text-gray-700 hover:text-theme transition" 
+                    onClick={toggleMobileMenu}
+                  >
+                    <Menu size={20} />
+                  </button>
+                )}
+              </div>
             </div>
-          </div>
+          )}
         </div>
       </div>
 
