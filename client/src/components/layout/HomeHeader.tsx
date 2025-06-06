@@ -303,13 +303,13 @@ const HomeHeader = () => {
             {/* Mobile Layout */}
             {isMobile && (
               <div className="px-4 py-4">
-                {/* Logo Row */}
-                <div className="flex items-center justify-center mb-4">
-                  <Link href="/" className="flex items-center space-x-2">
+                {/* Logo Row - Left aligned */}
+                <div className="flex items-center justify-start mb-4">
+                  <Link href="/" className="flex items-center space-x-3">
                     <img 
                       src={headerConfig.logoSrc} 
                       alt={headerConfig.logoText} 
-                      className="h-12 w-12 object-cover rounded-full"
+                      className="h-14 w-14 object-cover rounded-full"
                     />
                     <span className="font-heading font-bold text-lg text-theme">
                       {headerConfig.logoText}
@@ -317,9 +317,9 @@ const HomeHeader = () => {
                   </Link>
                 </div>
 
-                {/* Activity Circles Row with Horizontal Scroll */}
+                {/* Activity Circles Row with Horizontal Scroll - Left aligned */}
                 <div className="overflow-x-auto scrollbar-hide">
-                  <div className="flex items-center gap-3 pb-2" style={{ minWidth: 'max-content' }}>
+                  <div className="flex items-center justify-start gap-3 pb-2" style={{ minWidth: 'max-content' }}>
                     {activities?.map((activity) => (
                       <Link 
                         key={activity.id} 
@@ -327,7 +327,7 @@ const HomeHeader = () => {
                         className="flex flex-col items-center group flex-shrink-0"
                       > 
                         <div 
-                          className="w-16 h-16 rounded-full overflow-hidden border-2 border-transparent group-hover:border-theme transition-all duration-200 shadow-lg"
+                          className="w-12 h-12 rounded-full overflow-hidden border border-transparent group-hover:border-theme transition-all duration-200 shadow-md"
                           style={{ borderColor: activity.primaryColor }}
                         >
                           <img 
@@ -336,9 +336,6 @@ const HomeHeader = () => {
                             className="w-full h-full object-cover"
                           />
                         </div>
-                        <span className="text-xs text-gray-600 mt-1 text-center max-w-16 truncate">
-                          {activity.logoText.split(' ')[0]}
-                        </span>
                       </Link>
                     ))}
                   </div>
@@ -459,7 +456,7 @@ const HomeHeader = () => {
                       <img 
                         src={headerConfig.logoSrc} 
                         alt={headerConfig.logoText} 
-                        className="h-10 w-10 object-cover rounded-full"
+                        className="h-12 w-12 object-cover rounded-full"
                       />
                       <span className="font-heading font-bold text-base text-theme whitespace-nowrap">
                         {headerConfig.logoText.split(' ')[0]}
@@ -476,7 +473,7 @@ const HomeHeader = () => {
                             className="group flex-shrink-0"
                           > 
                             <div 
-                              className="w-9 h-9 rounded-full overflow-hidden border border-transparent group-hover:border-theme transition-all duration-200 shadow-sm"
+                              className="w-8 h-8 rounded-full overflow-hidden border border-transparent group-hover:border-theme transition-all duration-200 shadow-sm"
                               style={{ borderColor: activity.primaryColor }}
                             >
                               <img 
