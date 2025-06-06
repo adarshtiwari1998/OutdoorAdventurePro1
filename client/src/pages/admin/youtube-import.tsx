@@ -54,8 +54,6 @@ type YoutubeChannel = {
   subscribers: number;
   videoCount: number;
   importedVideoCount: number;
-  categoryId?: string;
-  category?: { id: string; name: string; };
   lastImport: string | null;
 };
 
@@ -916,7 +914,6 @@ const YoutubeImport = () => {
         <TableRow key={i}>
           <TableCell><Skeleton className="h-5 w-48" /></TableCell>
           <TableCell><Skeleton className="h-5 w-32" /></TableCell>
-          <TableCell><Skeleton className="h-5 w-32" /></TableCell>
           <TableCell><Skeleton className="h-5 w-16" /></TableCell>
           <TableCell><Skeleton className="h-5 w-16" /></TableCell>
           <TableCell><Skeleton className="h-5 w-16" /></TableCell>
@@ -973,7 +970,6 @@ const YoutubeImport = () => {
                     <TableRow>
                       <TableHead>Channel Name</TableHead>
                       <TableHead>Channel ID</TableHead>
-                      <TableHead>Category</TableHead>
                       <TableHead>Subscribers</TableHead>
                       <TableHead>Total Videos</TableHead>
                       <TableHead>Imported Videos</TableHead>
@@ -986,7 +982,7 @@ const YoutubeImport = () => {
                       renderChannelSkeleton()
                     ) : channels?.length === 0 ? (
                       <TableRow>
-                        <TableCell colSpan={7} className="text-center py-8">
+                        <TableCell colSpan={6} className="text-center py-8">
                           No Youtube channels found. Add a new channel to get started.
                         </TableCell>
                       </TableRow>
@@ -1005,32 +1001,6 @@ const YoutubeImport = () => {
                             <code className="bg-gray-100 px-2 py-1 rounded text-xs font-mono">
                               {channel.channelId}
                             </code>
-                          </TableCell>
-                          <TableCell>
-                            <Select 
-                              value={channel.categoryId ? channel.categoryId.toString() : ""} 
-                              onValueChange={(categoryId) => {
-                                if (categoryId && categoryId !== "" && categoryId !== "NaN") {
-                                  console.log('Update/Assign channel category:', { channelId: channel.id, categoryId });
-                                  // TODO: Implement channel category update mutation
-                                }
-                              }}
-                            >
-                              <SelectTrigger className="w-40 h-8 text-sm">
-                                <SelectValue placeholder="Select Category">
-                                  {channel.categoryId && blogCategories?.find(cat => cat.id.toString() === channel.categoryId?.toString())?.name || 
-                                   channel.category?.name || 
-                                   (channel.categoryId ? `Category ID: ${channel.categoryId}` : "Select Category")}
-                                </SelectValue>
-                              </SelectTrigger>
-                              <SelectContent className="max-h-60 overflow-y-auto">
-                                {blogCategories?.map(category => (
-                                  <SelectItem key={category.id} value={category.id.toString()}>
-                                    {category.name} ({category.type || 'blog'})
-                                  </SelectItem>
-                                ))}
-                              </SelectContent>
-                            </Select>
                           </TableCell>
                           <TableCell>{channel.subscribers.toLocaleString()}</TableCell>
                           <TableCell>{channel.videoCount}</TableCell>
