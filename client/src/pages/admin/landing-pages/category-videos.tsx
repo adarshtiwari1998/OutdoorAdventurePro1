@@ -278,8 +278,29 @@ const CategoryVideos = () => {
                         ))}
                       </optgroup>
                       
-                      {/* All other categories grouped by type */}
+                      {/* Activity categories */}
+                      {categories?.filter((cat: any) => cat.type === 'activity').map((category: any) => (
+                        <SelectItem key={category.id} value={category.id.toString()}>
+                          {getCategoryDisplayText(category)}
+                        </SelectItem>
+                      ))}
+                      
+                      {/* Blog categories that don't have landing pages */}
                       {categories?.filter((cat: any) => 
+                        cat.type === 'blog' && 
+                        !availableCategories.some((header: any) => 
+                          header.category.toLowerCase() === cat.name.toLowerCase()
+                        )
+                      ).map((category: any) => (
+                        <SelectItem key={category.id} value={category.id.toString()}>
+                          {getCategoryDisplayText(category)}
+                        </SelectItem>
+                      ))}
+                      
+                      {/* Other category types */}
+                      {categories?.filter((cat: any) => 
+                        cat.type !== 'activity' && 
+                        cat.type !== 'blog' &&
                         !availableCategories.some((header: any) => 
                           header.category.toLowerCase() === cat.name.toLowerCase()
                         )
