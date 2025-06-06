@@ -934,8 +934,7 @@ const YoutubeImport = () => {
 
       <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
         <TabsList className="mb-4">
-          <TabsTrigger value="channels">Channels</TabsTrigger>
-          <TabsTrigger value="videos" disabled={!selectedChannelId}>Videos</TabsTrigger>
+          <TabsTrigger value="channels">Channels</TabsTrigger          <TabsTrigger value="videos" disabled={!selectedChannelId}>Videos</TabsTrigger>
           <TabsTrigger value="add">Add New</TabsTrigger>
         </TabsList>
 
@@ -1168,7 +1167,7 @@ const YoutubeImport = () => {
                         <SelectValue placeholder="Select category" />
                       </SelectTrigger>
                       <SelectContent>
-                        {blogCategories?.map(category => (
+                        {blogCategories?.filter(cat => !cat.id.toString().startsWith('header_')).map(category => (
                           <SelectItem key={category.id} value={category.id.toString()}>
                             {category.name}
                           </SelectItem>
@@ -1205,7 +1204,7 @@ const YoutubeImport = () => {
                         <SelectValue placeholder="Select category" />
                       </SelectTrigger>
                       <SelectContent>
-                        {blogCategories?.map(category => (
+                        {blogCategories?.filter(cat => !cat.id.toString().startsWith('header_')).map(category => (
                           <SelectItem key={category.id} value={category.id.toString()}>
                             {category.name}
                           </SelectItem>
@@ -1512,11 +1511,11 @@ const YoutubeImport = () => {
                                           {...importForm.register("categoryId", { required: true })}
                                         >
                                           <option value="">Select a category</option>
-                                          {blogCategories?.map(category => (
-                                            <option key={category.id} value={category.id}>
-                                              {category.name}
-                                            </option>
-                                          ))}
+                                          {blogCategories?.filter(cat => !cat.id.toString().startsWith('header_')).map(category => (
+                            <option key={category.id} value={category.id.toString()}>
+                              {category.name}
+                            </option>
+                          ))}
                                         </select>
                                         {importForm.formState.errors.categoryId && (
                                           <p className="text-sm text-destructive">Category is required</p>
@@ -2111,17 +2110,17 @@ const YoutubeImport = () => {
               <Select 
                 value={selectedCategoryForImport || "no-category"} 
                 onValueChange={(value) => {
-                  console.log(`Category selection changed to: ${value}`);
+                  console.log(`🎯 Category selection changed to: ${value}`);
                   setSelectedCategoryForImport(value === "no-category" ? undefined : value);
                 }}
               >
                 <SelectTrigger>
-                  <SelectValue placeholder="Select category" />
+                  <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="no-category">No Category (assign later)</SelectItem>
-                  {blogCategories?.map(category => (
-                    <SelectItem key={category.id} value={category.id}>
+                  <SelectItem value="no-category">No Category (import without category)</SelectItem>
+                  {blogCategories?.filter(cat => !cat.id.toString().startsWith('header_')).map(category => (
+                    <SelectItem key={category.id} value={category.id.toString()}>
                       {category.name}
                     </SelectItem>
                   ))}
