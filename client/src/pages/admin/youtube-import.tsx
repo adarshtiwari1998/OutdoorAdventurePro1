@@ -1087,12 +1087,16 @@ const YoutubeImport = () => {
                       <SelectTrigger>
                         <SelectValue placeholder="All categories" />
                       </SelectTrigger>
-                      <SelectContent>
+                      <SelectContent className="max-h-60 overflow-y-auto">
                         <SelectItem value="all">All Categories</SelectItem>
                         <SelectItem value="no-category">No Category</SelectItem>
-                        {blogCategories?.filter(cat => !cat.id.toString().startsWith('header_')).map(category => (
+                        {blogCategories?.filter(cat => 
+                          !cat.id.toString().startsWith('header_') && 
+                          cat.type !== 'header' &&
+                          (cat.type === 'blog' || cat.type === 'activity' || !cat.type)
+                        ).map(category => (
                           <SelectItem key={category.id} value={category.id.toString()}>
-                            {category.name}
+                            {category.name} ({category.type || 'blog'})
                           </SelectItem>
                         ))}
                       </SelectContent>
@@ -1181,10 +1185,14 @@ const YoutubeImport = () => {
                       <SelectTrigger className="w-48">
                         <SelectValue placeholder="Select category" />
                       </SelectTrigger>
-                      <SelectContent>
-                        {blogCategories?.filter(cat => !cat.id.toString().startsWith('header_')).map(category => (
+                      <SelectContent className="max-h-60 overflow-y-auto">
+                        {blogCategories?.filter(cat => 
+                          !cat.id.toString().startsWith('header_') && 
+                          cat.type !== 'header' &&
+                          (cat.type === 'blog' || cat.type === 'activity' || !cat.type)
+                        ).map(category => (
                           <SelectItem key={category.id} value={category.id.toString()}>
-                            {category.name}
+                            {category.name} ({category.type || 'blog'})
                           </SelectItem>
                         ))}
                       </SelectContent>
@@ -1218,10 +1226,14 @@ const YoutubeImport = () => {
                       <SelectTrigger className="w-48">
                         <SelectValue placeholder="Select category" />
                       </SelectTrigger>
-                      <SelectContent>
-                        {blogCategories?.filter(cat => !cat.id.toString().startsWith('header_')).map(category => (
+                      <SelectContent className="max-h-60 overflow-y-auto">
+                        {blogCategories?.filter(cat => 
+                          !cat.id.toString().startsWith('header_') && 
+                          cat.type !== 'header' &&
+                          (cat.type === 'blog' || cat.type === 'activity' || !cat.type)
+                        ).map(category => (
                           <SelectItem key={category.id} value={category.id.toString()}>
-                            {category.name}
+                            {category.name} ({category.type || 'blog'})
                           </SelectItem>
                         ))}
                       </SelectContent>
@@ -1374,10 +1386,14 @@ const YoutubeImport = () => {
                                      `Category ID: ${video.categoryId}`}
                                   </SelectValue>
                                 </SelectTrigger>
-                                <SelectContent>
-                                  {blogCategories?.filter(cat => !cat.id.toString().startsWith('header_')).map(category => (
+                                <SelectContent className="max-h-60 overflow-y-auto">
+                                  {blogCategories?.filter(cat => 
+                                    !cat.id.toString().startsWith('header_') && 
+                                    cat.type !== 'header' &&
+                                    (cat.type === 'blog' || cat.type === 'activity' || !cat.type)
+                                  ).map(category => (
                                     <SelectItem key={category.id} value={category.id}>
-                                      {category.name}
+                                      {category.name} ({category.type || 'blog'})
                                     </SelectItem>
                                   ))}
                                 </SelectContent>
@@ -1398,10 +1414,14 @@ const YoutubeImport = () => {
                                 <SelectTrigger className="w-40 h-8 text-sm">
                                   <SelectValue placeholder="Select Category" />
                                 </SelectTrigger>
-                                <SelectContent>
-                                  {blogCategories?.filter(cat => !cat.id.toString().startsWith('header_')).map(category => (
+                                <SelectContent className="max-h-60 overflow-y-auto">
+                                  {blogCategories?.filter(cat => 
+                                    !cat.id.toString().startsWith('header_') && 
+                                    cat.type !== 'header' &&
+                                    (cat.type === 'blog' || cat.type === 'activity' || !cat.type)
+                                  ).map(category => (
                                     <SelectItem key={category.id} value={category.id}>
-                                      {category.name}
+                                      {category.name} ({category.type || 'blog'})
                                     </SelectItem>
                                   ))}
                                 </SelectContent>
@@ -2126,11 +2146,15 @@ const YoutubeImport = () => {
                 <SelectTrigger>
                   <SelectValue />
                 </SelectTrigger>
-                <SelectContent>
+                <SelectContent className="max-h-60 overflow-y-auto">
                   <SelectItem value="no-category">No Category (import without category)</SelectItem>
-                  {blogCategories?.filter(cat => !cat.id.toString().startsWith('header_')).map(category => (
+                  {blogCategories?.filter(cat => 
+                    !cat.id.toString().startsWith('header_') && 
+                    cat.type !== 'header' &&
+                    (cat.type === 'blog' || cat.type === 'activity' || !cat.type)
+                  ).map(category => (
                     <SelectItem key={category.id} value={category.id.toString()}>
-                      {category.name}
+                      {category.name} ({category.type || 'blog'})
                     </SelectItem>
                   ))}
                 </SelectContent>
