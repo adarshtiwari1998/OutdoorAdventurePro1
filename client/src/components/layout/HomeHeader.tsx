@@ -233,11 +233,23 @@ const HomeHeader = () => {
       {/* Activity Circles Section - Top */}
       <div className={`w-full transition-all duration-300 ${!showMainHeader && isScrolled ? 'hidden' : ''}`}>
         <div className="w-full px-4">
-          <div className="flex justify-center items-center py-4">
-            <div className="flex items-center gap-6">
-              <span className="font-heading font-bold text-xl text-theme mr-6">
-                {headerConfig.logoText}
-              </span>
+          <div className="flex justify-between items-center py-4">
+            {/* Home Logo on Left */}
+            <div className="flex items-center">
+              <Link href="/" className="flex items-center space-x-3">
+                <img 
+                  src={headerConfig.logoSrc} 
+                  alt={headerConfig.logoText} 
+                  className="h-16 w-16 object-cover rounded-full"
+                />
+                <span className="font-heading font-bold text-2xl text-theme">
+                  {headerConfig.logoText}
+                </span>
+              </Link>
+            </div>
+
+            {/* Activity Circles on Right */}
+            <div className="flex items-center gap-4">
               {activities?.slice(0, 6).map((activity) => (
                 <Link 
                   key={activity.id} 
@@ -266,35 +278,44 @@ const HomeHeader = () => {
         <div className="w-full px-4">
           <div className="flex justify-between items-center">
             {/* Logo and Activity Circles - Show when scrolled */}
-            {isScrolled ? (
-              <div className="flex items-center gap-4">
-                <span className="font-heading font-bold text-lg text-theme mr-4">
-                  {headerConfig.logoText}
-                </span>
-                {activities?.slice(0, 6).map((activity) => (
-                  <Link 
-                    key={activity.id} 
-                    href={`/${activity.category}`}
-                    className="flex flex-col items-center group"
-                  > 
-                    <div 
-                      className="w-12 h-12 rounded-full overflow-hidden border-2 border-transparent group-hover:border-theme transition-all duration-200"
-                      style={{ borderColor: activity.primaryColor }}
-                    >
-                      <img 
-                        src={activity.logoSrc} 
-                        alt={activity.logoText} 
-                        className="w-full h-full object-cover"
-                      />
-                    </div>
+            <div className="flex items-center gap-4">
+              {isScrolled && (
+                <>
+                  <Link href="/" className="flex items-center space-x-2">
+                    <img 
+                      src={headerConfig.logoSrc} 
+                      alt={headerConfig.logoText} 
+                      className="h-10 w-10 object-cover rounded-full"
+                    />
+                    <span className="font-heading font-bold text-lg text-theme">
+                      {headerConfig.logoText}
+                    </span>
                   </Link>
-                ))}
-              </div>
-            ) : null}
+                  {activities?.slice(0, 6).map((activity) => (
+                    <Link 
+                      key={activity.id} 
+                      href={`/${activity.category}`}
+                      className="flex flex-col items-center group"
+                    > 
+                      <div 
+                        className="w-10 h-10 rounded-full overflow-hidden border-2 border-transparent group-hover:border-theme transition-all duration-200"
+                        style={{ borderColor: activity.primaryColor }}
+                      >
+                        <img 
+                          src={activity.logoSrc} 
+                          alt={activity.logoText} 
+                          className="w-full h-full object-cover"
+                        />
+                      </div>
+                    </Link>
+                  ))}
+                </>
+              )}
+            </div>
 
             {/* Main Navigation - Desktop */}
             {!isMobile && (
-              <nav className="flex items-center space-x-6">
+              <nav className={`flex items-center space-x-6 ${isScrolled ? 'ml-auto' : ''}`}>
                 {headerConfig.menuItems.map((item) => (
                   <div 
                     key={typeof item.id === 'string' ? item.id : `menu-${item.id}`}
