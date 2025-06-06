@@ -88,23 +88,34 @@ const HomeHeader = () => {
       if (!ticking) {
         requestAnimationFrame(() => {
           const currentScrollY = window.scrollY;
-          const scrollThreshold = 80;
+          const scrollThreshold = 100;
+          const hideThreshold = 150;
 
-          // Determine scroll direction
+          // Calculate scroll direction and speed
           const scrollDelta = currentScrollY - lastScrollY;
           const scrollingDown = scrollDelta > 0;
           const scrollingUp = scrollDelta < 0;
+          const isScrollingFast = Math.abs(scrollDelta) > 3;
 
+          // Set scrolled state based on position
           if (currentScrollY > scrollThreshold) {
             setIsScrolled(true);
-            // Always show header when scrolled, but hide/show based on direction
-            if (scrollingDown && scrollDelta > 5) {
+          } else {
+            setIsScrolled(false);
+            setShowMainHeader(true); // Always show when near top
+            setLastScrollY(currentScrollY);
+            ticking = false;
+            return;
+          }
+
+          // Handle header visibility based on scroll direction
+          if (currentScrollY > hideThreshold) {
+            if (scrollingDown && isScrollingFast) {
               setShowMainHeader(false);
-            } else if (scrollingUp || scrollDelta < -2) {
+            } else if (scrollingUp && isScrollingFast) {
               setShowMainHeader(true);
             }
           } else {
-            setIsScrolled(false);
             setShowMainHeader(true);
           }
 
