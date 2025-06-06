@@ -1929,11 +1929,59 @@ Status: Transcript extraction failed during import. Video may have captions that
   app.delete(`${apiPrefix}/admin/youtube/videos/:id`, async (req, res) => {
     try {
       const { id } = req.params;
+      
+      // Get the video first to know which channel needs updating
+      const video = await storage.getYoutubeVideoById(parseInt(id));
+      if (!video) {
+        return res.status(404).json({ message: "Video not found" });
+      }
+      
+      // Delete the video
       await storage.deleteYoutubeVideo(parseInt(id));
+      
+      // Update the channel's imported video count
+      if (video.channelId) {
+        await storage.refreshChannelVideoCount(video.channelId);
+      }
+      
       res.json({ success: true });
     } catch (error) {
       console.error(`Error deleting YouTube video ${req.params.id}:`, error);
       res.status(500).json({ message: "Failed to delete YouTube video" });
+    }
+  });
+
+  // New endpoint to refresh all channel video counts
+  app.post(`${apiPrefix}/admin/youtube/channels/refresh-counts`, async (req, res) => {
+    try {
+      const { channelId } = req.body;
+      
+      if (channelId) {
+        // Refresh specific channel
+        await storage.refreshChannelVideoCount(parseInt(channelId));
+        res.json({ 
+          success: true, 
+          message: `Refreshed video count for channel ${channelId}` 
+        });
+      } else {
+        // Refresh all channels
+        const channels = await storage.getYoutubeChannels();
+        let updatedCount = 0;
+        
+        for (const channel of channels) {
+          await storage.refreshChannelVideoCount(channel.id);
+          updatedCount++;
+        }
+        
+        res.json({ 
+          success: true, 
+          message: `Refreshed video counts for ${updatedCount} channels`,
+          updatedCount 
+        });
+      }
+    } catch (error) {
+      console.error("Error refreshing channel video counts:", error);
+      res.status(500).json({ message: "Failed to refresh channel video counts" });
     }
   });
 

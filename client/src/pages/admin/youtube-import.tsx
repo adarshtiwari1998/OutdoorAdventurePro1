@@ -933,7 +933,7 @@ const YoutubeImport = () => {
     bulkFetchTranscriptsMutation.mutate(selectedVideos);
   };
 
-  const handleSyncCounts = () => {
+  const handleRefreshCounts = () => {
     syncCountsMutation.mutate();
   };
 
@@ -1017,6 +1017,19 @@ const YoutubeImport = () => {
                   )}
                   Update All Categories
                 </Button>
+                 <Button 
+                    variant="outline" 
+                    size="sm"
+                    onClick={handleRefreshCounts}
+                    disabled={syncCountsMutation.isPending}
+                  >
+                    {syncCountsMutation.isPending ? (
+                      <RefreshCw className="h-4 w-4 mr-2 animate-spin" />
+                    ) : (
+                      <RefreshCw className="h-4 w-4 mr-2" />
+                    )}
+                    Refresh Counts
+                  </Button>
               </div>
             </CardHeader>
             <CardContent>

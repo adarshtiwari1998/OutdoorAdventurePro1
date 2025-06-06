@@ -196,7 +196,7 @@ export const storage = {
       if (channel.categoryIds && channel.categoryIds.trim()) {
         const categoryIdsList = channel.categoryIds.split(',').filter(id => id.trim());
         console.log(`📋 Found categoryIds list:`, categoryIdsList);
-        
+
         categoryIdsArray = categoryIdsList;
         categoryNames = categoryIdsList
           .map(id => {
@@ -964,8 +964,8 @@ export const storage = {
         },
         author: {
           name: post.author?.fullName || post.author?.username || 'Unknown',
-          avatar: post.author?.fullName 
-            ? `https://ui-avatars.com/api/?name=${encodeURIComponent(post.author.fullName)}&background=random`
+          avatar:```tool_code
+ `https://ui-avatars.com/api/?name=${encodeURIComponent(post.author.fullName)}&background=random`
             : `https://ui-avatars.com/api/?name=Unknown&background=random`,
         },
         publishedAt: post.publishedAt || new Date().toISOString(),
@@ -1910,9 +1910,7 @@ export const storage = {
 
           // Construct the full public ID path for Cloudinary deletion
           const fullPublicId = `HTHFO_Assets/AdminDashboard_Assets/${asset.type}s/${asset.cloudinaryPublicId}`;
-          console.log(`Attempting to delete from Cloudinary with public ID: ${fullPublicId}`);
-
-          const deleteResult = await service.deleteAsset(fullPublicId);
+          console.log(`Attempting to delete from Cloudinary with public ID: ${fullPublicId}`);          const deleteResult = await service.deleteAsset(fullPublicId);
 
           if (deleteResult) {
             console.log(`Successfully deleted asset from Cloudinary: ${fullPublicId}`);
@@ -2251,5 +2249,60 @@ export const storage = {
       console.error('Error updating all channel categories:', error);
       throw error;
     }
-  }
+  },
+
+  async deleteBlogPosts(ids: string[]) {
+    try {
+      const numericIds = ids.map(id => parseInt(id));
+      await db.delete(blogPosts)
+        .where(inArray(blogPosts.id, numericIds));
+    } catch (error) {
+      console.error("Error deleting blog posts:", error);
+      throw error;
+    }
+  },
+
+  async deleteYoutubeVideos(ids: number[]) {
+    try {
+      // Get the videos first to know which channels need updating
+      const videos = await db.select({ channelId: youtubeVideos.channelId })
+        .from(youtubeVideos)
+        .where(inArray(youtubeVideos.id, ids));
+
+      // Get unique channel IDs
+      const channelIds = [...new Set(videos.map(v => v.channelId).filter(Boolean))];
+
+      // Delete the videos
+      await db.delete(youtubeVideos).where(inArray(youtubeVideos.id, ids));
+
+      // Update each affected channel's video count
+      for (const channelId of channelIds) {
+        if (channelId) {
+          await this.refreshChannelVideoCount(channelId);
+        }
+      }
+
+      console.log(`✅ Deleted ${ids.length} videos and updated ${channelIds.length} channel counts`);
+    } catch (error) {
+      console.error("Error deleting YouTube videos:", error);
+      throw error;
+    }
+  },
+
+  async refreshChannelVideoCount(channelId: number) {
+    try {
+      const videoCountResult = await db.select({ count: sql<number>`count(*)` })
+        .from(youtubeVideos)
+        .where(eq(youtubeVideos.channelId, channelId));
+
+      const videoCount = videoCountResult[0]?.count || 0;
+
+      await this.setYoutubeChannelImportedCount(channelId, videoCount);
+
+      console.log(`✅ Refreshed video count for channel ${channelId}: ${videoCount}`);
+    } catch (error) {
+      console.error(`Error refreshing video count for channel ${channelId}:`, error);
+      throw error;
+    }
+  },
 };
