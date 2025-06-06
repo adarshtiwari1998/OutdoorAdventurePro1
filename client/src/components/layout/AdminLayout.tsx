@@ -354,6 +354,7 @@ const AdminLayout = ({ children, title }: AdminLayoutProps) => {
                   label="Cruising Style"
                   href="/admin/styles/cruising"
                   isActive={location === '/admin/styles/cruising'}
+                ```
                 />
                 <AdminMenuItem
                   icon={Compass}
