@@ -185,7 +185,7 @@ export const storage = {
     // Add category names to channels
     const channelsWithCategories = channels.map(channel => {
       let categoryNames = [];
-      
+
       // Check categoryIds first (comma-separated list)
       if (channel.categoryIds) {
         const categoryIdsList = channel.categoryIds.split(',').filter(id => id.trim());
@@ -193,7 +193,7 @@ export const storage = {
           .map(id => categoryMap.get(id.trim()))
           .filter(name => name);
       }
-      
+
       // Fall back to single categoryId if no categoryIds
       if (categoryNames.length === 0 && channel.categoryId) {
         const categoryName = categoryMap.get(channel.categoryId.toString());
@@ -960,7 +960,7 @@ export const storage = {
             id: "101",
             title: "Essential Fishing Gear for Different Species",
             excerpt: "Discover the specialized equipment you need to target different fish species, from bass to trout to deep-sea fishing.",
-            featuredImage: "https://images.unsplash.com/photo-1511554153372-99d5d2ffd256?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80",
+            featuredImage: "https://images.unsplash.com/photo-15115541533372-99d5d2ffd256?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80",
             category: {
               name: "Fishing",
               slug: "fishing",
@@ -1911,7 +1911,7 @@ export const storage = {
       // Delete from database
       await db.delete(schema.dashboardAssets).where(eq(schema.dashboardAssets.id, id));
 
-      console.log(`Successfully deleted dashboard asset ${id} from database`);
+      console.log(`Successfully deleted dashboard asset ${id} from database`);```text
     } catch (error) {
       console.error(`Error deleting dashboard asset ${id}:`, error);
       throw error;

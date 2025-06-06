@@ -1874,8 +1874,9 @@ Status: Transcript extraction failed during import. Video may have captions that
       const actualVideoCount = await storage.getYoutubeVideosByChannel(channel.id.toString());
       await storage.setYoutubeChannelImportedCount(parseInt(id), actualVideoCount.length);
       
-      // Update channel categories based on imported videos
-      await storage.updateChannelCategories(parseInt(id));
+      // Update channel categories based on imported videos - this will ensure category_ids are populated
+      const categoryUpdateResult = await storage.updateChannelCategories(parseInt(id));
+      console.log(`📊 Channel categories updated:`, categoryUpdateResult);
 
       console.log(`\n📊 IMPORT COMPLETE:`);
       console.log(`   - Videos imported: ${importedCount}/${desiredNewVideos}`);
