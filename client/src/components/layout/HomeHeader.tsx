@@ -415,13 +415,13 @@ const HomeHeader = () => {
                     <div className="flex items-center justify-between">
                       {/* Logo - Left side */}
                       <div className="flex items-center">
-                        <Link href="/" className="flex items-center space-x-2">
+                        <Link href="/" className="flex items-center space-x-3">
                           <img 
                             src={headerConfig.logoSrc} 
                             alt={headerConfig.logoText} 
-                            className="h-10 w-10 object-cover rounded-full shadow-md"
+                            className="h-16 w-16 object-cover rounded-full shadow-md"
                           />
-                          <span className="font-heading font-bold text-lg text-theme whitespace-nowrap">
+                          <span className="font-heading font-bold text-xl text-theme whitespace-nowrap">
                             {headerConfig.logoText}
                           </span>
                         </Link>
