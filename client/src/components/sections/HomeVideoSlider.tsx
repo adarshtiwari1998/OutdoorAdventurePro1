@@ -66,7 +66,7 @@ const HomeVideoSlider = ({ className = "" }: HomeVideoSliderProps) => {
         const maxIndex = Math.max(0, videos.length - getVisibleCount());
         return prev >= maxIndex ? 0 : prev + 1;
       });
-    }, 6000); // Change slide every 6 seconds (increased from 4s)
+    }, 4000); // Change slide every 4 seconds
 
     return () => {
       if (autoScrollRef.current) {
@@ -211,7 +211,15 @@ const HomeVideoSlider = ({ className = "" }: HomeVideoSliderProps) => {
                           </div>
                         </div>
 
-                        {/* Video Type Badge - Removed as requested */}
+                        {/* Video Type Badge */}
+                        <div className="absolute top-2 left-2">
+                          <Badge 
+                            variant={video.videoType === 'short' ? 'secondary' : 'default'}
+                            className="text-xs"
+                          >
+                            {video.videoType === 'short' ? 'Short' : 'Video'}
+                          </Badge>
+                        </div>
 
                         {/* Duration Badge */}
                         {video.duration && (
