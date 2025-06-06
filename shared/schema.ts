@@ -77,6 +77,7 @@ export const youtubeChannels = pgTable("youtube_channels", {
   videoCount: integer("video_count").default(0).notNull(),
   importedVideoCount: integer("imported_video_count").default(0).notNull(),
   categoryId: integer("category_id").references(() => categories.id), // Single category reference
+  categoryIds: text("category_ids"), // Comma-separated list of category IDs
   lastImport: timestamp("last_import"),
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),

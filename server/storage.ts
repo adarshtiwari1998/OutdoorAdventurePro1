@@ -184,11 +184,27 @@ export const storage = {
 
     // Add category names to channels
     const channelsWithCategories = channels.map(channel => {
-      const categoryName = channel.categoryId ? categoryMap.get(channel.categoryId.toString()) : null;
+      let categoryNames = [];
+      
+      // Check categoryIds first (comma-separated list)
+      if (channel.categoryIds) {
+        const categoryIdsList = channel.categoryIds.split(',').filter(id => id.trim());
+        categoryNames = categoryIdsList
+          .map(id => categoryMap.get(id.trim()))
+          .filter(name => name);
+      }
+      
+      // Fall back to single categoryId if no categoryIds
+      if (categoryNames.length === 0 && channel.categoryId) {
+        const categoryName = categoryMap.get(channel.categoryId.toString());
+        if (categoryName) {
+          categoryNames = [categoryName];
+        }
+      }
 
       return {
         ...channel,
-        categoryName: categoryName || 'No category'
+        categoryName: categoryNames.length > 0 ? categoryNames.join(', ') : 'No categories'
       };
     });
 
@@ -2142,6 +2158,78 @@ export const storage = {
       }));
     } catch (error) {
       console.error("Error fetching YouTube videos:", error);
+      throw error;
+    }
+  },
+
+  async updateChannelCategories(channelId?: number) {
+    try {
+      if (channelId) {
+        // Update categories for specific channel
+        const videos = await db.query.youtubeVideos.findMany({
+          where: eq(schema.youtubeVideos.channelId, channelId),
+          columns: {
+            categoryId: true
+          }
+        });
+
+        const uniqueCategoryIds = [...new Set(
+          videos
+            .map(v => v.categoryId)
+            .filter(id => id !== null)
+        )];
+
+        const categoryIdsString = uniqueCategoryIds.length > 0 ? uniqueCategoryIds.join(',') : null;
+
+        await db.update(schema.youtubeChannels)
+          .set({ 
+            categoryIds: categoryIdsString,
+            updatedAt: new Date()
+          })
+          .where(eq(schema.youtubeChannels.id, channelId));
+
+        console.log(`✅ Updated channel ${channelId} categories: ${categoryIdsString || 'none'}`);
+      } else {
+        // Update categories for all channels
+        const channels = await db.query.youtubeChannels.findMany();
+
+        for (const channel of channels) {
+          const videos = await db.query.youtubeVideos.findMany({
+            where: eq(schema.youtubeVideos.channelId, channel.id),
+            columns: {
+              categoryId: true
+            }
+          });
+
+          const uniqueCategoryIds = [...new Set(
+            videos
+              .map(v => v.categoryId)
+              .filter(id => id !== null)
+          )];
+
+          const categoryIdsString = uniqueCategoryIds.length > 0 ? uniqueCategoryIds.join(',') : null;
+
+          await db.update(schema.youtubeChannels)
+            .set({ 
+              categoryIds: categoryIdsString,
+              updatedAt: new Date()
+            })
+            .where(eq(schema.youtubeChannels.id, channel.id));
+
+          console.log(`✅ Updated channel ${channel.id} categories: ${categoryIdsString || 'none'}`);
+        }
+      }
+    } catch (error) {
+      console.error('Error updating channel categories:', error);
+      throw error;
+    }
+  },
+
+  async updateAllChannelCategories() {
+    try {
+      return await this.updateChannelCategories();
+    } catch (error) {
+      console.error('Error updating all channel categories:', error);
       throw error;
     }
   }
