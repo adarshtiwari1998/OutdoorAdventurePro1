@@ -1,4 +1,3 @@
-
 import { useQuery } from "@tanstack/react-query";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -11,6 +10,20 @@ interface CategoryVideoSectionProps {
 const CategoryVideoSection = ({ category }: CategoryVideoSectionProps) => {
   const { data: videos, isLoading } = useQuery({
     queryKey: [`/api/category-videos/${category}`],
+    queryFn: async () => {
+      if (!category) return [];
+
+      const response = await fetch(`/api/category-videos/${category}`);
+      if (!response.ok) {
+        console.error(`Failed to fetch videos for category ${category}`);
+        return [];
+      }
+
+      const data = await response.json();
+      console.log(`Fetched ${data.length} videos for category ${category}`);
+      return data;
+    },
+    enabled: !!category,
   });
 
   const { data: settings } = useQuery({
@@ -83,7 +96,7 @@ const CategoryVideoSection = ({ category }: CategoryVideoSectionProps) => {
                   {shorts.length} shorts
                 </span>
               </div>
-              
+
               <div className="grid grid-cols-2 gap-4">
                 {shorts.slice(0, 4).map((video: any) => (
                   <div key={video.id} className="group cursor-pointer">
@@ -133,7 +146,7 @@ const CategoryVideoSection = ({ category }: CategoryVideoSectionProps) => {
                   {regularVideos.length} videos
                 </span>
               </div>
-              
+
               <div className="space-y-4">
                 {regularVideos.slice(0, 3).map((video: any) => (
                   <div key={video.id} className="group cursor-pointer">
@@ -163,7 +176,7 @@ const CategoryVideoSection = ({ category }: CategoryVideoSectionProps) => {
                           </Badge>
                         )}
                       </div>
-                      
+
                       <div className="flex-1 min-w-0">
                         <h4 className="font-medium text-base line-clamp-2 group-hover:text-primary transition-colors mb-2">
                           {video.title}

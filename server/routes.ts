@@ -962,6 +962,43 @@ export async function registerRoutes(app: Express): Promise {
     }
   });
 
+  // Public category videos endpoint for landing pages
+  app.get(`${apiPrefix}/category-videos/:category`, async (req, res) => {
+    try {
+      const { category } = req.params;
+      
+      console.log(`Fetching videos for category landing page: ${category}`);
+      
+      // Get the category video settings
+      const settings = await storage.getCategoryVideoSettings(category);
+      
+      if (!settings || !settings.isActive) {
+        console.log(`No active settings found for category ${category}`);
+        return res.json([]);
+      }
+      
+      console.log(`Found settings for ${category}:`, settings);
+      
+      // Get videos using the category ID from settings
+      if (settings.categoryId) {
+        const videos = await storage.getVideosByCategory(
+          settings.categoryId,
+          settings.videoCount || 8,
+          settings.videoType || 'all'
+        );
+        
+        console.log(`Returning ${videos.length} videos for ${category}`);
+        res.json(videos);
+      } else {
+        console.log(`No categoryId found in settings for ${category}`);
+        res.json([]);
+      }
+    } catch (error) {
+      console.error(`Error fetching category videos for ${req.params.category}:`, error);
+      res.status(500).json({ message: "Failed to fetch category videos" });
+    }
+  });
+
   // Category Video Settings API routes
   app.get(`${apiPrefix}/admin/category-video-settings`, async (req, res) => {
     try {
@@ -990,46 +1027,63 @@ export async function registerRoutes(app: Express): Promise {
 
       console.log('Received category video settings:', { category, categoryId, videoCount, isActive, title, description, videoType });
 
-      // Handle both regular category IDs and header category IDs
+      // Handle different types of category identification
       let parsedCategoryId = null;
+      let finalCategory = category;
+
       if (categoryId !== null && categoryId !== undefined && categoryId !== "" && categoryId !== "NaN") {
         if (typeof categoryId === 'number') {
           parsedCategoryId = categoryId;
         } else if (typeof categoryId === 'string') {
-          // Check if it's a header category (format: "header_X")
-          if (categoryId.startsWith('header_')) {
-            console.log(`⚠️ WARNING: Received header category ID "${categoryId}" - this should use regular category IDs`);
-            const headerIdStr = categoryId.replace('header_', '');
-            const headerConfigId = parseInt(headerIdStr);
-
-            if (!isNaN(headerConfigId)) {
-              // Get the header config to find or create corresponding blog category
-              const headerConfig = await db.query.headerConfigs.findFirst({
-                where: eq(schema.headerConfigs.id, headerConfigId)
-              });
-
-              if (headerConfig) {
-                // Ensure there's a corresponding blog category
-                const blogCategory = await storage.ensureBlogCategoryFromHeader(headerConfig.category);
-                parsedCategoryId = blogCategory.id;
-                console.log(`🔄 Mapped header category "${categoryId}" to blog category ID: ${parsedCategoryId}`);
-              }
+          // Check if it's a numeric string (regular category ID)
+          const numericId = parseInt(categoryId);
+          if (!isNaN(numericId)) {
+            parsedCategoryId = numericId;
+            
+            // Get the category name from the database
+            const categoryFromDb = await db.query.categories.findFirst({
+              where: eq(schema.categories.id, numericId)
+            });
+            
+            if (categoryFromDb) {
+              finalCategory = categoryFromDb.name.toLowerCase();
+              console.log(`✅ Using category ID ${parsedCategoryId} for category: ${finalCategory}`);
             }
           } else {
-            // Regular numeric string
-            const parsed = parseInt(categoryId);
-            if (!isNaN(parsed)) {
-              parsedCategoryId = parsed;
-              console.log(`✅ Using regular category ID: ${parsedCategoryId}`);
+            // It's a category name - find the corresponding category ID
+            const categoryFromDb = await db.query.categories.findFirst({
+              where: eq(schema.categories.name, categoryId)
+            });
+            
+            if (categoryFromDb) {
+              parsedCategoryId = categoryFromDb.id;
+              finalCategory = categoryFromDb.name.toLowerCase();
+              console.log(`🔄 Mapped category name "${categoryId}" to category ID: ${parsedCategoryId}`);
+            } else {
+              // Check for case-insensitive match
+              const allCategories = await db.query.categories.findMany();
+              const matchedCategory = allCategories.find(cat => 
+                cat.name.toLowerCase() === categoryId.toLowerCase() ||
+                cat.slug.toLowerCase() === categoryId.toLowerCase()
+              );
+              
+              if (matchedCategory) {
+                parsedCategoryId = matchedCategory.id;
+                finalCategory = matchedCategory.name.toLowerCase();
+                console.log(`🔄 Case-insensitive match: "${categoryId}" -> category ID: ${parsedCategoryId}`);
+              } else {
+                console.log(`⚠️ Category "${categoryId}" not found in database`);
+                finalCategory = categoryId.toLowerCase();
+              }
             }
           }
         }
       }
 
-      console.log('Parsed categoryId:', parsedCategoryId);
+      console.log('Final values - category:', finalCategory, 'categoryId:', parsedCategoryId);
 
       const settings = await storage.saveCategoryVideoSettings({
-        category,
+        category: finalCategory,
         categoryId: parsedCategoryId,
         videoCount,
         isActive,
@@ -1069,37 +1123,43 @@ export async function registerRoutes(app: Express): Promise {
         return res.json([]);
       }
 
-      // Handle both regular category IDs and header category IDs
       let parsedCategoryId = null;
+
+      // First try to parse as numeric ID
       if (typeof categoryId === 'string') {
-        // Check if it's a header category (format: "header_X")
-        if (categoryId.startsWith('header_')) {
-          const headerIdStr = categoryId.replace('header_', '');
-          const headerConfigId = parseInt(headerIdStr);
-
-          if (!isNaN(headerConfigId)) {
-            // Get the header config to find or create corresponding blog category
-            const headerConfig = await db.query.headerConfigs.findFirst({
-              where: eq(schema.headerConfigs.id, headerConfigId)
-            });
-
-            if (headerConfig) {
-              // Ensure there's a corresponding blog category
-              const blogCategory = await storage.ensureBlogCategoryFromHeader(headerConfig.category);
-              parsedCategoryId = blogCategory.id;
-              console.log(`Mapped header category "${categoryId}" to blog category ID: ${parsedCategoryId}`);
+        const numericId = parseInt(categoryId);
+        if (!isNaN(numericId)) {
+          parsedCategoryId = numericId;
+          console.log(`Using numeric category ID: ${parsedCategoryId}`);
+        } else {
+          // It's a category name - find the corresponding category ID
+          const categoryFromDb = await db.query.categories.findFirst({
+            where: eq(schema.categories.name, categoryId as string)
+          });
+          
+          if (categoryFromDb) {
+            parsedCategoryId = categoryFromDb.id;
+            console.log(`Mapped category name "${categoryId}" to category ID: ${parsedCategoryId}`);
+          } else {
+            // Check for case-insensitive match
+            const allCategories = await db.query.categories.findMany();
+            const matchedCategory = allCategories.find(cat => 
+              cat.name.toLowerCase() === (categoryId as string).toLowerCase() ||
+              cat.slug.toLowerCase() === (categoryId as string).toLowerCase()
+            );
+            
+            if (matchedCategory) {
+              parsedCategoryId = matchedCategory.id;
+              console.log(`Case-insensitive match: "${categoryId}" -> category ID: ${parsedCategoryId}`);
             }
           }
-        } else {
-          // Regular numeric string
-          parsedCategoryId = parseInt(categoryId);
         }
       } else if (typeof categoryId === 'number') {
         parsedCategoryId = categoryId;
       }
 
-      if (isNaN(parsedCategoryId) || parsedCategoryId === null) {
-        console.log('Failed to parse categoryId, returning empty array');
+      if (!parsedCategoryId || isNaN(parsedCategoryId)) {
+        console.log('Failed to resolve categoryId to a numeric value, returning empty array');
         return res.json([]);
       }
 

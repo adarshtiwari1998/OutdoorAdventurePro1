@@ -68,21 +68,23 @@ const CategoryVideos = () => {
   const watchedCategory = form.watch('category');
 
   const { data: previewVideos, isLoading: previewLoading } = useQuery({
-    queryKey: [`/api/admin/category-video-preview/${watchedCategory}`],
+    queryKey: [`/api/admin/category-video-preview/${watchedCategory}`, watchedCategoryId, watchedVideoCount],
     queryFn: async () => {
       const currentCategoryId = form.getValues('categoryId');
       const currentVideoCount = form.getValues('videoCount');
       const currentVideoType = form.getValues('videoType');
       const currentCategory = form.getValues('category');
 
-      if (!currentCategory || !currentCategoryId || currentCategoryId === "" || currentCategoryId === "undefined") {
+      if (!currentCategoryId || currentCategoryId === "" || currentCategoryId === "undefined") {
         return [];
       }
 
-      const response = await fetch(`/api/admin/category-video-preview/${currentCategory}?categoryId=${currentCategoryId}&videoCount=${currentVideoCount || 8}&videoType=${currentVideoType || 'all'}`);
+      // Use the actual category ID if it's numeric, otherwise use the category name
+      const categoryForUrl = currentCategory || 'preview';
+      const response = await fetch(`/api/admin/category-video-preview/${categoryForUrl}?categoryId=${currentCategoryId}&videoCount=${currentVideoCount || 8}&videoType=${currentVideoType || 'all'}`);
       return response.json();
     },
-    enabled: !!(watchedCategory && watchedCategoryId && watchedCategoryId !== "" && watchedCategoryId !== "undefined"),
+    enabled: !!(watchedCategoryId && watchedCategoryId !== "" && watchedCategoryId !== "undefined"),
     refetchOnMount: true,
   });
 
@@ -144,7 +146,27 @@ const CategoryVideos = () => {
   });
 
   const onSubmit = (data: CategoryVideoSettings) => {
-    saveMutation.mutate(data);
+    // Ensure we have a proper numeric category ID
+    let finalCategoryId = data.categoryId;
+    
+    // If categoryId is not a number, try to find the corresponding category
+    if (isNaN(parseInt(finalCategoryId))) {
+      const category = categories?.find((cat: any) => 
+        cat.name.toLowerCase() === finalCategoryId.toLowerCase() ||
+        cat.slug.toLowerCase() === finalCategoryId.toLowerCase()
+      );
+      if (category) {
+        finalCategoryId = category.id.toString();
+      }
+    }
+    
+    const submissionData = {
+      ...data,
+      categoryId: finalCategoryId
+    };
+    
+    console.log('Submitting category video settings:', submissionData);
+    saveMutation.mutate(submissionData);
   };
 
   const handleEdit = (setting: any) => {
@@ -153,9 +175,16 @@ const CategoryVideos = () => {
     // Set the selected category for the preview
     setSelectedCategory(setting.category);
     
+    // Find the actual category ID from the categories list
+    let actualCategoryId = setting.categoryId;
+    if (!actualCategoryId && categories) {
+      const category = categories.find((cat: any) => cat.name.toLowerCase() === setting.category.toLowerCase());
+      actualCategoryId = category?.id;
+    }
+    
     form.reset({
       category: setting.category,
-      categoryId: setting.category, // Use the category name as the categoryId for the form
+      categoryId: actualCategoryId ? actualCategoryId.toString() : "",
       videoCount: setting.videoCount,
       isActive: setting.isActive,
       title: setting.title,
@@ -170,12 +199,35 @@ const CategoryVideos = () => {
     }
   };
 
-  const handleCategoryChange = (category: string) => {
-    const headerConfig = availableCategories.find((config: any) => config.category === category);
+  const handleCategoryChange = (categoryValue: string) => {
+    // Check if it's a header category or regular category
+    const headerConfig = availableCategories.find((config: any) => config.category === categoryValue);
+    
     if (headerConfig) {
-      form.setValue('category', category);
-      form.setValue('categoryId', category);
-      setSelectedCategory(category);
+      // It's a header category - use the category name and find corresponding blog category ID
+      form.setValue('category', categoryValue);
+      
+      // Find the corresponding blog category
+      const blogCategory = categories?.find((cat: any) => 
+        cat.name.toLowerCase() === categoryValue.toLowerCase() || 
+        cat.slug.toLowerCase() === categoryValue.toLowerCase()
+      );
+      
+      if (blogCategory) {
+        form.setValue('categoryId', blogCategory.id.toString());
+      } else {
+        form.setValue('categoryId', categoryValue); // Fallback to category name
+      }
+      
+      setSelectedCategory(categoryValue);
+    } else {
+      // Check if it's a regular category ID
+      const category = categories?.find((cat: any) => cat.id.toString() === categoryValue);
+      if (category) {
+        form.setValue('category', category.name.toLowerCase());
+        form.setValue('categoryId', category.id.toString());
+        setSelectedCategory(category.name.toLowerCase());
+      }
     }
   };
 
@@ -193,16 +245,28 @@ const CategoryVideos = () => {
                 <div>
                   <Label htmlFor="category">Category</Label>
                   <Select
-                    value={form.watch('category')}
+                    value={form.watch('categoryId')}
                     onValueChange={handleCategoryChange}
                   >
                     <SelectTrigger>
                       <SelectValue placeholder="Select a category" />
                     </SelectTrigger>
-                    <SelectContent>
+                    <SelectContent className="max-h-60 overflow-y-auto">
+                      {/* Header categories (landing pages) */}
                       {availableCategories.map((config: any) => (
                         <SelectItem key={config.category} value={config.category}>
-                          {config.category.charAt(0).toUpperCase() + config.category.slice(1)}
+                          {config.category.charAt(0).toUpperCase() + config.category.slice(1)} (Landing Page)
+                        </SelectItem>
+                      ))}
+                      
+                      {/* All other categories */}
+                      {categories?.filter((cat: any) => 
+                        !availableCategories.some((header: any) => 
+                          header.category.toLowerCase() === cat.name.toLowerCase()
+                        )
+                      ).map((category: any) => (
+                        <SelectItem key={category.id} value={category.id.toString()}>
+                          {category.name} (ID: {category.id})
                         </SelectItem>
                       ))}
                     </SelectContent>
