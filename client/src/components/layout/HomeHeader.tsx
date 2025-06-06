@@ -273,25 +273,30 @@ const HomeHeader = () => {
                   </div>
 
                   {/* Activity Circles - Center */}
-                  <div className="absolute left-1/2 transform -translate-x-1/2 flex items-center justify-center gap-4">
-                    {activities?.slice(0, 6).map((activity) => (
-                      <Link 
-                        key={activity.id} 
-                        href={`/${activity.category}`}
-                        className="flex flex-col items-center group"
-                      > 
-                        <div 
-                          className="w-20 h-20 rounded-full overflow-hidden border-3 border-transparent group-hover:border-theme transition-all duration-200 shadow-lg"
-                          style={{ borderColor: activity.primaryColor }}
-                        >
-                          <img 
-                            src={activity.logoSrc} 
-                            alt={activity.logoText} 
-                            className="w-full h-full object-cover"
-                          />
-                        </div>
-                      </Link>
-                    ))}
+                  <div className="absolute left-1/2 transform -translate-x-1/2 flex items-center justify-center gap-4 max-h-32 overflow-y-auto scrollbar-hide">
+                    <div className="flex flex-wrap items-center justify-center gap-4 max-w-md">
+                      {activities?.slice(0, 6).map((activity) => (
+                        <Link 
+                          key={activity.id} 
+                          href={`/${activity.category}`}
+                          className="flex flex-col items-center group"
+                        > 
+                          <div 
+                            className="w-20 h-20 rounded-full overflow-hidden border-3 border-transparent group-hover:border-theme transition-all duration-200 shadow-lg"
+                            style={{ borderColor: activity.primaryColor }}
+                          >
+                            <img 
+                              src={activity.logoSrc} 
+                              alt={activity.logoText} 
+                              className="w-full h-full object-cover"
+                            />
+                          </div>
+                          <span className="text-xs font-medium text-center mt-1 break-words max-w-20" style={{ color: activity.primaryColor }}>
+                            {activity.logoText}
+                          </span>
+                        </Link>
+                      ))}
+                    </div>
                   </div>
 
                   {/* Right side placeholder for balance */}
@@ -316,14 +321,14 @@ const HomeHeader = () => {
                     </span>
                   </Link>
 
-                  {/* Activity Circles - Compact on right */}
-                  <div className="overflow-x-auto scrollbar-hide flex-1 ml-2">
-                    <div className="flex items-center justify-end gap-2" style={{ minWidth: 'max-content' }}>
+                  {/* Activity Circles - Compact on right with vertical scroll */}
+                  <div className="flex-1 ml-2 max-h-20 overflow-y-auto scrollbar-hide">
+                    <div className="grid grid-cols-3 gap-1 justify-items-end">
                       {activities?.slice(0, 6).map((activity) => (
                         <Link 
                           key={activity.id} 
                           href={`/${activity.category}`}
-                          className="group flex-shrink-0"
+                          className="group flex-shrink-0 flex flex-col items-center"
                         > 
                           <div 
                             className="w-9 h-9 rounded-full overflow-hidden border border-transparent group-hover:border-theme transition-all duration-200 shadow-sm"
@@ -335,6 +340,9 @@ const HomeHeader = () => {
                               className="w-full h-full object-cover"
                             />
                           </div>
+                          <span className="text-[8px] font-medium text-center break-words max-w-12 leading-tight" style={{ color: activity.primaryColor }}>
+                            {activity.logoText}
+                          </span>
                         </Link>
                       ))}
                     </div>
@@ -397,26 +405,31 @@ const HomeHeader = () => {
                         </span>
                       </Link>
 
-                      {/* Activity Circles - Compact */}
-                      <div className="flex items-center justify-center gap-2 ml-4">
-                        {activities?.slice(0, 5).map((activity) => (
-                          <Link 
-                            key={activity.id} 
-                            href={`/${activity.category}`}
-                            className="group"
-                          > 
-                            <div 
-                              className="w-12 h-12 rounded-full overflow-hidden border-2 border-transparent group-hover:border-theme transition-all duration-200 shadow-md"
-                              style={{ borderColor: activity.primaryColor }}
-                            >
-                              <img 
-                                src={activity.logoSrc} 
-                                alt={activity.logoText} 
-                                className="w-full h-full object-cover"
-                              />
-                            </div>
-                          </Link>
-                        ))}
+                      {/* Activity Circles - Compact with text */}
+                      <div className="flex items-center justify-center gap-2 ml-4 max-h-16 overflow-y-auto scrollbar-hide">
+                        <div className="flex gap-2">
+                          {activities?.slice(0, 5).map((activity) => (
+                            <Link 
+                              key={activity.id} 
+                              href={`/${activity.category}`}
+                              className="group flex flex-col items-center"
+                            > 
+                              <div 
+                                className="w-12 h-12 rounded-full overflow-hidden border-2 border-transparent group-hover:border-theme transition-all duration-200 shadow-md"
+                                style={{ borderColor: activity.primaryColor }}
+                              >
+                                <img 
+                                  src={activity.logoSrc} 
+                                  alt={activity.logoText} 
+                                  className="w-full h-full object-cover"
+                                />
+                              </div>
+                              <span className="text-[10px] font-medium text-center break-words max-w-16 leading-tight" style={{ color: activity.primaryColor }}>
+                                {activity.logoText}
+                              </span>
+                            </Link>
+                          ))}
+                        </div>
                       </div>
                     </div>
 
@@ -492,14 +505,14 @@ const HomeHeader = () => {
                     </span>
                   </Link>
 
-                  {/* Activity Circles - Center */}
-                  <div className="overflow-x-auto scrollbar-hide flex-1 mx-2">
-                    <div className="flex items-center justify-center gap-1" style={{ minWidth: 'max-content' }}>
+                  {/* Activity Circles - Center with vertical scroll */}
+                  <div className="flex-1 mx-2 max-h-14 overflow-y-auto scrollbar-hide">
+                    <div className="grid grid-cols-3 gap-1 justify-items-center">
                       {activities?.slice(0, 6).map((activity) => (
                         <Link 
                           key={activity.id} 
                           href={`/${activity.category}`}
-                          className="group flex-shrink-0"
+                          className="group flex-shrink-0 flex flex-col items-center"
                         > 
                           <div 
                             className="w-7 h-7 rounded-full overflow-hidden border border-transparent group-hover:border-theme transition-all duration-200 shadow-sm"
@@ -511,6 +524,9 @@ const HomeHeader = () => {
                               className="w-full h-full object-cover"
                             />
                           </div>
+                          <span className="text-[7px] font-medium text-center break-words max-w-10 leading-tight" style={{ color: activity.primaryColor }}>
+                            {activity.logoText}
+                          </span>
                         </Link>
                       ))}
                     </div>
