@@ -1768,7 +1768,7 @@ const YoutubeImport = () => {
                           <p className="text-xs text-muted-foreground">
                             Channel name will be fetched automatically when URL/handle is resolved
                           </p>
-                        </FormItem>```
+                        </FormItem>
                       )}
                     />
                     <Button 
