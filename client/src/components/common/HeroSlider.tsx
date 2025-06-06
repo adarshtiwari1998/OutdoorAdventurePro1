@@ -201,7 +201,7 @@ const HeroSlider = ({ slides }: HeroSliderProps) => {
       </button>
       
       {/* Slide Indicators */}
-      <div className="absolute bottom-6 left-0 right-0 flex justify-center z-20">
+      <div className="absolute bottom-2 left-0 right-0 flex justify-center z-20">
         <div className="flex space-x-2">
           {slides.map((_, index) => (
             <button
