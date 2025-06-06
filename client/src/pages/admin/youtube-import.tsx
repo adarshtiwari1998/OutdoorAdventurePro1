@@ -748,6 +748,36 @@ const YoutubeImport = () => {
     },
   });
 
+  const updateCategoriesMutation = useMutation({
+    mutationFn: async (channelId?: string) => {
+      const response = await fetch('/api/admin/youtube/channels/update-categories', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ channelId }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to update channel categories');
+      }
+
+      return response.json();
+    },
+    onSuccess: (data) => {
+      toast({
+        title: "Categories Updated",
+        description: data.message || "Successfully updated channel categories",
+      });
+      queryClient.invalidateQueries({ queryKey: ['/api/admin/youtube/channels'] });
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Error",
+        description: error.message,
+        variant: "destructive",
+      });
+    },
+  });
+
   // Event handlers
   const onAddChannelSubmit = (values: z.infer<typeof youtubeChannelSchema>) => {
     addChannelMutation.mutate({
@@ -907,12 +937,21 @@ const YoutubeImport = () => {
     syncCountsMutation.mutate();
   };
 
+  const handleUpdateChannelCategories = (channelId: string) => {
+    updateCategoriesMutation.mutate(channelId);
+  };
+
+  const handleUpdateAllChannelCategories = () => {
+    updateCategoriesMutation.mutate();
+  };
+
   // Renderers
   const renderChannelSkeleton = () => (
     <>
       {Array(3).fill(0).map((_, i) => (
         <TableRow key={i}>
           <TableCell><Skeleton className="h-5 w-48" /></TableCell>
+          <TableCell><Skeleton className="h-5 w-32" /></TableCell>
           <TableCell><Skeleton className="h-5 w-32" /></TableCell>
           <TableCell><Skeleton className="h-5 w-16" /></TableCell>
           <TableCell><Skeleton className="h-5 w-16" /></TableCell>
@@ -958,10 +997,27 @@ const YoutubeImport = () => {
         <TabsContent value="channels">
           <Card>
             <CardHeader>
-              <CardTitle>Your Youtube Channels</CardTitle>
-              <CardDescription>
-                Manage your connected Youtube channels for content import.
-              </CardDescription>
+              <div className="flex justify-between items-center">
+                <div>
+                  <CardTitle>Your Youtube Channels</CardTitle>
+                  <CardDescription>
+                    Manage your connected Youtube channels for content import.
+                  </CardDescription>
+                </div>
+                <Button 
+                  variant="outline" 
+                  size="sm"
+                  onClick={handleUpdateAllChannelCategories}
+                  disabled={updateCategoriesMutation.isPending}
+                >
+                  {updateCategoriesMutation.isPending ? (
+                    <RefreshCw className="h-4 w-4 mr-2 animate-spin" />
+                  ) : (
+                    <RefreshCw className="h-4 w-4 mr-2" />
+                  )}
+                  Update All Categories
+                </Button>
+              </div>
             </CardHeader>
             <CardContent>
               <div className="admin-table-container channels-table">
@@ -970,6 +1026,7 @@ const YoutubeImport = () => {
                     <TableRow>
                       <TableHead>Channel Name</TableHead>
                       <TableHead>Channel ID</TableHead>
+                      <TableHead>Categories</TableHead>
                       <TableHead>Subscribers</TableHead>
                       <TableHead>Total Videos</TableHead>
                       <TableHead>Imported Videos</TableHead>
@@ -982,7 +1039,7 @@ const YoutubeImport = () => {
                       renderChannelSkeleton()
                     ) : channels?.length === 0 ? (
                       <TableRow>
-                        <TableCell colSpan={6} className="text-center py-8">
+                        <TableCell colSpan={7} className="text-center py-8">
                           No Youtube channels found. Add a new channel to get started.
                         </TableCell>
                       </TableRow>
@@ -1001,6 +1058,24 @@ const YoutubeImport = () => {
                             <code className="bg-gray-100 px-2 py-1 rounded text-xs font-mono">
                               {channel.channelId}
                             </code>
+                          </TableCell>
+                          <TableCell>
+                            <div className="max-w-xs">
+                              {channel.categoryNames ? (
+                                <div className="text-sm">
+                                  <div className="font-medium text-gray-900 dark:text-gray-100">
+                                    {channel.categoryNames}
+                                  </div>
+                                  {channel.categoryIdsArray && (
+                                    <div className="text-xs text-gray-500 dark:text-gray-400 font-mono">
+                                      IDs: {channel.categoryIdsArray.join(', ')}
+                                    </div>
+                                  )}
+                                </div>
+                              ) : (
+                                <span className="text-sm text-gray-500 dark:text-gray-400">No categories</span>
+                              )}
+                            </div>
                           </TableCell>
                           <TableCell>{channel.subscribers.toLocaleString()}</TableCell>
                           <TableCell>{channel.videoCount}</TableCell>
@@ -1029,6 +1104,20 @@ const YoutubeImport = () => {
                                 <RefreshCw className="h-4 w-4 mr-1" />
                               )}
                               Import
+                            </Button>
+                            <Button 
+                              variant="outline" 
+                              size="sm" 
+                              className="mr-2"
+                              onClick={() => handleUpdateChannelCategories(channel.id.toString())}
+                              disabled={updateCategoriesMutation.isPending}
+                            >
+                              {updateCategoriesMutation.isPending ? (
+                                <RefreshCw className="h-4 w-4 mr-1 animate-spin" />
+                              ) : (
+                                <RefreshCw className="h-4 w-4 mr-1" />
+                              )}
+                              Update Categories
                             </Button>
                             <AlertDialog>
                               <AlertDialogTrigger asChild>

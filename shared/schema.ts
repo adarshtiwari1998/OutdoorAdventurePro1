@@ -76,6 +76,7 @@ export const youtubeChannels = pgTable("youtube_channels", {
   subscribers: integer("subscribers").default(0).notNull(),
   videoCount: integer("video_count").default(0).notNull(),
   importedVideoCount: integer("imported_video_count").default(0).notNull(),
+  categoryIds: text("category_ids"), // Comma-separated category IDs
   lastImport: timestamp("last_import"),
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),

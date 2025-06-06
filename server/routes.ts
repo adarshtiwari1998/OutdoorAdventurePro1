@@ -1491,6 +1491,32 @@ app.delete(`${apiPrefix}/admin/wordpress/credentials`, async (req, res) => {
     }
   });
 
+  // Update channel categories
+  app.post(`${apiPrefix}/admin/youtube/channels/update-categories`, async (req, res) => {
+    try {
+      const { channelId } = req.body;
+
+      if (channelId) {
+        // Update specific channel
+        await storage.updateChannelCategories(parseInt(channelId));
+        res.json({ 
+          success: true, 
+          message: `Updated categories for channel ${channelId}` 
+        });
+      } else {
+        // Update all channels
+        await storage.updateAllChannelCategories();
+        res.json({ 
+          success: true, 
+          message: 'Updated categories for all channels' 
+        });
+      }
+    } catch (error) {
+      console.error("Error updating channel categories:", error);
+      res.status(500).json({ message: "Failed to update channel categories" });
+    }
+  });
+
   app.get(`${apiPrefix}/admin/youtube/stats-status`, async (req, res) => {
     try {
       const videosToUpdate = await storage.getVideosForStatsUpdate(1000);
@@ -1843,10 +1869,13 @@ Status: Transcript extraction failed during import. Video may have captions that
         }
       }
 
-      // Update channel statistics
+      // Update channel statistics and categories
       await storage.updateYoutubeChannelLastImport(parseInt(id));
       const actualVideoCount = await storage.getYoutubeVideosByChannel(channel.id.toString());
       await storage.setYoutubeChannelImportedCount(parseInt(id), actualVideoCount.length);
+      
+      // Update channel categories based on imported videos
+      await storage.updateChannelCategories(parseInt(id));
 
       console.log(`\n📊 IMPORT COMPLETE:`);
       console.log(`   - Videos imported: ${importedCount}/${desiredNewVideos}`);

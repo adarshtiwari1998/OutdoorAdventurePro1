@@ -170,15 +170,36 @@ export const storage = {
     }
   },
 
-  async getAdminYoutubeChannels() {
-    try {
-      return await db.query.youtubeChannels.findMany({
-        orderBy: desc(youtubeChannels.createdAt),
-      });
-    } catch (error) {
-      console.error('Error getting admin YouTube channels:', error);
-      throw error;
-    }
+  async getAdminYoutubeChannels(): Promise<any[]> {
+    const channels = await db.query.youtubeChannels.findMany({
+      orderBy: [desc(schema.youtubeChannels.createdAt)]
+    });
+
+    // Get all categories for name mapping
+    const categories = await db.query.categories.findMany({
+      columns: { id: true, name: true }
+    });
+
+    const categoryMap = new Map(categories.map(cat => [cat.id.toString(), cat.name]));
+
+    // Add category names to channels
+    const channelsWithCategories = channels.map(channel => {
+      let categoryNames = [];
+      let categoryIdsArray = [];
+
+      if (channel.categoryIds) {
+        categoryIdsArray = channel.categoryIds.split(',').filter(id => id.trim());
+        categoryNames = categoryIdsArray.map(id => categoryMap.get(id.trim()) || `Category ${id}`);
+      }
+
+      return {
+        ...channel,
+        categoryIdsArray,
+        categoryNames: categoryNames.join(', ') || 'No categories'
+      };
+    });
+
+    return channelsWithCategories;
   },
 
   async getYoutubeChannelById(id: number) {
