@@ -1092,8 +1092,7 @@ const YoutubeImport = () => {
                         <SelectItem value="no-category">No Category</SelectItem>
                         {blogCategories?.filter(cat => 
                           !cat.id.toString().startsWith('header_') && 
-                          cat.type !== 'header' &&
-                          (cat.type === 'blog' || cat.type === 'activity' || !cat.type)
+                          cat.type !== 'header'
                         ).map(category => (
                           <SelectItem key={category.id} value={category.id.toString()}>
                             {category.name} ({category.type || 'blog'})
@@ -1188,8 +1187,7 @@ const YoutubeImport = () => {
                       <SelectContent className="max-h-60 overflow-y-auto">
                         {blogCategories?.filter(cat => 
                           !cat.id.toString().startsWith('header_') && 
-                          cat.type !== 'header' &&
-                          (cat.type === 'blog' || cat.type === 'activity' || !cat.type)
+                          cat.type !== 'header'
                         ).map(category => (
                           <SelectItem key={category.id} value={category.id.toString()}>
                             {category.name} ({category.type || 'blog'})
@@ -1229,8 +1227,7 @@ const YoutubeImport = () => {
                       <SelectContent className="max-h-60 overflow-y-auto">
                         {blogCategories?.filter(cat => 
                           !cat.id.toString().startsWith('header_') && 
-                          cat.type !== 'header' &&
-                          (cat.type === 'blog' || cat.type === 'activity' || !cat.type)
+                          cat.type !== 'header'
                         ).map(category => (
                           <SelectItem key={category.id} value={category.id.toString()}>
                             {category.name} ({category.type || 'blog'})
@@ -1389,8 +1386,7 @@ const YoutubeImport = () => {
                                 <SelectContent className="max-h-60 overflow-y-auto">
                                   {blogCategories?.filter(cat => 
                                     !cat.id.toString().startsWith('header_') && 
-                                    cat.type !== 'header' &&
-                                    (cat.type === 'blog' || cat.type === 'activity' || !cat.type)
+                                    cat.type !== 'header'
                                   ).map(category => (
                                     <SelectItem key={category.id} value={category.id}>
                                       {category.name} ({category.type || 'blog'})
@@ -1417,8 +1413,7 @@ const YoutubeImport = () => {
                                 <SelectContent className="max-h-60 overflow-y-auto">
                                   {blogCategories?.filter(cat => 
                                     !cat.id.toString().startsWith('header_') && 
-                                    cat.type !== 'header' &&
-                                    (cat.type === 'blog' || cat.type === 'activity' || !cat.type)
+                                    cat.type !== 'header'
                                   ).map(category => (
                                     <SelectItem key={category.id} value={category.id}>
                                       {category.name} ({category.type || 'blog'})
@@ -1766,7 +1761,7 @@ const YoutubeImport = () => {
                           <FormMessage />
                           <p className="text-xs text-muted-foreground">
                             The actual YouTube Channel ID will appear here after URL/handle resolution
-                          </p>
+                                    </p>
                         </FormItem>
                       )}
                     />
@@ -2149,10 +2144,9 @@ const YoutubeImport = () => {
                 <SelectContent className="max-h-60 overflow-y-auto">
                   <SelectItem value="no-category">No Category (import without category)</SelectItem>
                   {blogCategories?.filter(cat => 
-                    !cat.id.toString().startsWith('header_') && 
-                    cat.type !== 'header' &&
-                    (cat.type === 'blog' || cat.type === 'activity' || !cat.type)
-                  ).map(category => (
+                          !cat.id.toString().startsWith('header_') && 
+                          cat.type !== 'header'
+                        ).map(category => (
                     <SelectItem key={category.id} value={category.id.toString()}>
                       {category.name} ({category.type || 'blog'})
                     </SelectItem>
