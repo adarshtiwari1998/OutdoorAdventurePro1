@@ -228,12 +228,12 @@ const YoutubeImport = () => {
     queryFn: async ({ queryKey }) => {
       const [, params] = queryKey;
       console.log(`🎬 Fetching videos for channel:`, params);
-      
+
       // If no specific channel is selected, fetch all videos
       const url = params.channelId 
         ? `/api/admin/youtube/videos?channelId=${params.channelId}`
         : '/api/admin/youtube/videos';
-      
+
       const response = await fetch(url);
       if (!response.ok) {
         const error = await response.text();
@@ -1365,9 +1365,9 @@ const YoutubeImport = () => {
                             </div>
                           </TableCell>
                           <TableCell>
-                            {video.category ? (
+                            {video.categoryId ? (
                               <Badge variant="outline">
-                                {video.category.name}
+                                {video.category?.name || blogCategories?.find(c => c.id === video.categoryId.toString())?.name || 'Unknown Category'}
                               </Badge>
                             ) : (
                               <div className="flex items-center gap-2">
@@ -1389,7 +1389,7 @@ const YoutubeImport = () => {
                                   </SelectTrigger>
                                   <SelectContent>
                                     {blogCategories?.map(category => (
-                                      <SelectItem key={category.id} value={category.id}>
+                                      <SelectItem key={category.id} value={category.id.toString()}>
                                         {category.name}
                                       </SelectItem>
                                     ))}
@@ -1801,7 +1801,7 @@ const YoutubeImport = () => {
                             <Input placeholder="dQw4w9WgXcQ" {...field} />
                           </FormControl>
                           <FormMessage />
-                        </FormItem>
+</FormItem>
                       )}
                     />
                     <FormField
