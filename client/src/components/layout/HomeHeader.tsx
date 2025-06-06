@@ -83,10 +83,11 @@ const [showMainHeader, setShowMainHeader] = useState(true);
   useEffect(() => {
     let lastScrollY = window.scrollY;
     let ticking = false;
+    let frameId: number;
 
     const handleScroll = () => {
       if (!ticking) {
-        window.requestAnimationFrame(() => {
+        frameId = window.requestAnimationFrame(() => {
           const currentScrollY = window.scrollY;
           const scrollThreshold = 50;
           
