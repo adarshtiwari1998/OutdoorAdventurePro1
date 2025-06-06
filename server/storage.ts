@@ -1911,7 +1911,7 @@ export const storage = {
       // Delete from database
       await db.delete(schema.dashboardAssets).where(eq(schema.dashboardAssets.id, id));
 
-      console.log(`Successfully deleted dashboard asset ${id} from database`);```text
+      console.log(`Successfully deleted dashboard asset ${id} from database`);
     } catch (error) {
       console.error(`Error deleting dashboard asset ${id}:`, error);
       throw error;
