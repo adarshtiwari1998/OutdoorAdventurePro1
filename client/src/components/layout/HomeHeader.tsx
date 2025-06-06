@@ -512,7 +512,7 @@ const HomeHeader = () => {
               )}
             </div>
           ) : (
-            /* Normal Layout - Navigation row */}
+            /* Normal Layout - Navigation row */
             <div className="px-4 py-3">
               {/* Desktop Normal Layout */}
               {!isMobile && (
