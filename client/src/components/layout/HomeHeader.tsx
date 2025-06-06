@@ -83,51 +83,33 @@ const HomeHeader = () => {
   const [lastScrollY, setLastScrollY] = useState(0);
 
   useEffect(() => {
-    let ticking = false;
-
     const handleScroll = () => {
-      if (!ticking) {
-        requestAnimationFrame(() => {
-          const currentScrollY = window.scrollY;
-          const scrollThreshold = 150; // When to switch to fixed header mode
-          const hideThreshold = 200; // When to start hiding header on scroll down
+      const currentScrollY = window.scrollY;
+      const scrollThreshold = 80; // Faster trigger point
 
-          // Calculate scroll direction and speed
-          const scrollDelta = currentScrollY - lastScrollY;
-          const scrollingDown = scrollDelta > 0;
-          const scrollingUp = scrollDelta < 0;
-          const isScrollingFast = Math.abs(scrollDelta) > 2;
+      // Calculate scroll direction
+      const scrollDelta = currentScrollY - lastScrollY;
+      const scrollingDown = scrollDelta > 0;
+      const scrollingUp = scrollDelta < 0;
 
-          // Near the top - always show normal header
-          if (currentScrollY <= scrollThreshold) {
-            setIsScrolled(false);
-            setShowMainHeader(true);
-            setLastScrollY(currentScrollY);
-            ticking = false;
-            return;
-          }
+      // Immediate state updates without requestAnimationFrame delay
+      if (currentScrollY <= scrollThreshold) {
+        // At top - normal header
+        setIsScrolled(false);
+        setShowMainHeader(true);
+      } else {
+        // Past threshold - fixed header mode
+        setIsScrolled(true);
 
-          // Past threshold - enable fixed header behavior
-          setIsScrolled(true);
-
-          // Show fixed header immediately when scrolling down past threshold
-          if (scrollingDown && currentScrollY > scrollThreshold) {
-            setShowMainHeader(true);
-          }
-          // Hide header when scrolling down fast and past hide threshold
-          else if (scrollingDown && isScrollingFast && currentScrollY > hideThreshold) {
-            setShowMainHeader(false);
-          } 
-          // Show header when scrolling up
-          else if (scrollingUp) {
-            setShowMainHeader(true);
-          }
-
-          setLastScrollY(currentScrollY);
-          ticking = false;
-        });
-        ticking = true;
+        // Immediate header visibility based on scroll direction
+        if (scrollingDown && scrollDelta > 3) {
+          setShowMainHeader(false);
+        } else if (scrollingUp || scrollDelta <= 0) {
+          setShowMainHeader(true);
+        }
       }
+
+      setLastScrollY(currentScrollY);
     };
 
     window.addEventListener('scroll', handleScroll, { passive: true });
