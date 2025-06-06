@@ -1885,8 +1885,7 @@ export const storage = {
       const credentials = await db.query.wordpressCredentials.findFirst();
       return credentials || null;
     } catch (error) {
-      Adding CategoryVideoSettings methods and related methods to storage object.```text
-      console.error('Error getting WordPress credentials:', error);
+     console.error('Error getting WordPress credentials:', error);
     }
   },
 
