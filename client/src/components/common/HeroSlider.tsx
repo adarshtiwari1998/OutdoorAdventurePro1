@@ -26,23 +26,23 @@ const HeroSlider = ({ slides }: HeroSliderProps) => {
       const ctx = canvas.getContext('2d');
       const img = new Image();
       img.crossOrigin = 'anonymous';
-      
+
       return new Promise<string>((resolve) => {
         img.onload = () => {
           canvas.width = img.width;
           canvas.height = img.height;
           ctx?.drawImage(img, 0, 0);
-          
+
           const imageData = ctx?.getImageData(0, 0, canvas.width, canvas.height);
           if (!imageData) {
             resolve('rgba(0,0,0,0.8)');
             return;
           }
-          
+
           // Sample colors from different regions
           const colors: number[][] = [];
           const step = 50;
-          
+
           for (let y = 0; y < canvas.height; y += step) {
             for (let x = 0; x < canvas.width; x += step) {
               const index = (y * canvas.width + x) * 4;
@@ -53,7 +53,7 @@ const HeroSlider = ({ slides }: HeroSliderProps) => {
               ]);
             }
           }
-          
+
           // Calculate average color
           const avgColor = colors.reduce(
             (acc, color) => [
@@ -63,16 +63,16 @@ const HeroSlider = ({ slides }: HeroSliderProps) => {
             ],
             [0, 0, 0]
           ).map(c => Math.floor(c / colors.length));
-          
+
           // Create gradient with darker and lighter variations
           const [r, g, b] = avgColor;
           const darkerColor = `rgba(${Math.max(0, r-40)}, ${Math.max(0, g-40)}, ${Math.max(0, b-40)}, 0.9)`;
           const lighterColor = `rgba(${Math.min(255, r+20)}, ${Math.min(255, g+20)}, ${Math.min(255, b+20)}, 0.7)`;
-          
+
           const gradient = `linear-gradient(135deg, ${darkerColor} 0%, ${lighterColor} 50%, rgba(0,0,0,0.8) 100%)`;
           resolve(gradient);
         };
-        
+
         img.onerror = () => resolve('rgba(0,0,0,0.8)');
         img.src = imageUrl;
       });
@@ -93,51 +93,67 @@ const HeroSlider = ({ slides }: HeroSliderProps) => {
     const interval = setInterval(() => {
       setActiveSlide((current) => (current + 1) % slides.length);
     }, 7000);
-    
+
     setAutoplayInterval(interval);
-    
+
     return () => {
       if (autoplayInterval) clearInterval(autoplayInterval);
     };
   }, [slides.length]);
-  
+
   // Reset autoplay when manually changing slides
   const changeSlide = (index: number) => {
     setActiveSlide(index);
-    
+
     if (autoplayInterval) {
       clearInterval(autoplayInterval);
-      
+
       const newInterval = setInterval(() => {
         setActiveSlide((current) => (current + 1) % slides.length);
       }, 7000);
-      
+
       setAutoplayInterval(newInterval);
     }
   };
-  
+
   const goToNextSlide = () => {
     changeSlide((activeSlide + 1) % slides.length);
   };
-  
+
   const goToPrevSlide = () => {
     changeSlide((activeSlide - 1 + slides.length) % slides.length);
   };
 
   return (
     <section className="relative h-[600px] overflow-hidden">
-      {/* Dynamic gradient background */}
+      {/* Netflix-style dynamic gradient background that fills entire container */}
       <div 
-        className="absolute inset-0 transition-all duration-1000 ease-in-out"
+        className="netflix-gradient-bg gradient-transition"
         style={{ 
           background: gradientColors,
-          filter: 'blur(100px)',
-          transform: 'scale(1.1)',
-          opacity: 0.7
+          position: 'absolute',
+          top: '-50px',
+          left: '-50px',
+          right: '-50px',
+          bottom: '-50px',
+          filter: 'blur(120px)',
+          transform: 'scale(1.2)',
+          opacity: 0.8,
+          zIndex: 0
         }}
       />
-      
-      <div className="absolute inset-0 flex">
+
+      {/* Additional background overlay for better coverage */}
+      <div 
+        className="absolute inset-0 gradient-transition"
+        style={{ 
+          background: `linear-gradient(135deg, ${gradientColors} 0%, rgba(0,0,0,0.9) 100%)`,
+          opacity: 0.6,
+          zIndex: 1
+        }}
+      />
+
+      <div className="absolute inset-0 flex" style={{ zIndex: 2 }}>
         {slides.map((slide, index) => (
           <div 
             key={slide.id}
@@ -154,7 +170,7 @@ const HeroSlider = ({ slides }: HeroSliderProps) => {
               {/* Overlay with reduced opacity to show gradient behind */}
               <div className="absolute inset-0 bg-gradient-to-r from-black/60 via-black/40 to-transparent"></div>
             </div>
-            
+
             <div className="relative z-10 h-full flex items-center">
               <div className="container mx-auto px-4">
                 <div className="max-w-xl text-white">
@@ -182,26 +198,28 @@ const HeroSlider = ({ slides }: HeroSliderProps) => {
           </div>
         ))}
       </div>
-      
+
       {/* Navigation Arrows */}
       <button 
         onClick={goToPrevSlide} 
-        className="absolute left-4 top-1/2 -translate-y-1/2 z-20 bg-black/30 hover:bg-theme text-white p-2 rounded-full transition-colors duration-300"
+        className="absolute left-4 top-1/2 -translate-y-1/2 bg-black/30 hover:bg-theme text-white p-2 rounded-full transition-colors duration-300"
+        style={{ zIndex: 30 }}
         aria-label="Previous slide"
       >
         <ChevronLeft className="h-6 w-6" />
       </button>
-      
+
       <button 
         onClick={goToNextSlide} 
-        className="absolute right-4 top-1/2 -translate-y-1/2 z-20 bg-black/30 hover:bg-theme text-white p-2 rounded-full transition-colors duration-300"
+        className="absolute right-4 top-1/2 -translate-y-1/2 bg-black/30 hover:bg-theme text-white p-2 rounded-full transition-colors duration-300"
+        style={{ zIndex: 30 }}
         aria-label="Next slide"
       >
         <ChevronRight className="h-6 w-6" />
       </button>
-      
+
       {/* Slide Indicators */}
-      <div className="absolute bottom-6 left-0 right-0 flex justify-center z-20">
+      <div className="absolute bottom-6 left-0 right-0 flex justify-center" style={{ zIndex: 30 }}>
         <div className="flex space-x-2">
           {slides.map((_, index) => (
             <button
