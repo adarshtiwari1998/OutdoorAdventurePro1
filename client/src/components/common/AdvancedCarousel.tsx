@@ -352,7 +352,7 @@ const AdvancedCarousel = ({ slides }: AdvancedCarouselProps) => {
             </div>
           </div>
         </div>
-      )}</div>
+      )}
       
       {/* Thumbnails/Indicators at the bottom */}
       <div className="absolute bottom-6 left-0 right-0 flex justify-center z-10 px-4">
