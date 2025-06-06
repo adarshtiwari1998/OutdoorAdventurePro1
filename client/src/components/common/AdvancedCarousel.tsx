@@ -283,17 +283,14 @@ const AdvancedCarousel = ({ slides }: AdvancedCarouselProps) => {
                 slide.videoUrl.includes('youtube.com/embed') ? (
                   <iframe
                     src={`${slide.videoUrl}?autoplay=${isPlaying ? 1 : 0}&mute=${isMuted ? 1 : 0}&loop=1&playlist=${slide.videoUrl.split('/').pop()?.split('?')[0]}&controls=0&showinfo=0&rel=0&modestbranding=1&iv_load_policy=3`}
-                    className="w-full h-full"
+                    className="w-full h-full object-cover"
                     style={{
                       position: 'absolute',
-                      top: '50%',
-                      left: '50%',
-                      width: '100vw',
-                      height: '100vh',
-                      transform: 'translate(-50%, -50%)',
-                      minWidth: '100%',
-                      minHeight: '100%',
-                      objectFit: 'cover'
+                      top: 0,
+                      left: 0,
+                      width: '100%',
+                      height: '100%',
+                      border: 'none'
                     }}
                     allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
                     allowFullScreen
