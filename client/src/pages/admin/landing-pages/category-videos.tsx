@@ -15,7 +15,7 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import { useToast } from "@/hooks/use-toast";
 import { Textarea } from "@/components/ui/textarea";
 import { Edit, Trash2, Video, Loader2 } from "lucide-react";
-import AdminLayout from "@/components/layout/AdminLayout";
+
 
 const categoryVideoSettingsSchema = z.object({
   category: z.string().min(1, "Category is required"),
@@ -176,7 +176,6 @@ const CategoryVideos = () => {
   };
 
   return (
-    <AdminLayout title="Category Videos">
       <div className="space-y-6">
         <Card>
           <CardHeader>
@@ -402,7 +401,6 @@ const CategoryVideos = () => {
           </CardContent>
         </Card>
       </div>
-    </AdminLayout>
   );
 };
 

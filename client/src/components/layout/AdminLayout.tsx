@@ -325,8 +325,8 @@ const AdminLayout = ({ children, title }: AdminLayoutProps) => {
                 <AdminMenuItem
                   icon={Video}
                   label="Category Videos"
-                  href="/admin/category-videos"
-                  isActive={location === '/admin/category-videos'}
+                  href="/admin/landing-pages/category-videos"
+                  isActive={location === '/admin/landing-pages/category-videos'}
                 />
               </div>
             </div>
