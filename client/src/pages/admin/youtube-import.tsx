@@ -1007,49 +1007,30 @@ const YoutubeImport = () => {
                             </code>
                           </TableCell>
                           <TableCell>
-                            {channel.categoryId ? (
-                              <Select 
-                                value={channel.categoryId.toString()} 
-                                onValueChange={(categoryId) => {
-                                  // Handle category update for channel
-                                  console.log('Update channel category:', { channelId: channel.id, categoryId });
-                                }}
-                              >
-                                <SelectTrigger className="w-40 h-8 text-sm">
-                                  <SelectValue>
-                                    {blogCategories?.find(cat => cat.id.toString() === channel.categoryId?.toString())?.name || 
-                                     channel.category?.name || 
-                                     `Category ID: ${channel.categoryId}`}
-                                  </SelectValue>
-                                </SelectTrigger>
-                                <SelectContent className="max-h-60 overflow-y-auto">
-                                  {blogCategories?.map(category => (
-                                    <SelectItem key={category.id} value={category.id.toString()}>
-                                      {category.name} ({category.type || 'blog'})
-                                    </SelectItem>
-                                  ))}
-                                </SelectContent>
-                              </Select>
-                            ) : (
-                              <Select 
-                                value="" 
-                                onValueChange={(categoryId) => {
-                                  // Handle category assignment for channel
-                                  console.log('Assign channel category:', { channelId: channel.id, categoryId });
-                                }}
-                              >
-                                <SelectTrigger className="w-40 h-8 text-sm">
-                                  <SelectValue placeholder="Select Category" />
-                                </SelectTrigger>
-                                <SelectContent className="max-h-60 overflow-y-auto">
-                                  {blogCategories?.map(category => (
-                                    <SelectItem key={category.id} value={category.id.toString()}>
-                                      {category.name} ({category.type || 'blog'})
-                                    </SelectItem>
-                                  ))}
-                                </SelectContent>
-                              </Select>
-                            )}
+                            <Select 
+                              value={channel.categoryId ? channel.categoryId.toString() : ""} 
+                              onValueChange={(categoryId) => {
+                                if (categoryId && categoryId !== "" && categoryId !== "NaN") {
+                                  console.log('Update/Assign channel category:', { channelId: channel.id, categoryId });
+                                  // TODO: Implement channel category update mutation
+                                }
+                              }}
+                            >
+                              <SelectTrigger className="w-40 h-8 text-sm">
+                                <SelectValue placeholder="Select Category">
+                                  {channel.categoryId && blogCategories?.find(cat => cat.id.toString() === channel.categoryId?.toString())?.name || 
+                                   channel.category?.name || 
+                                   (channel.categoryId ? `Category ID: ${channel.categoryId}` : "Select Category")}
+                                </SelectValue>
+                              </SelectTrigger>
+                              <SelectContent className="max-h-60 overflow-y-auto">
+                                {blogCategories?.map(category => (
+                                  <SelectItem key={category.id} value={category.id.toString()}>
+                                    {category.name} ({category.type || 'blog'})
+                                  </SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
                           </TableCell>
                           <TableCell>{channel.subscribers.toLocaleString()}</TableCell>
                           <TableCell>{channel.videoCount}</TableCell>
