@@ -76,14 +76,18 @@ export const youtubeChannels = pgTable("youtube_channels", {
   subscribers: integer("subscribers").default(0).notNull(),
   videoCount: integer("video_count").default(0).notNull(),
   importedVideoCount: integer("imported_video_count").default(0).notNull(),
-  categoryIds: text("category_ids"), // Comma-separated category IDs
+  categoryId: integer("category_id").references(() => categories.id), // Single category reference
   lastImport: timestamp("last_import"),
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
 });
 
-export const youtubeChannelsRelations = relations(youtubeChannels, ({ many }) => ({
+export const youtubeChannelsRelations = relations(youtubeChannels, ({ one, many }) => ({
   videos: many(youtubeVideos),
+  category: one(categories, {
+    fields: [youtubeChannels.categoryId],
+    references: [categories.id],
+  }),
 }));
 
 // Slider management for homepage

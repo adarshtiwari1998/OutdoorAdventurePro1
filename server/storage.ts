@@ -184,18 +184,11 @@ export const storage = {
 
     // Add category names to channels
     const channelsWithCategories = channels.map(channel => {
-      let categoryNames = [];
-      let categoryIdsArray = [];
-
-      if (channel.categoryIds) {
-        categoryIdsArray = channel.categoryIds.split(',').filter(id => id.trim());
-        categoryNames = categoryIdsArray.map(id => categoryMap.get(id.trim()) || `Category ${id}`);
-      }
+      const categoryName = channel.categoryId ? categoryMap.get(channel.categoryId.toString()) : null;
 
       return {
         ...channel,
-        categoryIdsArray,
-        categoryNames: categoryNames.join(', ') || 'No categories'
+        categoryName: categoryName || 'No category'
       };
     });
 
