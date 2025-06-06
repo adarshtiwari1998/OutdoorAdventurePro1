@@ -174,7 +174,9 @@ export const storage = {
     try {
       return await db.query.youtubeChannels.findMany({
         with: {
-          category: true,
+          category: {
+            columns: { id: true, name: true, slug: true }
+          },
         },
         orderBy: [desc(schema.youtubeChannels.createdAt)]
       });
@@ -2000,8 +2002,12 @@ export const storage = {
         orderBy: desc(schema.youtubeVideos.publishedAt),
         limit,
         with: {
-          category: true,
-          channel: true
+          category: {
+            columns: { id: true, name: true, slug: true }
+          },
+          channel: {
+            columns: { id: true, name: true, channelId: true }
+          }
         }
       });
 
