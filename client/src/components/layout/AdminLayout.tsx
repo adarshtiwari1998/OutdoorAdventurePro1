@@ -81,7 +81,7 @@ const AdminLayout = ({ children, title }: AdminLayoutProps) => {
   const [showSidebar, setShowSidebar] = useState(false);
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
   const { user, logoutMutation } = useAuth();
-  const { toast } } = useToast();
+  const { toast } = useToast();
   const [, navigate] = useLocation();
 
   // Fetch active dashboard assets with more frequent updates

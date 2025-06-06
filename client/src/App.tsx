@@ -75,7 +75,7 @@ function Router() {
 
        <ProtectedRoute path="/admin/home-blocks/tips-management" component={TipsManagement} />
         <ProtectedRoute path="/admin/home-blocks/home-videos" component={HomeVideos} />
-      <ProtectedRoute path="/admin/landing-pages/category-videos" component={CategoryVideos} />
+         <ProtectedRoute path="/admin/landing-pages/category-videos" component={CategoryVideos} />
       <ProtectedRoute path="/admin/dashboard-assets" component={DashboardAssets} />
       {/* Landing page style routes */}
       <ProtectedRoute path="/admin/styles/home" component={LandingPageStyle} />
