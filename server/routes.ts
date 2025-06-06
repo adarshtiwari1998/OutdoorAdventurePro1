@@ -874,7 +874,7 @@ export async function registerRoutes(app: Express): Promise {
       res.json({ success: true });
     } catch (error) {
       console.error(`Error deleting slider ${req.params.id}:`, error);
-      res.status(500).json({message: "Failed to delete slider" });
+      res.status(500).json({message:`Failed to delete slider" });
     }
     });
 
@@ -1059,7 +1059,7 @@ export async function registerRoutes(app: Express): Promise {
       });
 
       console.log(`📋 Fetched ${allCategories.length} total categories for admin`);
-      
+
       res.json(allCategories);
     } catch (error) {
       console.error("Error fetching blog categories:", error);
@@ -1758,7 +1758,8 @@ app.get(`${apiPrefix}/admin/youtube/videos`, async (req, res) => {
             channelId: channel.id, // This is already a number from the channel object
             categoryId: parsedCategoryId,
             transcript: null,
-            importStatus: 'processing',
+            ```text
+importStatus: 'processing',
             videoType: video.videoType,
             duration: video.duration,
             viewCount: video.viewCount || 0,
@@ -1873,7 +1874,7 @@ Status: Transcript extraction failed during import. Video may have captions that
       await storage.updateYoutubeChannelLastImport(parseInt(id));
       const actualVideoCount = await storage.getYoutubeVideosByChannel(channel.id.toString());
       await storage.setYoutubeChannelImportedCount(parseInt(id), actualVideoCount.length);
-      
+
       // Update channel categories based on imported videos - this will ensure category_ids are populated
       const categoryUpdateResult = await storage.updateChannelCategories(parseInt(id));
       console.log(`📊 Channel categories updated:`, categoryUpdateResult);
@@ -1926,14 +1927,15 @@ Status: Transcript extraction failed during import. Video may have captions that
     }
   });
 
-  app.delete(`${apiPrefix}/admin/youtube/videos/:id`, async (req, res) => {
+  
+app.delete(`${apiPrefix}/admin/youtube/videos/:id`, async (req, res) => {
     try {
-      const { id } = req.params;
-      
-      // Delete the video (this will automatically update channel counts)
-      await storage.deleteYoutubeVideo(parseInt(id));
-      
-      res.json({ success: true, message: "Video deleted and channel counts updated automatically" });
+      await storage.deleteYoutubeVideo(parseInt(req.params.id));
+      res.json({ 
+        success: true, 
+        message: "YouTube video deleted successfully",
+        timestamp: new Date().toISOString() // Add timestamp to help with cache invalidation
+      });
     } catch (error) {
       console.error(`Error deleting YouTube video ${req.params.id}:`, error);
       res.status(500).json({ message: "Failed to delete YouTube video" });
@@ -1944,7 +1946,7 @@ Status: Transcript extraction failed during import. Video may have captions that
   app.post(`${apiPrefix}/admin/youtube/channels/refresh-counts`, async (req, res) => {
     try {
       const { channelId } = req.body;
-      
+
       if (channelId) {
         // Refresh specific channel
         await storage.refreshChannelVideoCount(parseInt(channelId));
@@ -1956,12 +1958,12 @@ Status: Transcript extraction failed during import. Video may have captions that
         // Refresh all channels
         const channels = await storage.getYoutubeChannels();
         let updatedCount = 0;
-        
+
         for (const channel of channels) {
           await storage.refreshChannelVideoCount(channel.id);
           updatedCount++;
         }
-        
+
         res.json({ 
           success: true, 
           message: `Manually refreshed video counts for ${updatedCount} channels (automatic updates usually handle this)`,
@@ -2662,6 +2664,7 @@ Status: Transcript extraction failed during import. Video may have captions that
         return res.status(404).json({ message: "Sidebar configuration not found" });
       }
 
+      //```text
       // Delete config (will cascade delete items)
       await db.delete(schema.sidebarConfigs)
         .where(eq(schema.sidebarConfigs.id, sidebarConfigId));

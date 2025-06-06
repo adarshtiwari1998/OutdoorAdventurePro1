@@ -634,7 +634,9 @@ const YoutubeImport = () => {
         title: "Success",
         description: "Youtube video deleted successfully",
       });
+      // Invalidate both videos and channels queries to ensure counts are updated
       queryClient.invalidateQueries({ queryKey: ['/api/admin/youtube/videos'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/admin/youtube/channels'] });
     },
     onError: (error) => {
       toast({

@@ -238,6 +238,15 @@ export const storage = {
       console.log(`✅ Final category name for "${channel.name}": ${finalCategoryNames || 'No categories'}`);
       console.log(`📊 Real-time video count for "${channel.name}": ${realTimeVideoCount}`);
 
+      // Update the stored count if it's different from real-time count
+      if (channel.importedVideoCount !== realTimeVideoCount) {
+        console.log(`🔄 Updating stored count for "${channel.name}" from ${channel.importedVideoCount} to ${realTimeVideoCount}`);
+        // Fire-and-forget update to sync the stored count
+        this.setYoutubeChannelImportedCount(channel.id, realTimeVideoCount).catch(err => 
+          console.warn(`⚠️ Failed to update stored count for channel ${channel.id}:`, err)
+        );
+      }
+
       return {
         ...channel,
         categoryNames: finalCategoryNames,
@@ -804,8 +813,12 @@ export const storage = {
       // Delete the video
       await db.delete(youtubeVideos).where(eq(youtubeVideos.id, id));
 
-      // Update channel categories after deletion (this will trigger count recalculation)
+      // Immediately update the channel's video count after deletion
       if (video?.channelId) {
+        // Get the new count and update it
+        await this.refreshChannelVideoCount(video.channelId);
+        
+        // Also update channel categories after deletion
         await this.updateChannelCategories(video.channelId);
         console.log(`✅ Auto-updated channel ${video.channelId} counts after deleting video ${id}`);
       }
