@@ -924,8 +924,8 @@ export const storage = {
               name: "Fishing",
               slug: "fishing",
             },
-            author:{
-              name: "Robert Streams",<previous_generation>
+            author: {
+              name: "RobertStreams",
               avatar: "https://ui-avatars.com/api/?name=Robert+Streams&background=random",
             },
             publishedAt: new Date(Date.now() - 21 * 24 * 60 * 60 * 1000).toISOString(),
@@ -1250,7 +1250,7 @@ export const storage = {
 
       // Get total count for pagination
       const countQuery = db.select({
-        count: sql<number>`count(*)`
+        count: sql<number>`count(*)`,
       }).from(blogPosts)
         .leftJoin(categories, eq(blogPosts.categoryId, categories.id));
 
@@ -1913,6 +1913,7 @@ export const storage = {
       // Build where condition based on video type
       let whereCondition;
 ```text
+```python
       if (videoType === 'all') {
         whereCondition = eq(schema.youtubeVideos.categoryId, categoryId);
       } else {
@@ -2048,6 +2049,39 @@ export const storage = {
       await db.delete(schema.favoriteDestinations).where(eq(schema.favoriteDestinations.id, id));
     } catch (error) {
       console.error(`Error deleting favorite destination ${id}:`, error);
+      throw error;
+    }
+  },
+  async getYoutubeVideos(channelId?: string): Promise<any[]> {
+    try {
+      let whereCondition: any = {};
+
+      if (channelId) {
+        whereCondition = eq(schema.youtubeVideos.channelId, parseInt(channelId));
+      }
+
+      const videos = await db.query.youtubeVideos.findMany({
+        where: Object.keys(whereCondition).length > 0 ? whereCondition : undefined,
+        with: {
+          channel: {
+            columns: {
+              name: true,
+              channelId: true
+            }
+          },
+          category: {
+            columns: {
+              id: true,
+              name: true
+            }
+          }
+        },
+        orderBy: [desc(schema.youtubeVideos.publishedAt)],
+      });
+
+      return videos;
+    } catch (error) {
+      console.error("Error fetching YouTube videos:", error);
       throw error;
     }
   }

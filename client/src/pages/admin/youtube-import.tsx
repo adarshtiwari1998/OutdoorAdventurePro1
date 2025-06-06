@@ -248,8 +248,9 @@ const YoutubeImport = () => {
   // Filter videos based on selected filters
   const filteredVideos = videos?.filter(video => {
     const categoryMatch = filterCategory === "all" || 
-                         (filterCategory === "no-category" && !video.categoryId) ||
-                         (video.categoryId && video.categoryId === filterCategory);
+                         (filterCategory === "no-category" && (!video.categoryId && !video.category)) ||
+                         (video.categoryId && video.categoryId.toString() === filterCategory) ||
+                         (video.category && video.category.id.toString() === filterCategory);
 
     const channelMatch = filterChannel === "all" || video.channelId === filterChannel;
 
@@ -1193,11 +1194,11 @@ const YoutubeImport = () => {
               )}
 
               {/* Quick action for videos without categories */}
-              {filteredVideos && filteredVideos.filter(v => !v.category).length > 0 && (
+              {filteredVideos && filteredVideos.filter(v => !v.categoryId && !v.category).length > 0 && (
                 <div className="mb-4 p-4 bg-orange-50 dark:bg-orange-900/20 rounded-lg">
                   <div className="flex items-center gap-4">
                     <span className="text-sm font-medium text-orange-700 dark:text-orange-300">
-                      {filteredVideos.filter(v => !v.category).length} videos without category (in current filter)
+                      {filteredVideos.filter(v => !v.categoryId && !v.category).length} videos without category (in current filter)
                     </span>
                     <Select value={bulkCategoryId} onValueChange={setBulkCategoryId}>
                       <SelectTrigger className="w-48">
@@ -1213,7 +1214,7 @@ const YoutubeImport = () => {
                     </Select>
                     <Button 
                       onClick={() => {
-                        const videosWithoutCategory = filteredVideos?.filter(v => !v.category).map(v => v.id) || [];
+                        const videosWithoutCategory = filteredVideos?.filter(v => !v.categoryId && !v.category).map(v => v.id) || [];
 
                         if (videosWithoutCategory.length === 0) {
                           toast({
@@ -1249,7 +1250,7 @@ const YoutubeImport = () => {
                     <Button 
                       variant="ghost" 
                       onClick={() => {
-                        const videosWithoutCategory = filteredVideos?.filter(v => !v.category).map(v => v.id) || [];
+                        const videosWithoutCategory = filteredVideos?.filter(v => !v.categoryId && !v.category).map(v => v.id) || [];
                         setSelectedVideos(videosWithoutCategory);
                       }}
                       size="sm"
@@ -1339,10 +1340,35 @@ const YoutubeImport = () => {
                             </div>
                           </TableCell>
                           <TableCell>
-                            {video.category ? (
-                              <Badge variant="outline">
-                                {video.category.name}
-                              </Badge>
+                            {video.categoryId ? (
+                              <div className="flex items-center gap-2">
+                                <Badge variant="outline">
+                                  {blogCategories?.find(cat => cat.id === video.categoryId.toString())?.name || `Category ID: ${video.categoryId}`}
+                                </Badge>
+                                <Select 
+                                  value={video.categoryId.toString()} 
+                                  onValueChange={(categoryId) => {
+                                    if (categoryId && categoryId !== "" && categoryId !== "NaN" && categoryId !== video.categoryId.toString()) {
+                                      console.log('Individual category update:', { videoId: video.id, categoryId });
+                                      bulkUpdateCategoryMutation.mutate({
+                                        videoIds: [video.id],
+                                        categoryId: categoryId
+                                      });
+                                    }
+                                  }}
+                                >
+                                  <SelectTrigger className="w-32 h-7 text-xs">
+                                    <SelectValue placeholder="Change" />
+                                  </SelectTrigger>
+                                  <SelectContent>
+                                    {blogCategories?.map(category => (
+                                      <SelectItem key={category.id} value={category.id}>
+                                        {category.name}
+                                      </SelectItem>
+                                    ))}
+                                  </SelectContent>
+                                </Select>
+                              </div>
                             ) : (
                               <div className="flex items-center gap-2">
                                 <span className="text-muted-foreground text-sm">No Category</span>
