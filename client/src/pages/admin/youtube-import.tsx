@@ -951,8 +951,7 @@ const YoutubeImport = () => {
       {Array(3).fill(0).map((_, i) => (
         <TableRow key={i}>
           <TableCell><Skeleton className="h-5 w-48" /></TableCell>
-          <TableCell><Skeleton className="h-5 w-32" /></TableCell>
-          <TableCell><Skeleton className="h-5 w-32" /></TableCell>
+          <TableCell><Skeleton className="h-5 w-32" /></TableCell          <TableCell><Skeleton className="h-5 w-32" /></TableCell>
           <TableCell><Skeleton className="h-5 w-16" /></TableCell>
           <TableCell><Skeleton className="h-5 w-16" /></TableCell>
           <TableCell><Skeleton className="h-5 w-16" /></TableCell>
@@ -1155,7 +1154,7 @@ const YoutubeImport = () => {
                                 </AlertDialogContent>
                               </AlertDialog>
                             </div>
-                          </TableCell></old_str>
+                          </TableCell>
                         </TableRow>
                       ))
                     )}
@@ -1700,7 +1699,7 @@ const YoutubeImport = () => {
                                 </AlertDialogContent>
                               </AlertDialog>
                             </div>
-                          </TableCell></old_str>
+                          </TableCell>
                         </TableRow>
 
                         {/* Expandable row content */}
