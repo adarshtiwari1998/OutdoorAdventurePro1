@@ -339,7 +339,7 @@ export const storage = {
       if (!videoData.viewCount && process.env.AUTO_FETCH_STATS === 'true') {
         console.log(`📊 Auto-fetching statistics for new video: ${videoData.videoId}`);
         try {
-          const { YouTubeService } = await import('./services/youtubeService');
+          const { YouTubeService } = await import('../services/youtubeService');
           const youtubeService = new YouTubeService();
           const stats = await youtubeService.updateVideoStatistics(videoData.videoId);
 
@@ -925,7 +925,7 @@ export const storage = {
               slug: "fishing",
             },
             author:{
-              name: "Robert Streams",<previous_generation>
+              name: "Robert Streams",
               avatar: "https://ui-avatars.com/api/?name=Robert+Streams&background=random",
             },
             publishedAt: new Date(Date.now() - 21 * 24 * 60 * 60 * 1000).toISOString(),
@@ -1912,7 +1912,6 @@ export const storage = {
 
       // Build where condition based on video type
       let whereCondition;
-```text
       if (videoType === 'all') {
         whereCondition = eq(schema.youtubeVideos.categoryId, categoryId);
       } else {
