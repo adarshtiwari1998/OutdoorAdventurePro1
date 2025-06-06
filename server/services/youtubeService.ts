@@ -582,7 +582,7 @@ export class YouTubeService {
             if (availableLanguages.length > 0) {
               const firstAvailableLang = availableLanguages[0];
               console.log(`🔄 Strategy 3/6: First available language (${firstAvailableLang}) for video: ${videoId}`);
-              await new Promise(resolve => setTimeout(resolve, 12000));
+              await new Promise(resolve => setTimeout(resolve, 8000));
 
               transcriptData = await YoutubeTranscript.fetchTranscript(videoId, { lang: firstAvailableLang });
               extractionMethod = `Language-Specific (${firstAvailableLang})`;
