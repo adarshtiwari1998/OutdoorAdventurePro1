@@ -270,20 +270,28 @@ const CategoryVideos = () => {
                     </SelectTrigger>
                     <SelectContent className="max-h-60 overflow-y-auto">
                       {/* Header categories (landing pages) */}
-                      <optgroup>
-                        {availableCategories.map((config: any) => (
-                          <SelectItem key={config.category} value={config.category}>
-                            {config.category.charAt(0).toUpperCase() + config.category.slice(1)} (Landing Page)
-                          </SelectItem>
-                        ))}
-                      </optgroup>
+                      {availableCategories.length > 0 && (
+                        <>
+                          {availableCategories.map((config: any) => (
+                            <SelectItem key={config.category} value={config.category}>
+                              {config.category.charAt(0).toUpperCase() + config.category.slice(1)} (Landing Page)
+                            </SelectItem>
+                          ))}
+                          {categories && categories.length > 0 && <hr className="my-2" />}
+                        </>
+                      )}
                       
                       {/* Activity categories */}
-                      {categories?.filter((cat: any) => cat.type === 'activity').map((category: any) => (
-                        <SelectItem key={category.id} value={category.id.toString()}>
-                          {getCategoryDisplayText(category)}
-                        </SelectItem>
-                      ))}
+                      {categories?.filter((cat: any) => cat.type === 'activity').length > 0 && (
+                        <>
+                          {categories.filter((cat: any) => cat.type === 'activity').map((category: any) => (
+                            <SelectItem key={`activity-${category.id}`} value={category.id.toString()}>
+                              {getCategoryDisplayText(category)}
+                            </SelectItem>
+                          ))}
+                          {categories.filter((cat: any) => cat.type === 'blog').length > 0 && <hr className="my-2" />}
+                        </>
+                      )}
                       
                       {/* Blog categories that don't have landing pages */}
                       {categories?.filter((cat: any) => 
@@ -292,7 +300,7 @@ const CategoryVideos = () => {
                           header.category.toLowerCase() === cat.name.toLowerCase()
                         )
                       ).map((category: any) => (
-                        <SelectItem key={category.id} value={category.id.toString()}>
+                        <SelectItem key={`blog-${category.id}`} value={category.id.toString()}>
                           {getCategoryDisplayText(category)}
                         </SelectItem>
                       ))}
@@ -305,7 +313,7 @@ const CategoryVideos = () => {
                           header.category.toLowerCase() === cat.name.toLowerCase()
                         )
                       ).map((category: any) => (
-                        <SelectItem key={category.id} value={category.id.toString()}>
+                        <SelectItem key={`other-${category.id}`} value={category.id.toString()}>
                           {getCategoryDisplayText(category)}
                         </SelectItem>
                       ))}
