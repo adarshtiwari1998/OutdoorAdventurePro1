@@ -217,7 +217,7 @@ export const storage = {
     await db.update(schema.youtubeChannels)
       .set({ lastImport: new Date() })
       .where(eq(schema.youtubeChannels.id, channelId));
-  }
+  },
 
   async autoAssignChannelCategories(): Promise<{ channelsUpdated: number, results: Array<{ channelId: number, channelName: string, assignedCategoryId: number, assignedCategoryName: string, videoCount: number }> }> {
     console.log('🔄 Starting auto-assignment of channel categories based on video categories...');

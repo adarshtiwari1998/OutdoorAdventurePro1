@@ -948,6 +948,7 @@ const YoutubeImport = () => {
   const handleBulkFetchTranscripts = () => {
     if (selectedVideos.length === 0) {
       toast({
+        ```text
         title: "No Videos Selected",
         description: "Please select videos to fetch transcripts for",
         variant: "destructive",
@@ -1046,8 +1047,8 @@ const YoutubeImport = () => {
                     <TableHead>Subscribers</TableHead>
                     <TableHead>Total Videos</TableHead>
                     <TableHead>Imported Videos</TableHead>
-                    <TableHead>Last Import</TableHead>
                     <TableHead>Category</TableHead>
+                    <TableHead>Last Import</TableHead>
                     <TableHead>Actions</TableHead>
                   </TableRow>
                 </TableHeader>
@@ -1067,24 +1068,22 @@ const YoutubeImport = () => {
                       <TableCell className="text-xs font-mono">{channel.channelId}</TableCell>
                       <TableCell>{channel.subscribers?.toLocaleString()}</TableCell>
                       <TableCell>{channel.videoCount?.toLocaleString()}</TableCell>
-                      <TableCell>
-                        <Badge variant="secondary">{channel.importedVideoCount}</Badge>
-                      </TableCell>
-                      <TableCell className="text-sm text-gray-600">
-                        {channel.lastImport 
-                          ? new Date(channel.lastImport).toLocaleDateString()
-                          : "Never"
-                        }
-                      </TableCell>
-                      <TableCell>
-                        {channel.category ? (
-                          <Badge variant="outline" className="text-xs">
-                            {channel.category.name}
-                          </Badge>
-                        ) : (
-                          <span className="text-gray-400 text-xs">No Category</span>
-                        )}
-                      </TableCell>
+                      <TableCell>{channel.importedVideoCount || 0}</TableCell>
+                    <TableCell>
+                      <span className={`px-2 py-1 rounded text-xs ${
+                        channel.category 
+                          ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200' 
+                          : 'bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-400'
+                      }`}>
+                        {channel.category?.name || 'No Category'}
+                      </span>
+                    </TableCell>
+                    <TableCell>
+                      {channel.lastImport 
+                        ? new Date(channel.lastImport).toLocaleDateString()
+                        : 'Never'
+                      }
+                    </TableCell>
                           <TableCell className="text-right">
                             <Button 
                               variant="outline" 
@@ -1767,13 +1766,12 @@ const YoutubeImport = () => {
         </TabsContent>
 
         <TabsContent value="add">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">```text
             <Card>
               <CardHeader>
                 <CardTitle>Add Youtube Channel</CardTitle>
                 <CardDescription>
-                  Connect a Youtube channel to import```text
-videos from.
+                  Connect a Youtube channel to import videos from.
                 </CardDescription>
               </CardHeader>
               <CardContent>
