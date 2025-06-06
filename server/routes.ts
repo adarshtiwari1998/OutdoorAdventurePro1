@@ -1529,28 +1529,48 @@ app.delete(`${apiPrefix}/admin/wordpress/credentials`, async (req, res) => {
       res.status(500).json({ message: "Failed to fetch YouTube channels" });
     }
   });
-app.get(`${apiPrefix}/admin/youtube/videos`, async (req, res) => {
+// Get videos for a specific channel or all videos
+  app.get(`${apiPrefix}/admin/youtube/videos`, async (req, res) => {
     try {
       const { channelId } = req.query;
 
-      let whereCondition;
+      let videos;
       if (channelId) {
-        whereCondition = eq(schema.youtubeVideos.channelId, parseInt(channelId as string));
+        videos = await storage.getYoutubeVideosByChannel(channelId as string);
+      } else {
+        // Fetch all videos from all channels
+        videos = await storage.getAllYoutubeVideos();
       }
 
-      const videos = await db.query.youtubeVideos.findMany({
-        where: whereCondition,
-        orderBy: [desc(schema.youtubeVideos.publishedAt)],
-        with: {
-          category: true,
-          channel: true, // Include channel information
-        },
-      });
+      // Add channel and category information
+      const enrichedVideos = await Promise.all(
+        videos.map(async (video) => {
+          const channel = await storage.getYoutubeChannelById(video.channelId);
+          const category = video.categoryId ? await storage.getBlogCategories().then(cats => 
+            cats.find(cat => cat.id === video.categoryId)
+          ) : null;
 
-      res.json(videos);
+          return {
+            ...video,
+            channel: channel ? {
+              id: channel.id,
+              name: channel.name,
+              channelId: channel.channelId
+            } : null,
+            category: category ? {
+              id: category.id,
+              name: category.name,
+              slug: category.slug
+            } : null,
+            channelName: channel?.name || 'Unknown Channel'
+          };
+        })
+      );
+
+      res.json(enrichedVideos);
     } catch (error) {
-      console.error('Error fetching YouTube videos:', error);
-      res.status(500).json({ message: 'Failed to fetch videos' });
+      console.error("Error fetching YouTube videos:", error);
+      res.status(500).json({ message: "Failed to fetch YouTube videos" });
     }
   });
 

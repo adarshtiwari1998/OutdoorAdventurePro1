@@ -283,6 +283,17 @@ export const storage = {
     }
   },
 
+  async getAllYoutubeVideos() {
+    try {
+      return await db.query.youtubeVideos.findMany({
+        orderBy: desc(youtubeVideos.publishedAt),
+      });
+    } catch (error) {
+      console.error('Error getting all YouTube videos:', error);
+      throw error;
+    }
+  },
+
   async getYoutubeVideoById(id: number) {
     try {
       return await db.query.youtubeVideos.findFirst({
