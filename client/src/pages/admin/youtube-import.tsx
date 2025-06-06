@@ -1066,14 +1066,19 @@ const YoutubeImport = () => {
                                   <div className="font-medium text-gray-900 dark:text-gray-100">
                                     {channel.categoryNames}
                                   </div>
-                                  {channel.categoryIdsArray && (
+                                  {channel.categoryIdsArray && channel.categoryIdsArray.length > 0 && (
                                     <div className="text-xs text-gray-500 dark:text-gray-400 font-mono">
                                       IDs: {channel.categoryIdsArray.join(', ')}
                                     </div>
                                   )}
                                 </div>
                               ) : (
-                                <span className="text-sm text-gray-500 dark:text-gray-400">No categories</span>
+                                <div className="text-sm">
+                                  <span className="text-gray-500 dark:text-gray-400">No categories</span>
+                                  <div className="text-xs text-orange-600 dark:text-orange-400 mt-1">
+                                    Click "Update Categories" to assign
+                                  </div>
+                                </div>
                               )}
                             </div>
                           </TableCell>

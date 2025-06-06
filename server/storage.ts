@@ -185,6 +185,7 @@ export const storage = {
     // Add category names to channels
     const channelsWithCategories = channels.map(channel => {
       let categoryNames = [];
+      let categoryIdsArray = [];
 
       console.log(`🔍 Processing channel "${channel.name}":`, {
         categoryId: channel.categoryId,
@@ -196,6 +197,7 @@ export const storage = {
         const categoryIdsList = channel.categoryIds.split(',').filter(id => id.trim());
         console.log(`📋 Found categoryIds list:`, categoryIdsList);
         
+        categoryIdsArray = categoryIdsList;
         categoryNames = categoryIdsList
           .map(id => {
             const categoryName = categoryMap.get(id.trim());
@@ -211,15 +213,17 @@ export const storage = {
         console.log(`🏷️ Using single categoryId ${channel.categoryId} -> ${categoryName}`);
         if (categoryName) {
           categoryNames = [categoryName];
+          categoryIdsArray = [channel.categoryId.toString()];
         }
       }
 
-      const finalCategoryName = categoryNames.length > 0 ? categoryNames.join(', ') : 'No categories';
-      console.log(`✅ Final category name for "${channel.name}": ${finalCategoryName}`);
+      const finalCategoryNames = categoryNames.length > 0 ? categoryNames.join(', ') : null;
+      console.log(`✅ Final category name for "${channel.name}": ${finalCategoryNames || 'No categories'}`);
 
       return {
         ...channel,
-        categoryName: finalCategoryName
+        categoryNames: finalCategoryNames,
+        categoryIdsArray: categoryIdsArray
       };
     });
 
