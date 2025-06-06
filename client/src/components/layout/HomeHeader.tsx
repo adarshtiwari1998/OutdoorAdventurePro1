@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useRef } from "react";
 import { Link, useLocation } from "wouter";
 import { useMobile } from "@/hooks/use-mobile";
@@ -91,16 +90,16 @@ const HomeHeader = () => {
           const currentScrollY = window.scrollY;
           const scrollThreshold = 100;
           const hideThreshold = 200;
-          
+
           // Determine scroll direction and speed
           const scrollDelta = currentScrollY - lastScrollY;
           const scrollingDown = scrollDelta > 0;
           const scrollingUp = scrollDelta < 0;
           const isScrollingFast = Math.abs(scrollDelta) > 10;
-          
+
           if (currentScrollY > scrollThreshold) {
             setIsScrolled(true);
-            
+
             // Only hide/show header based on scroll direction and speed
             if (scrollingDown && currentScrollY > hideThreshold && isScrollingFast) {
               setShowMainHeader(false);
@@ -111,7 +110,7 @@ const HomeHeader = () => {
             setIsScrolled(false);
             setShowMainHeader(true);
           }
-          
+
           setLastScrollY(currentScrollY);
           ticking = false;
         });
@@ -304,9 +303,9 @@ const HomeHeader = () => {
                     {headerConfig.logoText}
                   </span>
                 </Link>
-                
+
                 {/* Activity Circles - Compact */}
-                <div className="flex items-center gap-2 ml-4">
+                <div className="flex items-center justify-center gap-2 ml-4">
                   {activities?.slice(0, 6).map((activity) => (
                     <Link 
                       key={activity.id} 
@@ -376,73 +375,78 @@ const HomeHeader = () => {
           ) : (
             /* Normal Layout - Navigation row */
             <div className="flex justify-between items-center">
-              {/* Main Navigation - Desktop */}
+              {/* Main Navigation - Desktop - Centered */}
               {!isMobile && (
-                <nav className="flex items-center space-x-6">
-                  {headerConfig.menuItems.map((item) => (
-                    <div 
-                      key={typeof item.id === 'string' ? item.id : `menu-${item.id}`}
-                      className="relative"
-                      onMouseEnter={() => {
-                        if (item.hasMegaMenu && typeof item.id === 'number') {
-                          handleMenuMouseEnter(item.id);
-                        }
-                      }}
-                      onMouseLeave={handleMenuMouseLeave}
-                    >
-                      <Link 
-                        href={item.path} 
-                        className={`font-medium hover:text-theme transition flex items-center gap-1 ${activeMegaMenu === item.id ? 'text-theme' : ''}`}
-                        onClick={() => setActiveMegaMenu(null)}
+                <div className="flex-1 flex justify-center">
+                  <nav className="flex items-center space-x-8">
+                    {headerConfig.menuItems.map((item) => (
+                      <div 
+                        key={typeof item.id === 'string' ? item.id : `menu-${item.id}`}
+                        className="relative"
+                        onMouseEnter={() => {
+                          if (item.hasMegaMenu && typeof item.id === 'number') {
+                            handleMenuMouseEnter(item.id);
+                          }
+                        }}
+                        onMouseLeave={handleMenuMouseLeave}
                       >
-                        {item.label}
-                        {item.hasMegaMenu && <ChevronDown size={16} />}
-                      </Link>
-                    </div>
-                  ))}
-                </nav>
+                        <Link 
+                          href={item.path} 
+                          className={`font-medium hover:text-theme transition flex items-center gap-1 ${activeMegaMenu === item.id ? 'text-theme' : ''}`}
+                          onClick={() => setActiveMegaMenu(null)}
+                        >
+                          {item.label}
+                          {item.hasMegaMenu && <ChevronDown size={16} />}
+                        </Link>
+                      </div>
+                    ))}
+                  </nav>
+                </div>
               )}
 
-              {/* Search Bar */}
-              <div className="flex-1 max-w-md mx-6">
-                <div className="relative">
-                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={18} />
-                  <input
-                    type="text"
-                    placeholder="Search destinations, activities..."
-                    className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-full focus:outline-none focus:ring-2 focus:ring-theme focus:border-transparent text-sm"
-                  />
+              {/* Search Bar and Action Buttons */}
+              <div className="flex items-center space-x-4">
+                {/* Search Bar */}
+                <div className="max-w-sm">
+                  <div className="relative">
+                    <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={16} />
+                    <input
+                      type="text"
+                      placeholder="Search destinations, activities..."
+                      className="w-full pl-8 pr-4 py-2 border border-gray-300 rounded-full focus:outline-none focus:ring-2 focus:ring-theme focus:border-transparent text-sm"
+                    />
+                  </div>
                 </div>
-              </div>
 
-              {/* Action Buttons */}
-              <div className="flex items-center space-x-3">
-                {!isMobile && (
-                  <>
-                    <button className="bg-transparent border border-theme text-theme hover:bg-theme hover:text-white transition rounded-full px-4 py-2 font-medium text-sm">
-                      Sign In
-                    </button>
-                    <button className="bg-orange-500 text-white hover:bg-theme-dark transition rounded-full px-4 py-2 font-medium text-sm">
-                      Join Now
-                    </button>
-                  </>
-                )}
-                <Link href="/cart" className="relative">
-                  <ShoppingCart className="text-gray-700 hover:text-theme transition" size={20} />
-                  {(typeof cartCount === 'number' && cartCount > 0) && (
-                    <span className="absolute -top-2 -right-2 bg-theme text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">
-                      {cartCount > 9 ? '9+' : cartCount}
-                    </span>
+                {/* Action Buttons */}
+                <div className="flex items-center space-x-3">
+                  {!isMobile && (
+                    <>
+                      <button className="bg-transparent border border-theme text-theme hover:bg-theme hover:text-white transition rounded-full px-4 py-2 font-medium text-sm">
+                        Sign In
+                      </button>
+                      <button className="bg-orange-500 text-white hover:bg-theme-dark transition rounded-full px-4 py-2 font-medium text-sm">
+                        Join Now
+                      </button>
+                    </>
                   )}
-                </Link>
-                {isMobile && (
-                  <button 
-                    className="text-gray-700 hover:text-theme transition" 
-                    onClick={toggleMobileMenu}
-                  >
-                    <Menu size={20} />
-                  </button>
-                )}
+                  <Link href="/cart" className="relative">
+                    <ShoppingCart className="text-gray-700 hover:text-theme transition" size={20} />
+                    {(typeof cartCount === 'number' && cartCount > 0) && (
+                      <span className="absolute -top-2 -right-2 bg-theme text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">
+                        {cartCount > 9 ? '9+' : cartCount}
+                      </span>
+                    )}
+                  </Link>
+                  {isMobile && (
+                    <button 
+                      className="text-gray-700 hover:text-theme transition" 
+                      onClick={toggleMobileMenu}
+                    >
+                      <Menu size={20} />
+                    </button>
+                  )}
+                </div>
               </div>
             </div>
           )}
