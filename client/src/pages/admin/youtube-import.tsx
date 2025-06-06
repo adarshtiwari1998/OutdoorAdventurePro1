@@ -1096,63 +1096,66 @@ const YoutubeImport = () => {
                             }
                           </TableCell>
                           <TableCell className="text-right">
-                            <Button 
-                              variant="outline" 
-                              size="sm" 
-                              className="mr-2"
-                              onClick={() => handleImportFromChannel(channel.id.toString())}
-                              disabled={importChannelVideosMutation.isPending || importProgress.isImporting}
-                            >
-                              {importProgress.isImporting && importChannelId === channel.id ? (
-                                <RefreshCw className="h-4 w-4 mr-1 animate-spin" />
-                              ) : (
-                                <RefreshCw className="h-4 w-4 mr-1" />
-                              )}
-                              Import
-                            </Button>
-                            <Button 
-                              variant="outline" 
-                              size="sm" 
-                              className="mr-2"
-                              onClick={() => handleUpdateChannelCategories(channel.id.toString())}
-                              disabled={updateCategoriesMutation.isPending}
-                            >
-                              {updateCategoriesMutation.isPending ? (
-                                <RefreshCw className="h-4 w-4 mr-1 animate-spin" />
-                              ) : (
-                                <RefreshCw className="h-4 w-4 mr-1" />
-                              )}
-                              Update Categories
-                            </Button>
-                            <AlertDialog>
-                              <AlertDialogTrigger asChild>
-                                <Button 
-                                  variant="destructive" 
-                                  size="sm"
-                                  onClick={(e) => e.stopPropagation()}
-                                >
-                                  <Trash2 className="h-4 w-4 mr-1" />
-                                  Delete
-                                </Button>
-                              </AlertDialogTrigger>
-                              <AlertDialogContent>
-                                <AlertDialogHeader>
-                                  <AlertDialogTitle>Delete Channel</AlertDialogTitle>
-                                  <AlertDialogDescription>
-                                    Are you sure you want to delete this channel? This will remove the channel and all associated videos from your database.
-                                  </AlertDialogDescription>
-                                </AlertDialogHeader>
-                                <AlertDialogFooter>
-                                  <AlertDialogCancel>Cancel</AlertDialogCancel>
-                                  <AlertDialogAction 
-                                    onClick={() => handleDeleteChannel(channel.id.toString())}
+                            <div className="flex items-center justify-end gap-2 min-w-[280px]">
+                              <Button 
+                                variant="outline" 
+                                size="sm" 
+                                className="h-8 px-3 font-medium hover:bg-blue-50 hover:text-blue-600 hover:border-blue-300 transition-all duration-200 shadow-sm"
+                                onClick={() => handleImportFromChannel(channel.id.toString())}
+                                disabled={importChannelVideosMutation.isPending || importProgress.isImporting}
+                              >
+                                {importProgress.isImporting && importChannelId === channel.id ? (
+                                  <RefreshCw className="h-3.5 w-3.5 mr-1.5 animate-spin" />
+                                ) : (
+                                  <RefreshCw className="h-3.5 w-3.5 mr-1.5" />
+                                )}
+                                Import
+                              </Button>
+                              <Button 
+                                variant="outline" 
+                                size="sm" 
+                                className="h-8 px-3 font-medium hover:bg-green-50 hover:text-green-600 hover:border-green-300 transition-all duration-200 shadow-sm"
+                                onClick={() => handleUpdateChannelCategories(channel.id.toString())}
+                                disabled={updateCategoriesMutation.isPending}
+                              >
+                                {updateCategoriesMutation.isPending ? (
+                                  <RefreshCw className="h-3.5 w-3.5 mr-1.5 animate-spin" />
+                                ) : (
+                                  <RefreshCw className="h-3.5 w-3.5 mr-1.5" />
+                                )}
+                                Update Categories
+                              </Button>
+                              <AlertDialog>
+                                <AlertDialogTrigger asChild>
+                                  <Button 
+                                    variant="destructive" 
+                                    size="sm"
+                                    className="h-8 px-3 font-medium bg-red-500 hover:bg-red-600 border-red-500 hover:border-red-600 transition-all duration-200 shadow-sm"
+                                    onClick={(e) => e.stopPropagation()}
                                   >
+                                    <Trash2 className="h-3.5 w-3.5 mr-1.5" />
                                     Delete
-                                  </AlertDialogAction>
-                                </AlertDialogFooter>
-                              </AlertDialogContent>
-                            </AlertDialog>
-                          </TableCell>
+                                  </Button>
+                                </AlertDialogTrigger>
+                                <AlertDialogContent>
+                                  <AlertDialogHeader>
+                                    <AlertDialogTitle>Delete Channel</AlertDialogTitle>
+                                    <AlertDialogDescription>
+                                      Are you sure you want to delete this channel? This will remove the channel and all associated videos from your database.
+                                    </AlertDialogDescription>
+                                  </AlertDialogHeader>
+                                  <AlertDialogFooter>
+                                    <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                    <AlertDialogAction 
+                                      onClick={() => handleDeleteChannel(channel.id.toString())}
+                                    >
+                                      Delete
+                                    </AlertDialogAction>
+                                  </AlertDialogFooter>
+                                </AlertDialogContent>
+                              </AlertDialog>
+                            </div>
+                          </TableCell></old_str>
                         </TableRow>
                       ))
                     )}
@@ -1552,149 +1555,152 @@ const YoutubeImport = () => {
                             )}
                           </TableCell>
                           <TableCell className="text-right sticky right-0 bg-white dark:bg-gray-950 z-10 border-l">
-                            {video.importStatus === 'imported' && video.blogPostId ? (
-                              <Button
-                                variant="outline"
-                                size="sm"
-                                className="mr-2"
-                                asChild
-                              >
-                                <a 
-                                  href={`/admin/blog?post=${video.blogPostId}`} 
-                                  target="_blank" 
-                                  rel="noopener noreferrer"
+                            <div className="flex items-center justify-end gap-2 min-w-[200px]">
+                              {video.importStatus === 'imported' && video.blogPostId ? (
+                                <Button
+                                  variant="outline"
+                                  size="sm"
+                                  className="h-8 px-3 font-medium hover:bg-blue-50 hover:text-blue-600 hover:border-blue-300 transition-all duration-200 shadow-sm"
+                                  asChild
                                 >
-                                  <FileText className="h-4 w-4 mr-1" />
-                                  View Post
-                                </a>
-                              </Button>
-                            ) : (
+                                  <a 
+                                    href={`/admin/blog?post=${video.blogPostId}`} 
+                                    target="_blank" 
+                                    rel="noopener noreferrer"
+                                  >
+                                    <FileText className="h-3.5 w-3.5 mr-1.5" />
+                                    View Post
+                                  </a>
+                                </Button>
+                              ) : (
+                                <AlertDialog>
+                                  <AlertDialogTrigger asChild>
+                                    <Button 
+                                      variant="outline" 
+                                      size="sm"
+                                      className="h-8 px-3 font-medium hover:bg-green-50 hover:text-green-600 hover:border-green-300 transition-all duration-200 shadow-sm"
+                                      onClick={() => openImportForm(video)}
+                                    >
+                                      <Upload className="h-3.5 w-3.5 mr-1.5" />
+                                      Convert
+                                    </Button>
+                                  </AlertDialogTrigger>
+                                  <AlertDialogContent>
+                                    <AlertDialogHeader>
+                                      <AlertDialogTitle>Convert to Blog Post</AlertDialogTitle>
+                                      <AlertDialogDescription>
+                                        This will convert the Youtube video transcript into a blog post using Gemini AI.
+                                      </AlertDialogDescription>
+                                    </AlertDialogHeader>
+                                    <form onSubmit={importForm.handleSubmit(onConvertSubmit)}>
+                                      <div className="space-y-4 py-4">
+                                        <input 
+                                          type="hidden" 
+                                          {...importForm.register("videoId")}
+                                        />
+
+                                        <div className="space-y-2">
+                                          <label htmlFor="title" className="text-sm font-medium">
+                                            Blog Post Title
+                                          </label>
+                                          <Input 
+                                            id="title" 
+                                            placeholder="Use video title or customize" 
+                                            {...importForm.register("title")}
+                                          />
+                                        </div>
+
+                                        <div className="space-y-2">
+                                          <label htmlFor="category" className="text-sm font-medium">
+                                            Blog Category
+                                          </label>
+                                          <select 
+                                            id="category"
+                                            className="w-full px-3 py-2 border border-input rounded-md focus:outline-none focus:ring-2 focus:ring-primary"
+                                            {...importForm.register("categoryId", { required: true })}
+                                          >
+                                            <option value="">Select a category</option>
+                                            {blogCategories?.map(category => (
+                              <option key={category.id} value={category.id.toString()}>
+                                {category.name}
+                              </option>
+                            ))}
+                                          </select>
+                                          {importForm.formState.errors.categoryId && (
+                                            <p className="text-sm text-destructive">Category is required</p>
+                                          )}
+                                        </div>
+
+                                        <div className="flex items-center space-x-2">
+                                          <input 
+                                            type="checkbox" 
+                                            id="summary" 
+                                            className="w-4 h-4 text-primary border-gray-300 rounded focus:ring-primary"
+                                            {...importForm.register("summary")}
+                                          />
+                                          <label htmlFor="summary" className="text-sm">
+                                            Include AI-generated summary
+                                          </label>
+                                        </div>
+
+                                        <div className="flex items-center space-x-2">
+                                          <input 
+                                            type="checkbox" 
+                                            id="tags" 
+                                            className="w-4 h-4 text-primary border-gray-300 rounded focus:ring-primary"
+                                            {...importForm.register("tags")}
+                                          />
+                                          <label htmlFor="tags" className="text-sm">
+                                            Generate relevant tags
+                                          </label>
+                                        </div>
+                                      </div>
+
+                                      <AlertDialogFooter>
+                                        <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                        <Button 
+                                          type="submit"
+                                          disabled={convertToBlogPostMutation.isPending}
+                                        >
+                                          {convertToBlogPostMutation.isPending ? "Converting..." : "Convert to Blog Post"}
+                                        </Button>
+                                      </AlertDialogFooter>
+                                    </form>
+                                  </AlertDialogContent>
+                                </AlertDialog>
+                              )}
+
                               <AlertDialog>
                                 <AlertDialogTrigger asChild>
                                   <Button 
-                                    variant="outline" 
+                                    variant="destructive" 
                                     size="sm"
-                                    className="mr-2"
-                                    onClick={() => openImportForm(video)}
+                                    className="h-8 px-3 font-medium bg-red-500 hover:bg-red-600 border-red-500 hover:border-red-600 transition-all duration-200 shadow-sm"
+                                    onClick={(e) => e.stopPropagation()}
                                   >
-                                    <Upload className="h-4 w-4 mr-1" />
-                                    Convert
+                                    <Trash2 className="h-3.5 w-3.5 mr-1.5" />
+                                    Delete
                                   </Button>
                                 </AlertDialogTrigger>
                                 <AlertDialogContent>
                                   <AlertDialogHeader>
-                                    <AlertDialogTitle>Convert to Blog Post</AlertDialogTitle>
+                                    <AlertDialogTitle>Delete Video</AlertDialogTitle>
                                     <AlertDialogDescription>
-                                      This will convert the Youtube video transcript into a blog post using Gemini AI.
+                                      Are you sure you want to delete this video from your database?
                                     </AlertDialogDescription>
                                   </AlertDialogHeader>
-                                  <form onSubmit={importForm.handleSubmit(onConvertSubmit)}>
-                                    <div className="space-y-4 py-4">
-                                      <input 
-                                        type="hidden" 
-                                        {...importForm.register("videoId")}
-                                      />
-
-                                      <div className="space-y-2">
-                                        <label htmlFor="title" className="text-sm font-medium">
-                                          Blog Post Title
-                                        </label>
-                                        <Input 
-                                          id="title" 
-                                          placeholder="Use video title or customize" 
-                                          {...importForm.register("title")}
-                                        />
-                                      </div>
-
-                                      <div className="space-y-2">
-                                        <label htmlFor="category" className="text-sm font-medium">
-                                          Blog Category
-                                        </label>
-                                        <select 
-                                          id="category"
-                                          className="w-full px-3 py-2 border border-input rounded-md focus:outline-none focus:ring-2 focus:ring-primary"
-                                          {...importForm.register("categoryId", { required: true })}
-                                        >
-                                          <option value="">Select a category</option>
-                                          {blogCategories?.map(category => (
-                            <option key={category.id} value={category.id.toString()}>
-                              {category.name}
-                            </option>
-                          ))}
-                                        </select>
-                                        {importForm.formState.errors.categoryId && (
-                                          <p className="text-sm text-destructive">Category is required</p>
-                                        )}
-                                      </div>
-
-                                      <div className="flex items-center space-x-2">
-                                        <input 
-                                          type="checkbox" 
-                                          id="summary" 
-                                          className="w-4 h-4 text-primary border-gray-300 rounded focus:ring-primary"
-                                          {...importForm.register("summary")}
-                                        />
-                                        <label htmlFor="summary" className="text-sm">
-                                          Include AI-generated summary
-                                        </label>
-                                      </div>
-
-                                      <div className="flex items-center space-x-2">
-                                        <input 
-                                          type="checkbox" 
-                                          id="tags" 
-                                          className="w-4 h-4 text-primary border-gray-300 rounded focus:ring-primary"
-                                          {...importForm.register("tags")}
-                                        />
-                                        <label htmlFor="tags" className="text-sm">
-                                          Generate relevant tags
-                                        </label>
-                                      </div>
-                                    </div>
-
-                                    <AlertDialogFooter>
-                                      <AlertDialogCancel>Cancel</AlertDialogCancel>
-                                      <Button 
-                                        type="submit"
-                                        disabled={convertToBlogPostMutation.isPending}
-                                      >
-                                        {convertToBlogPostMutation.isPending ? "Converting..." : "Convert to Blog Post"}
-                                      </Button>
-                                    </AlertDialogFooter>
-                                  </form>
+                                  <AlertDialogFooter>
+                                    <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                    <AlertDialogAction 
+                                      onClick={() => handleDeleteVideo(video.id)}
+                                    >
+                                      Delete
+                                    </AlertDialogAction>
+                                  </AlertDialogFooter>
                                 </AlertDialogContent>
                               </AlertDialog>
-                            )}
-
-                            <AlertDialog>
-                              <AlertDialogTrigger asChild>
-                                <Button 
-                                  variant="destructive" 
-                                  size="sm"
-                                  onClick={(e) => e.stopPropagation()}
-                                >
-                                  <Trash2 className="h-4 w-4 mr-1" />
-                                  Delete
-                                </Button>
-                              </AlertDialogTrigger>
-                              <AlertDialogContent>
-                                <AlertDialogHeader>
-                                  <AlertDialogTitle>Delete Video</AlertDialogTitle>
-                                  <AlertDialogDescription>
-                                    Are you sure you want to delete this video from your database?
-                                  </AlertDialogDescription>
-                                </AlertDialogHeader>
-                                <AlertDialogFooter>
-                                  <AlertDialogCancel>Cancel</AlertDialogCancel>
-                                  <AlertDialogAction 
-                                    onClick={() => handleDeleteVideo(video.id)}
-                                  >
-                                    Delete
-                                  </AlertDialogAction>
-                                </AlertDialogFooter>
-                              </AlertDialogContent>
-                            </AlertDialog>
-                          </TableCell>
+                            </div>
+                          </TableCell></old_str>
                         </TableRow>
 
                         {/* Expandable row content */}
