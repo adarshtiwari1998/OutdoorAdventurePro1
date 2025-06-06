@@ -1169,7 +1169,7 @@ const YoutubeImport = () => {
                       </SelectTrigger>
                       <SelectContent>
                         {blogCategories?.map(category => (
-                          <SelectItem key={category.id} value={category.id}>
+                          <SelectItem key={category.id} value={category.id.toString()}>
                             {category.name}
                           </SelectItem>
                         ))}
@@ -1206,7 +1206,7 @@ const YoutubeImport = () => {
                       </SelectTrigger>
                       <SelectContent>
                         {blogCategories?.map(category => (
-                          <SelectItem key={category.id} value={category.id}>
+                          <SelectItem key={category.id} value={category.id.toString()}>
                             {category.name}
                           </SelectItem>
                         ))}
