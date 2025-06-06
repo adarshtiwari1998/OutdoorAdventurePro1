@@ -366,8 +366,15 @@ const HomeHeader = () => {
                   <button 
                     className="text-gray-700 hover:text-theme transition p-1 flex-shrink-0" 
                     onClick={toggleMobileMenu}
+                    id="mobile-menu-button"
                   >
-                    <Menu size={20} />
+                    {isMobileMenuOpen ? (
+                      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" className="w-5 h-5">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                      </svg>
+                    ) : (
+                      <Menu size={20} />
+                    )}
                   </button>
                 </div>
               </div>
@@ -529,8 +536,15 @@ const HomeHeader = () => {
                     <button 
                       className="text-gray-700 hover:text-theme transition p-1" 
                       onClick={toggleMobileMenu}
+                      id="mobile-menu-button"
                     >
-                      <Menu size={18} />
+                      {isMobileMenuOpen ? (
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" className="w-[18px] h-[18px]">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                        </svg>
+                      ) : (
+                        <Menu size={18} />
+                      )}
                     </button>
                   </div>
                 </div>
