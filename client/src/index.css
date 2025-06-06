@@ -227,8 +227,8 @@
 
 /* Header smooth transitions */
 header {
-  transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  will-change: transform;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  will-change: transform, background-color, backdrop-filter;
 }
 
 .header-transition {
@@ -239,6 +239,7 @@ header {
   transform: translateY(-100%);
   visibility: hidden;
   opacity: 0;
+  pointer-events: none;
 }
 
 /* Smooth header show/hide animations */
@@ -246,13 +247,34 @@ header {
   transform: translateY(0);
   opacity: 1;
   visibility: visible;
+  pointer-events: auto;
 }
 
-/* Enhanced smooth scrolling for header */
+/* Enhanced smooth scrolling for header - Google-like */
 .smooth-header-transition {
-  transition: all 0.25s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+  transition: all 0.2s cubic-bezier(0.4, 0.0, 0.2, 1);
   backface-visibility: hidden;
   transform-style: preserve-3d;
+  position: relative;
+}
+
+/* Ensure header background is always visible */
+.smooth-header-transition.fixed {
+  background: rgba(255, 255, 255, 0.98);
+  backdrop-filter: blur(10px);
+  border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+}
+
+/* Prevent layout shift during transitions */
+.smooth-header-transition::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: inherit;
+  z-index: -1;
 }
 
 .activity-shortcuts {

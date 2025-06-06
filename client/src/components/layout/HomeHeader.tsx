@@ -89,18 +89,22 @@ const HomeHeader = () => {
       if (!ticking) {
         requestAnimationFrame(() => {
           const currentScrollY = window.scrollY;
-          const scrollThreshold = 80;
+          const scrollThreshold = 100;
+          const hideThreshold = 200;
           
-          // Determine scroll direction
-          const scrollingDown = currentScrollY > lastScrollY;
-          const scrollingUp = currentScrollY < lastScrollY;
+          // Determine scroll direction and speed
+          const scrollDelta = currentScrollY - lastScrollY;
+          const scrollingDown = scrollDelta > 0;
+          const scrollingUp = scrollDelta < 0;
+          const isScrollingFast = Math.abs(scrollDelta) > 10;
           
           if (currentScrollY > scrollThreshold) {
             setIsScrolled(true);
-            // Hide header when scrolling down, show when scrolling up
-            if (scrollingDown && currentScrollY > lastScrollY + 5) {
+            
+            // Only hide/show header based on scroll direction and speed
+            if (scrollingDown && currentScrollY > hideThreshold && isScrollingFast) {
               setShowMainHeader(false);
-            } else if (scrollingUp) {
+            } else if (scrollingUp && isScrollingFast) {
               setShowMainHeader(true);
             }
           } else {
@@ -227,7 +231,7 @@ const HomeHeader = () => {
   });
 
   return (
-    <header ref={headerRef} className={`bg-white shadow-md transition-transform duration-300 ease-in-out ${isScrolled ? 'fixed top-0 left-0 right-0 z-50' : 'sticky top-0 z-50'} ${!showMainHeader && isScrolled ? '-translate-y-full' : 'translate-y-0'}`}>
+    <header ref={headerRef} className={`bg-white shadow-md smooth-header-transition ${isScrolled ? 'fixed top-0 left-0 right-0 z-50 backdrop-blur-sm bg-white/95' : 'sticky top-0 z-50'} ${!showMainHeader && isScrolled ? 'header-hidden' : 'header-show'}`}>
       {/* Banner announcement - only show when not scrolled */}
       {headerConfig.bannerText && !isScrolled && (
         <div className="py-1 px-4 text-center text-white bg-theme text-xs md:text-sm">
@@ -284,7 +288,7 @@ const HomeHeader = () => {
         )}
 
         {/* Navigation Section */}
-        <div className="w-full px-4 py-3 bg-white"
+        <div className="w-full px-4 py-3 bg-white">
         {/* Scrolled Header Layout - Compact */}
           {isScrolled ? (
             <div className="flex items-center justify-between">
