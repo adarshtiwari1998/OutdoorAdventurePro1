@@ -186,25 +186,40 @@ export const storage = {
     const channelsWithCategories = channels.map(channel => {
       let categoryNames = [];
 
+      console.log(`🔍 Processing channel "${channel.name}":`, {
+        categoryId: channel.categoryId,
+        categoryIds: channel.categoryIds
+      });
+
       // Check categoryIds first (comma-separated list)
-      if (channel.categoryIds) {
+      if (channel.categoryIds && channel.categoryIds.trim()) {
         const categoryIdsList = channel.categoryIds.split(',').filter(id => id.trim());
+        console.log(`📋 Found categoryIds list:`, categoryIdsList);
+        
         categoryNames = categoryIdsList
-          .map(id => categoryMap.get(id.trim()))
+          .map(id => {
+            const categoryName = categoryMap.get(id.trim());
+            console.log(`🏷️ Mapping category ID ${id.trim()} to name: ${categoryName}`);
+            return categoryName;
+          })
           .filter(name => name);
       }
 
       // Fall back to single categoryId if no categoryIds
       if (categoryNames.length === 0 && channel.categoryId) {
         const categoryName = categoryMap.get(channel.categoryId.toString());
+        console.log(`🏷️ Using single categoryId ${channel.categoryId} -> ${categoryName}`);
         if (categoryName) {
           categoryNames = [categoryName];
         }
       }
 
+      const finalCategoryName = categoryNames.length > 0 ? categoryNames.join(', ') : 'No categories';
+      console.log(`✅ Final category name for "${channel.name}": ${finalCategoryName}`);
+
       return {
         ...channel,
-        categoryName: categoryNames.length > 0 ? categoryNames.join(', ') : 'No categories'
+        categoryName: finalCategoryName
       };
     });
 
