@@ -247,12 +247,26 @@ const YoutubeImport = () => {
 
   // Filter videos based on selected filters
   const filteredVideos = videos?.filter(video => {
-    const categoryMatch = filterCategory === "all" || 
-                         (filterCategory === "no-category" && (!video.categoryId && !video.category)) ||
-                         (video.categoryId && video.categoryId.toString() === filterCategory) ||
-                         (video.category && video.category.id.toString() === filterCategory);
+    // Category matching - handle both direct categoryId and nested category object
+    let categoryMatch = false;
+    if (filterCategory === "all") {
+      categoryMatch = true;
+    } else if (filterCategory === "no-category") {
+      categoryMatch = !video.categoryId && !video.category;
+    } else {
+      // Check direct categoryId (convert both to strings for comparison)
+      if (video.categoryId) {
+        categoryMatch = video.categoryId.toString() === filterCategory.toString();
+      }
+      // Also check nested category object
+      if (!categoryMatch && video.category && video.category.id) {
+        categoryMatch = video.category.id.toString() === filterCategory.toString();
+      }
+    }
 
-    const channelMatch = filterChannel === "all" || video.channelId === filterChannel;
+    // Channel matching - convert both to strings for comparison
+    const channelMatch = filterChannel === "all" || 
+                        (video.channelId && video.channelId.toString() === filterChannel.toString());
 
     const statusMatch = filterStatus === "all" || video.importStatus === filterStatus;
 
@@ -1076,8 +1090,8 @@ const YoutubeImport = () => {
                       <SelectContent>
                         <SelectItem value="all">All Categories</SelectItem>
                         <SelectItem value="no-category">No Category</SelectItem>
-                        {blogCategories?.map(category => (
-                          <SelectItem key={category.id} value={category.id}>
+                        {blogCategories?.filter(cat => !cat.id.toString().startsWith('header_')).map(category => (
+                          <SelectItem key={category.id} value={category.id.toString()}>
                             {category.name}
                           </SelectItem>
                         ))}
@@ -1150,8 +1164,8 @@ const YoutubeImport = () => {
 
                 <div className="mt-3 text-sm text-muted-foreground">
                   Showing {filteredVideos.length} of {videos?.length || 0} videos
-                  {filterCategory !== "all" && ` • Category: ${filterCategory === "no-category" ? "No Category" : blogCategories?.find(c => c.id === filterCategory)?.name}`}
-                  {filterChannel !== "all" && ` • Channel: ${channels?.find(c => c.id.toString() === filterChannel)?.name}`}
+                  {filterCategory !== "all" && ` • Category: ${filterCategory === "no-category" ? "No Category" : blogCategories?.find(c => c.id.toString() === filterCategory.toString())?.name}`}
+                  {filterChannel !== "all" && ` • Channel: ${channels?.find(c => c.id.toString() === filterChannel.toString())?.name}`}
                   {filterStatus !== "all" && ` • Status: ${filterStatus}`}
                   {filterVideoType !== "all" && ` • Type: ${filterVideoType === "video" ? "Videos" : "Shorts"}`}
                 </div>
