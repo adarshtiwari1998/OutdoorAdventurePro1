@@ -223,47 +223,6 @@
       rgba(0, 0, 0, 0.4) 100%);
   }
 
-  /* Netflix-style dynamic gradient background */
-  .netflix-gradient-bg {
-    position: absolute;
-    top: -50px;
-    left: -50px;
-    right: -50px;
-    bottom: -50px;
-    filter: blur(120px);
-    opacity: 0.8;
-    transition: all 1.5s cubic-bezier(0.4, 0, 0.2, 1);
-    z-index: 0;
-    transform: scale(1.2);
-  }
-
-  /* Enhanced gradient background for full coverage */
-  .hero-gradient-overlay {
-    position: absolute;
-    top: -100px;
-    left: -100px;
-    right: -100px;
-    bottom: -100px;
-    background: radial-gradient(ellipse at center, 
-      var(--gradient-primary, rgba(0,0,0,0.8)) 0%, 
-      var(--gradient-secondary, rgba(0,0,0,0.9)) 50%, 
-      rgba(0,0,0,1) 100%);
-    z-index: 0;
-    transition: all 1.5s ease-in-out;
-  }
-
-  /* Enhanced text shadows for better readability */
-  .text-shadow-netflix {
-    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.8), 
-                 0 0 8px rgba(0, 0, 0, 0.6),
-                 0 0 16px rgba(0, 0, 0, 0.4);
-  }
-
-  /* Smooth gradient transitions */
-  .gradient-transition {
-    transition: background 1.5s cubic-bezier(0.4, 0, 0.2, 1);
-  }
-
   /* Animations for slider content */
   .animate-fadeIn {
     animation: fadeIn 0.8s ease-out forwards;
@@ -737,6 +696,58 @@ header {
     width: 90vw;
     max-height: 80vh;
     z-index: 50;
+  }
+
+  /* Netflix-style gradient backgrounds */
+  .netflix-gradient-bg {
+    background: linear-gradient(135deg, #141414 0%, #2d2d2d 50%, #1a1a1a 100%);
+    transition: background 1s cubic-bezier(0.4, 0.0, 0.2, 1);
+  }
+
+  /* Smooth gradient transitions for video slider */
+  .video-slider-gradient {
+    background-attachment: fixed;
+    background-size: 100% 100%;
+    transition: all 1s cubic-bezier(0.4, 0.0, 0.2, 1);
+  }
+
+  /* Enhanced video card animations */
+  .video-card-enhanced {
+    transition: all 0.5s cubic-bezier(0.4, 0.0, 0.2, 1);
+    transform-origin: center;
+  }
+
+  .video-card-enhanced:hover {
+    transform: scale(1.05) translateY(-4px);
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4);
+  }
+
+  /* Backdrop blur effects */
+  .glass-effect {
+    backdrop-filter: blur(12px);
+    background: rgba(255, 255, 255, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+  }
+
+  /* Smooth fade animations */
+  .fade-in-up {
+    animation: fadeInUp 0.8s ease-out forwards;
+  }
+
+  @keyframes fadeInUp {
+    from {
+      opacity: 0;
+      transform: translateY(30px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  /* Netflix-style text shadows */
+  .text-shadow-netflix {
+    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.8);
   }
 
   /* Custom scrollbar for external preview columns */
