@@ -263,14 +263,14 @@ const HomeHeader = () => {
                     {/* Single Row Layout - Logo on left, Activity Circles centered */}
                     <div className="flex items-center">
                       {/* Home Logo and Text - Left side */}
-                      <div className="flex items-center space-x-3 flex-shrink-0">
-                        <Link href="/" className="flex items-center space-x-3">
+                      <div className="flex items-center space-x-4 flex-shrink-0">
+                        <Link href="/" className="flex items-center space-x-4">
                           <img 
                             src={headerConfig.logoSrc} 
                             alt={headerConfig.logoText} 
-                            className="h-16 w-16 object-cover rounded-full shadow-lg"
+                            className="h-20 w-20 object-cover rounded-full shadow-lg"
                           />
-                          <span className="font-heading font-bold text-xl text-theme whitespace-nowrap">
+                          <span className="font-heading font-bold text-2xl text-theme whitespace-nowrap">
                             {headerConfig.logoText}
                           </span>
                         </Link>
