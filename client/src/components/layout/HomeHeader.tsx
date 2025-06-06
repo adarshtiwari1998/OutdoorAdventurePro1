@@ -88,14 +88,14 @@ const HomeHeader = () => {
       if (!ticking) {
         requestAnimationFrame(() => {
           const currentScrollY = window.scrollY;
-          const scrollThreshold = 200; // When to switch to fixed header mode
-          const hideThreshold = 300; // When to start hiding header on scroll down
+          const scrollThreshold = 150; // When to switch to fixed header mode
+          const hideThreshold = 200; // When to start hiding header on scroll down
 
           // Calculate scroll direction and speed
           const scrollDelta = currentScrollY - lastScrollY;
           const scrollingDown = scrollDelta > 0;
           const scrollingUp = scrollDelta < 0;
-          const isScrollingFast = Math.abs(scrollDelta) > 3;
+          const isScrollingFast = Math.abs(scrollDelta) > 2;
 
           // Near the top - always show normal header
           if (currentScrollY <= scrollThreshold) {
@@ -108,17 +108,17 @@ const HomeHeader = () => {
 
           // Past threshold - enable fixed header behavior
           setIsScrolled(true);
-
-          // Only hide header when scrolling down fast and past hide threshold
-          if (scrollingDown && isScrollingFast && currentScrollY > hideThreshold) {
-            setShowMainHeader(false);
-          } 
-          // Show header when scrolling up (any speed) and past scroll threshold
-          else if (scrollingUp && currentScrollY > scrollThreshold) {
+          
+          // Show fixed header immediately when scrolling down past threshold
+          if (scrollingDown && currentScrollY > scrollThreshold) {
             setShowMainHeader(true);
           }
-          // Keep header visible when between scroll and hide thresholds
-          else if (currentScrollY >= scrollThreshold && currentScrollY <= hideThreshold) {
+          // Hide header when scrolling down fast and past hide threshold
+          else if (scrollingDown && isScrollingFast && currentScrollY > hideThreshold) {
+            setShowMainHeader(false);
+          } 
+          // Show header when scrolling up
+          else if (scrollingUp) {
             setShowMainHeader(true);
           }
 
@@ -253,32 +253,39 @@ const HomeHeader = () => {
       <div className="w-full bg-white">
         {/* Activity Circles Section - Only show when not scrolled */}
         {!isScrolled && (
-          <div className="w-full px-4 py-4 border-b border-gray-100">
-            <div className="flex items-center justify-between">
+          <div className="w-full px-4 py-6 border-b border-gray-100">
+            <div className="relative flex items-center justify-between">
               {/* Home Logo and Text - Left side */}
-              <div className="flex items-center">
+              <div className="flex items-center z-10">
                 <Link href="/" className="flex items-center space-x-3">
                   <img 
                     src={headerConfig.logoSrc} 
                     alt={headerConfig.logoText} 
                     className="h-16 w-16 object-cover rounded-full"
                   />
-                  <span className="font-heading font-bold text-2xl text-theme whitespace-nowrap">
-                    {headerConfig.logoText}
-                  </span>
+                  {!isMobile && (
+                    <span className="font-heading font-bold text-2xl text-theme whitespace-nowrap">
+                      {headerConfig.logoText}
+                    </span>
+                  )}
+                  {isMobile && (
+                    <span className="font-heading font-bold text-lg text-theme">
+                      {headerConfig.logoText}
+                    </span>
+                  )}
                 </Link>
               </div>
 
-              {/* Activity Circles - Center */}
-              <div className="flex items-center justify-center gap-4 flex-1">
-                {activities?.slice(0, 6).map((activity) => (
+              {/* Activity Circles - Center with mobile responsiveness */}
+              <div className="absolute left-1/2 transform -translate-x-1/2 flex items-center justify-center gap-2 md:gap-4">
+                {activities?.slice(0, isMobile ? 4 : 6).map((activity) => (
                   <Link 
                     key={activity.id} 
                     href={`/${activity.category}`}
                     className="flex flex-col items-center group"
                   > 
                     <div 
-                      className="w-16 h-16 rounded-full overflow-hidden border-2 border-transparent group-hover:border-theme transition-all duration-200"
+                      className={`${isMobile ? 'w-14 h-14' : 'w-20 h-20'} rounded-full overflow-hidden border-3 border-transparent group-hover:border-theme transition-all duration-200 shadow-lg`}
                       style={{ borderColor: activity.primaryColor }}
                     >
                       <img 
@@ -291,8 +298,8 @@ const HomeHeader = () => {
                 ))}
               </div>
 
-              {/* Empty space for balance */}
-              <div className="w-0"></div>
+              {/* Right side placeholder for balance */}
+              <div className="w-16"></div>
             </div>
           </div>
         )}
@@ -316,27 +323,29 @@ const HomeHeader = () => {
                   </span>
                 </Link>
 
-                {/* Activity Circles - Compact */}
-                <div className="flex items-center justify-center gap-2 ml-4">
-                  {activities?.slice(0, 6).map((activity) => (
-                    <Link 
-                      key={activity.id} 
-                      href={`/${activity.category}`}
-                      className="group"
-                    > 
-                      <div 
-                        className="w-10 h-10 rounded-full overflow-hidden border-2 border-transparent group-hover:border-theme transition-all duration-200"
-                        style={{ borderColor: activity.primaryColor }}
-                      >
-                        <img 
-                          src={activity.logoSrc} 
-                          alt={activity.logoText} 
-                          className="w-full h-full object-cover"
-                        />
-                      </div>
-                    </Link>
-                  ))}
-                </div>
+                {/* Activity Circles - Compact with mobile responsiveness */}
+                {!isMobile && (
+                  <div className="flex items-center justify-center gap-2 ml-4">
+                    {activities?.slice(0, 5).map((activity) => (
+                      <Link 
+                        key={activity.id} 
+                        href={`/${activity.category}`}
+                        className="group"
+                      > 
+                        <div 
+                          className="w-12 h-12 rounded-full overflow-hidden border-2 border-transparent group-hover:border-theme transition-all duration-200 shadow-md"
+                          style={{ borderColor: activity.primaryColor }}
+                        >
+                          <img 
+                            src={activity.logoSrc} 
+                            alt={activity.logoText} 
+                            className="w-full h-full object-cover"
+                          />
+                        </div>
+                      </Link>
+                    ))}
+                  </div>
+                )}
               </div>
 
               {/* Right side - Search and Actions */}
