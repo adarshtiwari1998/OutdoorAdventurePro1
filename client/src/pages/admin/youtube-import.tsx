@@ -55,6 +55,7 @@ type YoutubeChannel = {
   videoCount: number;
   importedVideoCount: number;
   lastImport: string | null;
+  categoryId?:number
 };
 
 type YoutubeVideo = {
@@ -748,6 +749,26 @@ const YoutubeImport = () => {
     },
   });
 
+  const updateChannelCategoryMutation = useMutation({
+    mutationFn: async ({ channelId, categoryId }: { channelId: string; categoryId: number }) => {
+      return apiRequest('PATCH', `/api/admin/youtube/channels/${channelId}/category`, { categoryId });
+    },
+    onSuccess: () => {
+      toast({
+        title: "Success",
+        description: "Channel category updated successfully",
+      });
+      queryClient.invalidateQueries({ queryKey: ['/api/admin/youtube/channels'] });
+    },
+    onError: (error) => {
+      toast({
+        title: "Error",
+        description: `Failed to update channel category: ${error}`,
+        variant: "destructive",
+      });
+    },
+  });
+
   // Event handlers
   const onAddChannelSubmit = (values: z.infer<typeof youtubeChannelSchema>) => {
     addChannelMutation.mutate({
@@ -934,7 +955,6 @@ const YoutubeImport = () => {
             <Skeleton className="h-3 w-32" />
           </TableCell>
           <TableCell><Skeleton className="h-5 w-24" /></TableCell>
-          ```
           <TableCell><Skeleton className="h-5 w-16" /></TableCell>
           <TableCell className="text-right"><Skeleton className="h-8 w-24 ml-auto" /></TableCell>
         </TableRow>
@@ -1014,6 +1034,31 @@ const YoutubeImport = () => {
                               ? format(new Date(channel.lastImport), 'MMM d, yyyy') 
                               : 'Never'
                             }
+                          </TableCell>
+                          <TableCell>
+                            <Select 
+                              value={channel.categoryId ? channel.categoryId.toString() : ""} 
+                              onValueChange={(categoryId) => {
+                                if (categoryId && categoryId !== "" && categoryId !== "NaN") {
+                                  console.log('Update/Assign channel category:', { channelId: channel.id, categoryId });
+                                  updateChannelCategoryMutation.mutate({
+                                    channelId: channel.id,
+                                    categoryId: parseInt(categoryId)
+                                  });
+                                }
+                              }}
+                            >
+                              <SelectTrigger className="w-40 h-8 text-sm">
+                                <SelectValue placeholder="Select Category" />
+                              </SelectTrigger>
+                              <SelectContent className="max-h-60 overflow-y-auto">
+                                {blogCategories?.map(category => (
+                                  <SelectItem key={category.id} value={category.id.toString()}>
+                                    {category.name} ({category.type || 'blog'})
+                                  </SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
                           </TableCell>
                           <TableCell className="text-right">
                             <Button 

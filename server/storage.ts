@@ -173,7 +173,10 @@ export const storage = {
   async getAdminYoutubeChannels() {
     try {
       return await db.query.youtubeChannels.findMany({
-        orderBy: desc(youtubeChannels.createdAt),
+        with: {
+          category: true,
+        },
+        orderBy: [desc(schema.youtubeChannels.createdAt)]
       });
     } catch (error) {
       console.error('Error getting admin YouTube channels:', error);
