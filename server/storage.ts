@@ -2027,56 +2027,6 @@ export const storage = {
       throw error;
     }
   },
-        with: {
-          category: {
-            columns: { name: true }
-          }
-        },
-        limit: 10
-      }).then(videos => videos.map(v => ({
-        id: v.id,
-        title: v.title.substring(0, 50),
-        categoryId: v.categoryId,
-        categoryName: v.category?.name,
-        videoType: v.videoType
-      }))));
-
-      console.log(`Found ${allVideosInCategory.length} videos for category ${categoryId} with type ${videoType}`);
-
-      const videos = await db.query.youtubeVideos.findMany({
-        where: whereCondition,
-        orderBy: desc(schema.youtubeVideos.publishedAt),
-        limit,
-        with: {
-          category: true,
-          channel: true
-        }
-      });
-
-      console.log(`Final result: ${videos.length} videos for category ${categoryId} with type ${videoType}`);
-
-      return videos.map(video => ({
-        id: video.id.toString(),
-        videoId: video.videoId,
-        title: video.title,
-        description: video.description,
-        thumbnail: video.thumbnail,
-        publishedAt: video.publishedAt,
-        channelId: video.channelId,
-        categoryId: video.categoryId,
-        category: video.category,
-        channel: video.channel,
-        videoType: video.videoType,
-        duration: video.duration,
-        viewCount: video.viewCount || 0,
-        likeCount: video.likeCount || 0,
-        commentCount: video.commentCount || 0
-      }));
-    } catch (error) {
-      console.error('Error getting videos by category:', error);
-      throw error;
-    }
-  },
 
   // Favorite Destinations Management
   async getFavoriteDestinations() {
