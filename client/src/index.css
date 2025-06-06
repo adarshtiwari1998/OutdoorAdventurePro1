@@ -571,7 +571,6 @@ header {
   /* Custom scrollbar for videos list */
   .custom-scrollbar::-webkit-scrollbar {
     width: 6px;
-    height: 4px;
   }
 
   .custom-scrollbar::-webkit-scrollbar-track {
@@ -586,21 +585,6 @@ header {
 
   .custom-scrollbar::-webkit-scrollbar-thumb:hover {
     background: rgba(255, 255, 255, 0.5);
-  }
-
-  /* Border utility classes */
-  .border-3 {
-    border-width: 3px;
-  }
-
-  /* Mobile activity circle scrolling */
-  .activity-circles-mobile {
-    scrollbar-width: none;
-    -ms-overflow-style: none;
-  }
-
-  .activity-circles-mobile::-webkit-scrollbar {
-    display: none;
   }
 
   /* Glassmorphism effect */
