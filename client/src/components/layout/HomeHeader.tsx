@@ -80,27 +80,35 @@ const HomeHeader = () => {
   const menuTimeoutRef = useRef<number | null>(null);
   const [isScrolled, setIsScrolled] = useState(false);
   const [showMainHeader, setShowMainHeader] = useState(true);
+  const [lastScrollY, setLastScrollY] = useState(0);
 
   useEffect(() => {
-    let lastScrollY = window.scrollY;
     let ticking = false;
-    let frameId: number;
 
     const handleScroll = () => {
       if (!ticking) {
-        frameId = window.requestAnimationFrame(() => {
+        requestAnimationFrame(() => {
           const currentScrollY = window.scrollY;
-          const scrollThreshold = 50;
+          const scrollThreshold = 80;
+          
+          // Determine scroll direction
+          const scrollingDown = currentScrollY > lastScrollY;
+          const scrollingUp = currentScrollY < lastScrollY;
           
           if (currentScrollY > scrollThreshold) {
             setIsScrolled(true);
-            setShowMainHeader(currentScrollY <= lastScrollY);
+            // Hide header when scrolling down, show when scrolling up
+            if (scrollingDown && currentScrollY > lastScrollY + 5) {
+              setShowMainHeader(false);
+            } else if (scrollingUp) {
+              setShowMainHeader(true);
+            }
           } else {
             setIsScrolled(false);
             setShowMainHeader(true);
           }
           
-          lastScrollY = currentScrollY;
+          setLastScrollY(currentScrollY);
           ticking = false;
         });
         ticking = true;
@@ -110,11 +118,8 @@ const HomeHeader = () => {
     window.addEventListener('scroll', handleScroll, { passive: true });
     return () => {
       window.removeEventListener('scroll', handleScroll);
-      if (frameId) {
-        cancelAnimationFrame(frameId);
-      }
     };
-  }, []);
+  }, [lastScrollY]);
 
   // Fetch header configuration from API for the home page
   const { data: headerData, isLoading, error } = useQuery<HeaderConfig>({
@@ -222,19 +227,19 @@ const HomeHeader = () => {
   });
 
   return (
-    <header ref={headerRef} className="bg-white shadow-md sticky top-0 z-50">
-      {/* Banner announcement */}
-      {headerConfig.bannerText && (
+    <header ref={headerRef} className={`bg-white shadow-md transition-transform duration-300 ease-in-out ${isScrolled ? 'fixed top-0 left-0 right-0 z-50' : 'sticky top-0 z-50'} ${!showMainHeader && isScrolled ? '-translate-y-full' : 'translate-y-0'}`}>
+      {/* Banner announcement - only show when not scrolled */}
+      {headerConfig.bannerText && !isScrolled && (
         <div className="py-1 px-4 text-center text-white bg-theme text-xs md:text-sm">
           {headerConfig.bannerText}
         </div>
       )}
 
-      {/* Activity Circles Section - Top */}
-      <div className={`w-full transition-all duration-300 ${!showMainHeader && isScrolled ? 'hidden' : ''}`}>
-        <div className="w-full px-4">
-          <div className="py-4">
-            {/* Single row: Main Logo on left, Activity Circles centered */}
+      {/* Main Header Content */}
+      <div className="w-full bg-white">
+        {/* Activity Circles Section - Only show when not scrolled */}
+        {!isScrolled && (
+          <div className="w-full px-4 py-4 border-b border-gray-100">
             <div className="flex items-center justify-between">
               {/* Home Logo and Text - Left side */}
               <div className="flex items-center">
@@ -276,84 +281,59 @@ const HomeHeader = () => {
               <div className="w-0"></div>
             </div>
           </div>
-        </div>
-      </div>
+        )}
 
-      {/* Navigation Section - Bottom */}
-      <div className={`w-full border-t border-gray-200 transition-all duration-300 ${isScrolled ? 'fixed top-0 left-0 right-0 bg-white shadow-md z-50 py-2' : 'py-3'}`}>
-        <div className="w-full px-4">
+        {/* Navigation Section */}
+        <div className="w-full px-4 py-3 bg-white"
+        {/* Scrolled Header Layout - Compact */}
           {isScrolled ? (
-            /* Fixed Header Layout - Two rows */
-            <div className="flex flex-col space-y-2">
-              {/* First Row - Logo and Activity Circles */}
-              <div className="flex items-center justify-center gap-4">
+            <div className="flex items-center justify-between">
+              {/* Logo and Activity Circles - Left side */}
+              <div className="flex items-center gap-4">
                 <Link href="/" className="flex items-center space-x-2">
                   <img 
                     src={headerConfig.logoSrc} 
                     alt={headerConfig.logoText} 
-                    className="h-8 w-8 object-cover rounded-full"
+                    className="h-10 w-10 object-cover rounded-full"
                   />
-                  <span className="font-heading font-bold text-sm text-theme">
+                  <span className="font-heading font-bold text-lg text-theme whitespace-nowrap">
                     {headerConfig.logoText}
                   </span>
                 </Link>
-                {activities?.slice(0, 6).map((activity) => (
-                  <Link 
-                    key={activity.id} 
-                    href={`/${activity.category}`}
-                    className="flex flex-col items-center group"
-                  > 
-                    <div 
-                      className="w-8 h-8 rounded-full overflow-hidden border-2 border-transparent group-hover:border-theme transition-all duration-200"
-                      style={{ borderColor: activity.primaryColor }}
-                    >
-                      <img 
-                        src={activity.logoSrc} 
-                        alt={activity.logoText} 
-                        className="w-full h-full object-cover"
-                      />
-                    </div>
-                  </Link>
-                ))}
+                
+                {/* Activity Circles - Compact */}
+                <div className="flex items-center gap-2 ml-4">
+                  {activities?.slice(0, 6).map((activity) => (
+                    <Link 
+                      key={activity.id} 
+                      href={`/${activity.category}`}
+                      className="group"
+                    > 
+                      <div 
+                        className="w-10 h-10 rounded-full overflow-hidden border-2 border-transparent group-hover:border-theme transition-all duration-200"
+                        style={{ borderColor: activity.primaryColor }}
+                      >
+                        <img 
+                          src={activity.logoSrc} 
+                          alt={activity.logoText} 
+                          className="w-full h-full object-cover"
+                        />
+                      </div>
+                    </Link>
+                  ))}
+                </div>
               </div>
 
-              {/* Second Row - Navigation and Actions */}
-              <div className="flex justify-between items-center">
-                {/* Main Navigation - Desktop */}
-                {!isMobile && (
-                  <nav className="flex items-center space-x-6">
-                    {headerConfig.menuItems.map((item) => (
-                      <div 
-                        key={typeof item.id === 'string' ? item.id : `menu-${item.id}`}
-                        className="relative"
-                        onMouseEnter={() => {
-                          if (item.hasMegaMenu && typeof item.id === 'number') {
-                            handleMenuMouseEnter(item.id);
-                          }
-                        }}
-                        onMouseLeave={handleMenuMouseLeave}
-                      >
-                        <Link 
-                          href={item.path} 
-                          className={`font-medium hover:text-theme transition flex items-center gap-1 text-sm ${activeMegaMenu === item.id ? 'text-theme' : ''}`}
-                          onClick={() => setActiveMegaMenu(null)}
-                        >
-                          {item.label}
-                          {item.hasMegaMenu && <ChevronDown size={14} />}
-                        </Link>
-                      </div>
-                    ))}
-                  </nav>
-                )}
-
+              {/* Right side - Search and Actions */}
+              <div className="flex items-center space-x-4">
                 {/* Search Bar */}
-                <div className="flex-1 max-w-md mx-6">
+                <div className="flex-1 max-w-md">
                   <div className="relative">
                     <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={16} />
                     <input
                       type="text"
                       placeholder="Search destinations, activities..."
-                      className="w-full pl-8 pr-4 py-1.5 border border-gray-300 rounded-full focus:outline-none focus:ring-2 focus:ring-theme focus:border-transparent text-xs"
+                      className="w-full pl-8 pr-4 py-2 border border-gray-300 rounded-full focus:outline-none focus:ring-2 focus:ring-theme focus:border-transparent text-sm"
                     />
                   </div>
                 </div>
@@ -362,10 +342,10 @@ const HomeHeader = () => {
                 <div className="flex items-center space-x-2">
                   {!isMobile && (
                     <>
-                      <button className="bg-transparent border border-theme text-theme hover:bg-theme hover:text-white transition rounded-full px-3 py-1 font-medium text-xs">
+                      <button className="bg-transparent border border-theme text-theme hover:bg-theme hover:text-white transition rounded-full px-3 py-1.5 font-medium text-sm">
                         Sign In
                       </button>
-                      <button className="bg-orange-500 text-white hover:bg-theme-dark transition rounded-full px-3 py-1 font-medium text-xs">
+                      <button className="bg-orange-500 text-white hover:bg-theme-dark transition rounded-full px-3 py-1.5 font-medium text-sm">
                         Join Now
                       </button>
                     </>
@@ -373,7 +353,7 @@ const HomeHeader = () => {
                   <Link href="/cart" className="relative">
                     <ShoppingCart className="text-gray-700 hover:text-theme transition" size={18} />
                     {(typeof cartCount === 'number' && cartCount > 0) && (
-                      <span className="absolute -top-2 -right-2 bg-theme text-white text-xs rounded-full h-4 w-4 flex items-center justify-center text-xs">
+                      <span className="absolute -top-2 -right-2 bg-theme text-white text-xs rounded-full h-4 w-4 flex items-center justify-center">
                         {cartCount > 9 ? '9+' : cartCount}
                       </span>
                     )}
@@ -390,7 +370,7 @@ const HomeHeader = () => {
               </div>
             </div>
           ) : (
-            /* Normal Layout - Single row */
+            /* Normal Layout - Navigation row */
             <div className="flex justify-between items-center">
               {/* Main Navigation - Desktop */}
               {!isMobile && (
