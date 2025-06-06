@@ -149,9 +149,13 @@ const CategoryVideos = () => {
 
   const handleEdit = (setting: any) => {
     setEditingCategory(setting.category);
+    
+    // Set the selected category for the preview
+    setSelectedCategory(setting.category);
+    
     form.reset({
       category: setting.category,
-      categoryId: setting.categoryId?.toString() || "",
+      categoryId: setting.category, // Use the category name as the categoryId for the form
       videoCount: setting.videoCount,
       isActive: setting.isActive,
       title: setting.title,
