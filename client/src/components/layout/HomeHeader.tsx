@@ -254,23 +254,24 @@ const HomeHeader = () => {
         {/* Activity Circles Section - Only show when not scrolled */}
         {!isScrolled && (
           <div className="w-full px-4 py-4 border-b border-gray-100">
-            <div className="flex items-center justify-between">
-              {/* Home Logo and Text - Left side */}
-              <div className="flex items-center">
+            {/* Desktop Layout */}
+            <div className="hidden md:flex flex-col items-center justify-center space-y-4">
+              {/* Home Logo and Text - Centered */}
+              <div className="flex items-center justify-center">
                 <Link href="/" className="flex items-center space-x-3">
                   <img 
                     src={headerConfig.logoSrc} 
                     alt={headerConfig.logoText} 
-                    className="h-16 w-16 object-cover rounded-full"
+                    className="h-20 w-20 object-cover rounded-full"
                   />
-                  <span className="font-heading font-bold text-2xl text-theme whitespace-nowrap">
+                  <span className="font-heading font-bold text-3xl text-theme whitespace-nowrap">
                     {headerConfig.logoText}
                   </span>
                 </Link>
               </div>
 
-              {/* Activity Circles - Center */}
-              <div className="flex items-center justify-center gap-4 flex-1">
+              {/* Activity Circles - Centered below */}
+              <div className="flex items-center justify-center gap-6">
                 {activities?.slice(0, 6).map((activity) => (
                   <Link 
                     key={activity.id} 
@@ -278,7 +279,7 @@ const HomeHeader = () => {
                     className="flex flex-col items-center group"
                   > 
                     <div 
-                      className="w-16 h-16 rounded-full overflow-hidden border-2 border-transparent group-hover:border-theme transition-all duration-200"
+                      className="w-20 h-20 rounded-full overflow-hidden border-3 border-transparent group-hover:border-theme transition-all duration-200 shadow-lg"
                       style={{ borderColor: activity.primaryColor }}
                     >
                       <img 
@@ -290,9 +291,47 @@ const HomeHeader = () => {
                   </Link>
                 ))}
               </div>
+            </div>
 
-              {/* Empty space for balance */}
-              <div className="w-0"></div>
+            {/* Mobile Layout */}
+            <div className="md:hidden flex flex-col items-center space-y-3">
+              {/* Home Logo and Text - Centered */}
+              <div className="flex items-center justify-center">
+                <Link href="/" className="flex items-center space-x-2">
+                  <img 
+                    src={headerConfig.logoSrc} 
+                    alt={headerConfig.logoText} 
+                    className="h-14 w-14 object-cover rounded-full"
+                  />
+                  <span className="font-heading font-bold text-lg text-theme whitespace-nowrap">
+                    {headerConfig.logoText}
+                  </span>
+                </Link>
+              </div>
+
+              {/* Activity Circles - Mobile Scrollable */}
+              <div className="w-full overflow-x-auto activity-circles-mobile">
+                <div className="flex items-center justify-start gap-4 px-4 min-w-max">
+                  {activities?.slice(0, 6).map((activity) => (
+                    <Link 
+                      key={activity.id} 
+                      href={`/${activity.category}`}
+                      className="flex flex-col items-center group flex-shrink-0"
+                    > 
+                      <div 
+                        className="w-16 h-16 rounded-full overflow-hidden border-2 border-transparent group-hover:border-theme transition-all duration-200 shadow-md"
+                        style={{ borderColor: activity.primaryColor }}
+                      >
+                        <img 
+                          src={activity.logoSrc} 
+                          alt={activity.logoText} 
+                          className="w-full h-full object-cover"
+                        />
+                      </div>
+                    </Link>
+                  ))}
+                </div>
+              </div>
             </div>
           </div>
         )}
@@ -304,28 +343,28 @@ const HomeHeader = () => {
             <div>
             <div className="flex items-center justify-between">
               {/* Logo and Activity Circles - Left side */}
-              <div className="flex items-center gap-4">
-                <Link href="/" className="flex items-center space-x-2">
+              <div className="flex items-center gap-2 md:gap-4">
+                <Link href="/" className="flex items-center space-x-1 md:space-x-2">
                   <img 
                     src={headerConfig.logoSrc} 
                     alt={headerConfig.logoText} 
-                    className="h-10 w-10 object-cover rounded-full"
+                    className="h-8 w-8 md:h-10 md:w-10 object-cover rounded-full"
                   />
-                  <span className="font-heading font-bold text-lg text-theme whitespace-nowrap">
+                  <span className="font-heading font-bold text-sm md:text-lg text-theme whitespace-nowrap">
                     {headerConfig.logoText}
                   </span>
                 </Link>
 
                 {/* Activity Circles - Compact */}
-                <div className="flex items-center justify-center gap-2 ml-4">
-                  {activities?.slice(0, 6).map((activity) => (
+                <div className="hidden sm:flex items-center justify-center gap-1 md:gap-2 ml-2 md:ml-4">
+                  {activities?.slice(0, isMobile ? 4 : 6).map((activity) => (
                     <Link 
                       key={activity.id} 
                       href={`/${activity.category}`}
                       className="group"
                     > 
                       <div 
-                        className="w-10 h-10 rounded-full overflow-hidden border-2 border-transparent group-hover:border-theme transition-all duration-200"
+                        className="w-8 h-8 md:w-10 md:h-10 rounded-full overflow-hidden border-2 border-transparent group-hover:border-theme transition-all duration-200"
                         style={{ borderColor: activity.primaryColor }}
                       >
                         <img 
@@ -340,21 +379,21 @@ const HomeHeader = () => {
               </div>
 
               {/* Right side - Search and Actions */}
-              <div className="flex items-center space-x-4">
+              <div className="flex items-center space-x-2 md:space-x-4">
                 {/* Search Bar */}
-                <div className="flex-1 max-w-md">
+                <div className="flex-1 max-w-sm md:max-w-md">
                   <div className="relative">
-                    <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={16} />
+                    <Search className="absolute left-2 md:left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={14} />
                     <input
                       type="text"
-                      placeholder="Search destinations, activities..."
-                      className="w-full pl-8 pr-4 py-2 border border-gray-300 rounded-full focus:outline-none focus:ring-2 focus:ring-theme focus:border-transparent text-sm"
+                      placeholder={isMobile ? "Search..." : "Search destinations, activities..."}
+                      className="w-full pl-6 md:pl-8 pr-2 md:pr-4 py-1.5 md:py-2 border border-gray-300 rounded-full focus:outline-none focus:ring-2 focus:ring-theme focus:border-transparent text-xs md:text-sm"
                     />
                   </div>
                 </div>
 
                 {/* Action Buttons */}
-                <div className="flex items-center space-x-2">
+                <div className="flex items-center space-x-1 md:space-x-2">
                   {!isMobile && (
                     <>
                       <button className="bg-transparent border border-theme text-theme hover:bg-theme hover:text-white transition rounded-full px-3 py-1.5 font-medium text-sm">
@@ -366,9 +405,9 @@ const HomeHeader = () => {
                     </>
                   )}
                   <Link href="/cart" className="relative">
-                    <ShoppingCart className="text-gray-700 hover:text-theme transition" size={18} />
+                    <ShoppingCart className="text-gray-700 hover:text-theme transition" size={isMobile ? 16 : 18} />
                     {(typeof cartCount === 'number' && cartCount > 0) && (
-                      <span className="absolute -top-2 -right-2 bg-theme text-white text-xs rounded-full h-4 w-4 flex items-center justify-center">
+                      <span className="absolute -top-1 -right-1 md:-top-2 md:-right-2 bg-theme text-white text-xs rounded-full h-3 w-3 md:h-4 md:w-4 flex items-center justify-center">
                         {cartCount > 9 ? '9+' : cartCount}
                       </span>
                     )}
@@ -378,7 +417,7 @@ const HomeHeader = () => {
                       className="text-gray-700 hover:text-theme transition" 
                       onClick={toggleMobileMenu}
                     >
-                      <Menu size={18} />
+                      <Menu size={16} />
                     </button>
                   )}
                 </div>
@@ -386,20 +425,20 @@ const HomeHeader = () => {
             </div>
             {/* Navigation Menu in Second Row */}
             <div className="flex justify-center mt-2">
-                <nav className="flex items-center space-x-4">
+                <nav className="flex items-center space-x-2 md:space-x-4 overflow-x-auto">
                     {headerConfig.menuItems.map((item) => (
                       <div 
                         key={typeof item.id === 'string' ? item.id : `menu-${item.id}`}
-                        className="relative"
+                        className="relative flex-shrink-0"
                         
                       >
                         <Link 
                           href={item.path} 
-                          className={`font-medium hover:text-theme transition flex items-center gap-1 `}
+                          className={`font-medium hover:text-theme transition flex items-center gap-1 text-xs md:text-sm px-1 md:px-0`}
                           onClick={() => setActiveMegaMenu(null)}
                         >
                           {item.label}
-                          {item.hasMegaMenu && <ChevronDown size={16} />}
+                          {item.hasMegaMenu && <ChevronDown size={14} />}
                         </Link>
                       </div>
                     ))}
@@ -439,21 +478,21 @@ const HomeHeader = () => {
               )}
 
               {/* Search Bar and Action Buttons */}
-              <div className="flex items-center space-x-4">
+              <div className="flex items-center space-x-2 md:space-x-4">
                 {/* Search Bar */}
-                <div className="max-w-sm">
+                <div className="max-w-xs md:max-w-sm">
                   <div className="relative">
-                    <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={16} />
+                    <Search className="absolute left-2 md:left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={16} />
                     <input
                       type="text"
-                      placeholder="Search destinations, activities..."
-                      className="w-full pl-8 pr-4 py-2 border border-gray-300 rounded-full focus:outline-none focus:ring-2 focus:ring-theme focus:border-transparent text-sm"
+                      placeholder={isMobile ? "Search..." : "Search destinations, activities..."}
+                      className="w-full pl-6 md:pl-8 pr-2 md:pr-4 py-1.5 md:py-2 border border-gray-300 rounded-full focus:outline-none focus:ring-2 focus:ring-theme focus:border-transparent text-xs md:text-sm"
                     />
                   </div>
                 </div>
 
                 {/* Action Buttons */}
-                <div className="flex items-center space-x-3">
+                <div className="flex items-center space-x-2 md:space-x-3">
                   {!isMobile && (
                     <>
                       <button className="bg-transparent border border-theme text-theme hover:bg-theme hover:text-white transition rounded-full px-4 py-2 font-medium text-sm">
@@ -465,9 +504,9 @@ const HomeHeader = () => {
                     </>
                   )}
                   <Link href="/cart" className="relative">
-                    <ShoppingCart className="text-gray-700 hover:text-theme transition" size={20} />
+                    <ShoppingCart className="text-gray-700 hover:text-theme transition" size={isMobile ? 18 : 20} />
                     {(typeof cartCount === 'number' && cartCount > 0) && (
-                      <span className="absolute -top-2 -right-2 bg-theme text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">
+                      <span className="absolute -top-1 -right-1 md:-top-2 md:-right-2 bg-theme text-white text-xs rounded-full h-4 w-4 md:h-5 md:w-5 flex items-center justify-center">
                         {cartCount > 9 ? '9+' : cartCount}
                       </span>
                     )}
@@ -477,7 +516,7 @@ const HomeHeader = () => {
                       className="text-gray-700 hover:text-theme transition" 
                       onClick={toggleMobileMenu}
                     >
-                      <Menu size={20} />
+                      <Menu size={18} />
                     </button>
                   )}
                 </div>
