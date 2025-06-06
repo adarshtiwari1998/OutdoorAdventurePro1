@@ -89,30 +89,38 @@ const HomeHeader = () => {
       if (!ticking) {
         requestAnimationFrame(() => {
           const currentScrollY = window.scrollY;
-          const scrollThreshold = 100; // Reduced threshold for faster trigger
-          
-          // Calculate scroll direction
+          const scrollThreshold = 150; // When to switch to fixed header mode
+          const hideThreshold = 200; // When to start hiding header on scroll down
+
+          // Calculate scroll direction and speed
           const scrollDelta = currentScrollY - lastScrollY;
           const scrollingDown = scrollDelta > 0;
           const scrollingUp = scrollDelta < 0;
+          const isScrollingFast = Math.abs(scrollDelta) > 2;
 
           // Near the top - always show normal header
           if (currentScrollY <= scrollThreshold) {
             setIsScrolled(false);
             setShowMainHeader(true);
+            setLastScrollY(currentScrollY);
+            ticking = false;
+            return;
           }
+
           // Past threshold - enable fixed header behavior
-          else {
-            setIsScrolled(true);
-            
-            // Immediate response to scroll direction
-            if (scrollingDown && scrollDelta > 5) {
-              // Hide header when scrolling down with minimal delta
-              setShowMainHeader(false);
-            } else if (scrollingUp || scrollDelta <= 0) {
-              // Show header immediately when scrolling up or stopped
-              setShowMainHeader(true);
-            }
+          setIsScrolled(true);
+
+          // Show fixed header immediately when scrolling down past threshold
+          if (scrollingDown && currentScrollY > scrollThreshold) {
+            setShowMainHeader(true);
+          }
+          // Hide header when scrolling down fast and past hide threshold
+          else if (scrollingDown && isScrollingFast && currentScrollY > hideThreshold) {
+            setShowMainHeader(false);
+          } 
+          // Show header when scrolling up
+          else if (scrollingUp) {
+            setShowMainHeader(true);
           }
 
           setLastScrollY(currentScrollY);
