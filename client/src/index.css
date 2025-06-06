@@ -214,6 +214,17 @@
     animation: fadeIn 0.8s ease-out forwards;
   }
 
+  @keyframes fadeIn {
+    from {
+      opacity: 0;
+      transform: translateY(20px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
 header {
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }

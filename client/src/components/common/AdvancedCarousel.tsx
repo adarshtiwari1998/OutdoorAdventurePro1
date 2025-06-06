@@ -1,3 +1,4 @@
+
 import { useState, useEffect, useRef } from "react";
 import { ChevronLeft, ChevronRight, Play, Volume2, VolumeX, Info } from "lucide-react";
 
@@ -25,6 +26,7 @@ const AdvancedCarousel = ({ slides }: AdvancedCarouselProps) => {
   const [isMuted, setIsMuted] = useState(true);
   const [isPlaying, setIsPlaying] = useState(true);
   const [isHovering, setIsHovering] = useState(false);
+  const [hoveredArrow, setHoveredArrow] = useState<'left' | 'right' | null>(null);
   const videoRefs = useRef<(HTMLVideoElement | null)[]>(new Array(slides.length).fill(null));
   
   // Set up autoplay for the carousel
@@ -95,10 +97,22 @@ const AdvancedCarousel = ({ slides }: AdvancedCarouselProps) => {
   
   const toggleMute = () => {
     setIsMuted(!isMuted);
+    const currentVideo = videoRefs.current[activeSlide];
+    if (currentVideo) {
+      currentVideo.muted = !isMuted;
+    }
   };
   
   const togglePlay = () => {
     setIsPlaying(!isPlaying);
+    const currentVideo = videoRefs.current[activeSlide];
+    if (currentVideo) {
+      if (isPlaying) {
+        currentVideo.pause();
+      } else {
+        currentVideo.play().catch(e => console.log("Video play prevented:", e));
+      }
+    }
   };
 
   const handleMouseEnter = () => {
@@ -111,6 +125,7 @@ const AdvancedCarousel = ({ slides }: AdvancedCarouselProps) => {
 
   const handleMouseLeave = () => {
     setIsHovering(false);
+    setHoveredArrow(null);
     // Restart autoplay
     const newInterval = setInterval(() => {
       setActiveSlide((current) => (current + 1) % slides.length);
@@ -132,7 +147,7 @@ const AdvancedCarousel = ({ slides }: AdvancedCarouselProps) => {
           : position;
     
     const translateX = normalizedPosition * 75;
-    const zIndex = 10 - Math.abs(normalizedPosition);
+    const zIndex = 5 - Math.abs(normalizedPosition);
     const opacity = 1 - (Math.abs(normalizedPosition) * 0.25);
     const scale = 1 - (Math.abs(normalizedPosition) * 0.1);
     
@@ -143,9 +158,17 @@ const AdvancedCarousel = ({ slides }: AdvancedCarouselProps) => {
     };
   };
 
+  const getPreviewSlideIndex = (direction: 'left' | 'right') => {
+    if (direction === 'left') {
+      return (activeSlide - 1 + slides.length) % slides.length;
+    } else {
+      return (activeSlide + 1) % slides.length;
+    }
+  };
+
   return (
     <div 
-      className="relative h-[650px] overflow-hidden bg-black"
+      className="relative h-[650px] overflow-hidden bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900"
       onMouseEnter={handleMouseEnter}
       onMouseLeave={handleMouseLeave}
     >
@@ -162,7 +185,7 @@ const AdvancedCarousel = ({ slides }: AdvancedCarouselProps) => {
                 // Check if it's a YouTube embed URL
                 slide.videoUrl.includes('youtube.com/embed') ? (
                   <iframe
-                    src={`${slide.videoUrl}?autoplay=1&mute=${isMuted ? 1 : 0}&loop=1&playlist=${slide.videoUrl.split('/').pop()?.split('?')[0]}&controls=0&showinfo=0&rel=0`}
+                    src={`${slide.videoUrl}?autoplay=${isPlaying ? 1 : 0}&mute=${isMuted ? 1 : 0}&loop=1&playlist=${slide.videoUrl.split('/').pop()?.split('?')[0]}&controls=0&showinfo=0&rel=0`}
                     className="w-full h-full object-cover"
                     allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
                     allowFullScreen
@@ -177,6 +200,7 @@ const AdvancedCarousel = ({ slides }: AdvancedCarouselProps) => {
                     muted={isMuted}
                     loop
                     playsInline
+                    autoPlay={isPlaying}
                     onError={(e) => console.log("Video playback error:", e)}
                   />
                 )
@@ -187,7 +211,7 @@ const AdvancedCarousel = ({ slides }: AdvancedCarouselProps) => {
                   className="w-full h-full object-cover"
                 />
               )}
-              <div className={`absolute inset-0 bg-gradient-to-r ${index === activeSlide ? 'from-theme/90 via-theme/60 to-black/40' : 'from-black/70 via-black/50 to-black/40'}`}></div>
+              <div className={`absolute inset-0 ${index === activeSlide ? 'bg-theme-overlay-gradient' : 'bg-gradient-to-r from-black/70 via-black/50 to-black/40'}`}></div>
             </div>
             
             {index === activeSlide && (
@@ -207,10 +231,9 @@ const AdvancedCarousel = ({ slides }: AdvancedCarouselProps) => {
                     {slide.title}
                   </h1>
                   
-                  {(slide.year || slide.rating) && (
+                  {(slide.year || slide.tags) && (
                     <div className="flex items-center gap-4 mb-4">
                       {slide.year && <span className="text-sm font-medium">{slide.year}</span>}
-                      {slide.rating && <span className="text-sm px-1 border border-white/40 rounded">{slide.rating}</span>}
                       {slide.tags && slide.tags.map((tag, i) => (
                         <span key={i} className="text-sm">
                           {tag}
@@ -248,7 +271,10 @@ const AdvancedCarousel = ({ slides }: AdvancedCarouselProps) => {
             {index === activeSlide && slide.videoUrl && (
               <div className="absolute bottom-4 left-10 flex items-center gap-4">
                 <button 
-                  onClick={togglePlay}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    togglePlay();
+                  }}
                   className="p-2 rounded-full bg-black/40 hover:bg-theme text-white transition"
                 >
                   {isPlaying ? (
@@ -261,7 +287,10 @@ const AdvancedCarousel = ({ slides }: AdvancedCarouselProps) => {
                   )}
                 </button>
                 <button 
-                  onClick={toggleMute}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    toggleMute();
+                  }}
                   className="p-2 rounded-full bg-black/40 hover:bg-theme text-white transition"
                 >
                   {isMuted ? <VolumeX size={24} /> : <Volume2 size={24} />}
@@ -275,7 +304,9 @@ const AdvancedCarousel = ({ slides }: AdvancedCarouselProps) => {
       {/* Navigation Arrows */}
       <button 
         onClick={goToPrevSlide} 
-        className="absolute left-4 top-1/2 -translate-y-1/2 z-50 bg-black/30 hover:bg-theme text-white p-3 rounded-full transition-colors duration-300"
+        onMouseEnter={() => setHoveredArrow('left')}
+        onMouseLeave={() => setHoveredArrow(null)}
+        className="absolute left-4 top-1/2 -translate-y-1/2 z-10 bg-black/30 hover:bg-theme text-white p-3 rounded-full transition-colors duration-300"
         aria-label="Previous slide"
       >
         <ChevronLeft className="h-6 w-6" />
@@ -283,14 +314,37 @@ const AdvancedCarousel = ({ slides }: AdvancedCarouselProps) => {
       
       <button 
         onClick={goToNextSlide} 
-        className="absolute right-4 top-1/2 -translate-y-1/2 z-50 bg-black/30 hover:bg-theme text-white p-3 rounded-full transition-colors duration-300"
+        onMouseEnter={() => setHoveredArrow('right')}
+        onMouseLeave={() => setHoveredArrow(null)}
+        className="absolute right-4 top-1/2 -translate-y-1/2 z-10 bg-black/30 hover:bg-theme text-white p-3 rounded-full transition-colors duration-300"
         aria-label="Next slide"
       >
         <ChevronRight className="h-6 w-6" />
       </button>
+
+      {/* Arrow Hover Previews */}
+      {hoveredArrow && (
+        <div className={`absolute top-1/2 -translate-y-1/2 z-15 transition-all duration-300 ${
+          hoveredArrow === 'left' ? 'left-16' : 'right-16'
+        }`}>
+          <div className="w-48 h-28 rounded-lg overflow-hidden border-2 border-white/60 shadow-lg">
+            <img 
+              src={slides[getPreviewSlideIndex(hoveredArrow)].backgroundImage}
+              alt={slides[getPreviewSlideIndex(hoveredArrow)].title}
+              className="w-full h-full object-cover"
+            />
+            <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent"></div>
+            <div className="absolute bottom-2 left-2 right-2">
+              <h4 className="text-white text-xs font-medium line-clamp-2">
+                {slides[getPreviewSlideIndex(hoveredArrow)].title}
+              </h4>
+            </div>
+          </div>
+        </div>
+      )}
       
       {/* Thumbnails/Indicators at the bottom */}
-      <div className="absolute bottom-6 left-0 right-0 flex justify-center z-50 px-4">
+      <div className="absolute bottom-6 left-0 right-0 flex justify-center z-10 px-4">
         <div className="flex gap-2 overflow-x-auto custom-scrollbar py-2 px-4 bg-black/40 rounded-full">
           {slides.map((slide, index) => (
             <button
