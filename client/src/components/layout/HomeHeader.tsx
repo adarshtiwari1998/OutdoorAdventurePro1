@@ -237,7 +237,24 @@ const HomeHeader = () => {
   // Fetch available activities for the activity cards
   const { data: activities } = useQuery<HeaderConfig[]>({
     queryKey: ['/api/admin/header-configs'],
-    select: (data) => data.filter(config => config.category !== 'home'), // Exclude home
+    select: (data) => {
+      const filtered = data.filter(config => config.category !== 'home'); // Exclude home
+      
+      // Define the desired order
+      const desiredOrder = ['outdoors', 'cruising', 'camping', 'fishing', 'hiking', 'four-x-four'];
+      
+      // Sort activities according to the desired order
+      return filtered.sort((a, b) => {
+        const aIndex = desiredOrder.indexOf(a.category);
+        const bIndex = desiredOrder.indexOf(b.category);
+        
+        // If category not found in desired order, put it at the end
+        const aOrder = aIndex === -1 ? 999 : aIndex;
+        const bOrder = bIndex === -1 ? 999 : bIndex;
+        
+        return aOrder - bOrder;
+      });
+    },
     staleTime: 5 * 60 * 1000, // 5 minutes
   });
 
