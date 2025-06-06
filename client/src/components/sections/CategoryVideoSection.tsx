@@ -8,27 +8,41 @@ interface CategoryVideoSectionProps {
 }
 
 const CategoryVideoSection = ({ category }: CategoryVideoSectionProps) => {
-  const { data: videos, isLoading } = useQuery({
+  const { data: videos, isLoading, error } = useQuery({
     queryKey: [`/api/category-videos/${category}`],
     queryFn: async () => {
       if (!category) return [];
 
       const response = await fetch(`/api/category-videos/${category}`);
       if (!response.ok) {
-        console.error(`Failed to fetch videos for category ${category}`);
+        console.error(`Failed to fetch videos for category ${category}:`, response.status, response.statusText);
         return [];
       }
 
       const data = await response.json();
-      console.log(`Fetched ${data.length} videos for category ${category}`);
-      return data;
+      console.log(`Fetched ${Array.isArray(data) ? data.length : 0} videos for category ${category}`);
+      return Array.isArray(data) ? data : [];
     },
     enabled: !!category,
   });
 
   const { data: settings } = useQuery({
     queryKey: [`/api/admin/category-video-settings/${category}`],
+    queryFn: async () => {
+      if (!category) return null;
+
+      const response = await fetch(`/api/admin/category-video-settings/${category}`);
+      if (!response.ok) {
+        console.error(`Failed to fetch settings for category ${category}`);
+        return null;
+      }
+
+      return response.json();
+    },
+    enabled: !!category,
   });
+
+  console.log(`CategoryVideoSection Debug - Category: ${category}, Videos:`, videos, 'Settings:', settings, 'Loading:', isLoading, 'Error:', error);
 
   if (isLoading) {
     return (
@@ -47,7 +61,18 @@ const CategoryVideoSection = ({ category }: CategoryVideoSectionProps) => {
     );
   }
 
-  if (!videos || videos.length === 0 || !settings?.isActive) {
+  if (error) {
+    console.error(`CategoryVideoSection Error for ${category}:`, error);
+    return null;
+  }
+
+  if (!settings || !settings.isActive) {
+    console.log(`CategoryVideoSection: Settings not active for ${category}`, settings);
+    return null;
+  }
+
+  if (!videos || videos.length === 0) {
+    console.log(`CategoryVideoSection: No videos found for ${category}`);
     return null;
   }
 

@@ -2084,27 +2084,6 @@ export const storage = {
         columns: { id: true, title: true, categoryId: true, videoType: true }
       });
 
-      console.log(`Sample of available videos:`, await db.query.youtubeVideos.findMany({
-        columns: { 
-          id: true,
-          title: true, 
-          categoryId: true,
-          videoType: true
-        },
-        with: {
-          category: {
-            columns: { name: true }
-          }
-        },
-        limit: 10
-      }).then(videos => videos.map(v => ({
-        id: v.id,
-        title: v.title.substring(0, 50),
-        categoryId: v.categoryId,
-        categoryName: v.category?.name,
-        videoType: v.videoType
-      }))));
-
       console.log(`Found ${allVideosInCategory.length} videos for category ${categoryId} with type ${videoType}`);
 
       const videos = await db.query.youtubeVideos.findMany({
@@ -2119,23 +2098,26 @@ export const storage = {
 
       console.log(`Final result: ${videos.length} videos for category ${categoryId} with type ${videoType}`);
 
-      return videos.map(video => ({
-        id: video.id.toString(),
-        videoId: video.videoId,
-        title: video.title,
-        description: video.description,
-        thumbnail: video.thumbnail,
-        publishedAt: video.publishedAt,
-        channelId: video.channelId,
-        categoryId: video.categoryId,
-        category: video.category,
-        channel: video.channel,
-        videoType: video.videoType,
-        duration: video.duration,
-        viewCount: video.viewCount || 0,
-        likeCount: video.likeCount || 0,
-        commentCount: video.commentCount || 0
-      }));
+      // Filter out any undefined/null videos and safely map the results
+      return videos
+        .filter(video => video && video.id) // Filter out any undefined videos
+        .map(video => ({
+          id: video.id.toString(),
+          videoId: video.videoId || '',
+          title: video.title || 'Untitled Video',
+          description: video.description || '',
+          thumbnail: video.thumbnail || '',
+          publishedAt: video.publishedAt || new Date(),
+          channelId: video.channelId || null,
+          categoryId: video.categoryId || null,
+          category: video.category || null,
+          channel: video.channel || null,
+          videoType: video.videoType || 'video',
+          duration: video.duration || 0,
+          viewCount: video.viewCount || 0,
+          likeCount: video.likeCount || 0,
+          commentCount: video.commentCount || 0
+        }));
     } catch (error) {
       console.error('Error getting videos by category:', error);
       throw error;
