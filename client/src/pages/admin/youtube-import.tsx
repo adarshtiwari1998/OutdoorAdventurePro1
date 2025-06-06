@@ -225,23 +225,18 @@ const YoutubeImport = () => {
 
   const { data: videos, isLoading: videosLoading } = useQuery<YoutubeVideo[]>({
     queryKey: ['/api/admin/youtube/videos', { channelId: selectedChannelId }],
+    enabled: !!selectedChannelId,
     queryFn: async ({ queryKey }) => {
       const [, params] = queryKey;
       console.log(`🎬 Fetching videos for channel:`, params);
-
-      // If no specific channel is selected, fetch all videos
-      const url = params.channelId 
-        ? `/api/admin/youtube/videos?channelId=${params.channelId}`
-        : '/api/admin/youtube/videos';
-
-      const response = await fetch(url);
+      const response = await fetch(`/api/admin/youtube/videos?channelId=${params.channelId}`);
       if (!response.ok) {
         const error = await response.text();
         console.error(`❌ Error fetching videos:`, error);
         throw new Error(error);
       }
       const data = await response.json();
-      console.log(`📹 Received ${data.length} videos${params.channelId ? ` for channel ${params.channelId}` : ' from all channels'}`);
+      console.log(`📹 Received ${data.length} videos for channel ${params.channelId}`);
       return data;
     },
   });
@@ -256,7 +251,7 @@ const YoutubeImport = () => {
                          (filterCategory === "no-category" && !video.categoryId) ||
                          (video.categoryId && video.categoryId === filterCategory);
 
-    const channelMatch = filterChannel === "all" || video.channelId?.toString() === filterChannel;
+    const channelMatch = filterChannel === "all" || video.channelId === filterChannel;
 
     const statusMatch = filterStatus === "all" || video.importStatus === filterStatus;
 
@@ -939,7 +934,7 @@ const YoutubeImport = () => {
       <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
         <TabsList className="mb-4">
           <TabsTrigger value="channels">Channels</TabsTrigger>
-          <TabsTrigger value="videos">Videos</TabsTrigger>
+          <TabsTrigger value="videos" disabled={!selectedChannelId}>Videos</TabsTrigger>
           <TabsTrigger value="add">Add New</TabsTrigger>
         </TabsList>
 
@@ -1061,36 +1056,15 @@ const YoutubeImport = () => {
           <Card>
             <CardHeader>
               <CardTitle>
-                {selectedChannelId 
-                  ? `${channels?.find(c => c.id === selectedChannelId)?.name || "Channel"} Videos`
-                  : "All Channel Videos"
-                }
+                {channels?.find(c => c.id === selectedChannelId)?.name || "Channel"} Videos
               </CardTitle>
               <CardDescription>
-                {selectedChannelId 
-                  ? "Manage and import videos from this channel into blog posts."
-                  : "Manage and import videos from all channels into blog posts."
-                }
+                Manage and import videos from this channel into blog posts.
               </CardDescription>
             </CardHeader>
             <CardContent className="w-full max-w-full">
               {/* Filter Controls */}
               <div className="mb-4 p-4 bg-gray-50 dark:bg-gray-900/20 rounded-lg">
-                {selectedChannelId && (
-                  <div className="mb-4 flex items-center gap-4">
-                    <span className="text-sm font-medium">Currently viewing: {channels?.find(c => c.id === selectedChannelId)?.name}</span>
-                    <Button 
-                      variant="outline" 
-                      size="sm"
-                      onClick={() => {
-                        setSelectedChannelId(null);
-                        setFilterChannel("all");
-                      }}
-                    >
-                      View All Channels
-                    </Button>
-                  </div>
-                )}
                 <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
                   <div>
                     <label className="text-sm font-medium mb-1 block">Filter by Category</label>
@@ -1365,9 +1339,9 @@ const YoutubeImport = () => {
                             </div>
                           </TableCell>
                           <TableCell>
-                            {video.categoryId ? (
+                            {video.category ? (
                               <Badge variant="outline">
-                                {video.category?.name || blogCategories?.find(c => c.id === video.categoryId.toString())?.name || 'Unknown Category'}
+                                {video.category.name}
                               </Badge>
                             ) : (
                               <div className="flex items-center gap-2">
@@ -1389,7 +1363,7 @@ const YoutubeImport = () => {
                                   </SelectTrigger>
                                   <SelectContent>
                                     {blogCategories?.map(category => (
-                                      <SelectItem key={category.id} value={category.id.toString()}>
+                                      <SelectItem key={category.id} value={category.id}>
                                         {category.name}
                                       </SelectItem>
                                     ))}
@@ -1801,7 +1775,7 @@ const YoutubeImport = () => {
                             <Input placeholder="dQw4w9WgXcQ" {...field} />
                           </FormControl>
                           <FormMessage />
-</FormItem>
+                        </FormItem>
                       )}
                     />
                     <FormField

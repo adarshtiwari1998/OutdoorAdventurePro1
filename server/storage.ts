@@ -283,7 +283,6 @@ export const storage = {
     }
   },
 
-  
   async getYoutubeVideoById(id: number) {
     try {
       return await db.query.youtubeVideos.findFirst({
@@ -925,9 +924,8 @@ export const storage = {
               name: "Fishing",
               slug: "fishing",
             },
-           
-author:{
-              name: "Robert Streams",
+            author:{
+              name: "Robert Streams",<previous_generation>
               avatar: "https://ui-avatars.com/api/?name=Robert+Streams&background=random",
             },
             publishedAt: new Date(Date.now() - 21 * 24 * 60 * 60 * 1000).toISOString(),
@@ -1908,45 +1906,81 @@ author:{
     }
   },
 
-  
-  async getAllYoutubeVideos() {
+  async getVideosByCategory(categoryId: number, limit = 8, videoType = 'all') {
     try {
-      console.log('📹 Fetching all YouTube videos with related data...');
-      const videos = await db.query.youtubeVideos.findMany({
-        with: {
-          channel: true,
-          category: true,
-          blogPost: true
+      console.log(`Getting videos for category ${categoryId} with limit ${limit} and videoType ${videoType}`);
+
+      // Build where condition based on video type
+      let whereCondition;
+```text
+      if (videoType === 'all') {
+        whereCondition = eq(schema.youtubeVideos.categoryId, categoryId);
+      } else {
+        whereCondition = and(
+          eq(schema.youtubeVideos.categoryId, categoryId),
+          eq(schema.youtubeVideos.videoType, videoType)
+        );
+      }
+
+      // First check how many videos exist for this category and type
+      const allVideosInCategory = await db.query.youtubeVideos.findMany({
+        where: whereCondition,
+        columns: { id: true, title: true, categoryId: true, videoType: true }
+      });
+
+      console.log(`Sample of available videos:`, await db.query.youtubeVideos.findMany({
+        columns: { 
+          id: true,          title: true, 
+          categoryId: true,
+          videoType: true
         },
-        orderBy: [desc(schema.youtubeVideos.publishedAt)]
-      });
-
-      // Ensure category information is properly mapped
-      const videosWithCategories = videos.map(video => {
-        console.log(`🔍 Video ${video.id}: categoryId=${video.categoryId}, category=${video.category?.name || 'null'}`);
-        return {
-          ...video,
-          category: video.category ? {
-            id: video.category.id,
-            name: video.category.name,
-            slug: video.category.slug,
-            type: video.category.type
-          } : null,
-          channelName: video.channel?.name || 'Unknown Channel'
-        };
-      });
-
-      console.log(`✅ Found ${videosWithCategories.length} YouTube videos`);
-      console.log(`📊 Sample videos with categories:`, videosWithCategories.slice(0, 3).map(v => ({
+        with: {
+          category: {
+            columns: { name: true }
+          }
+        },
+        limit: 10
+      }).then(videos => videos.map(v => ({
         id: v.id,
-        title: v.title.substring(0, 50) + '...',
+        title: v.title.substring(0, 50),
         categoryId: v.categoryId,
-        category: v.category?.name || 'No Category'
-      })));
+        categoryName: v.category?.name,
+        videoType: v.videoType
+      }))));
 
-      return videosWithCategories;
+      console.log(`Found ${allVideosInCategory.length} videos for category ${categoryId} with type ${videoType}`);
+
+      const videos = await db.query.youtubeVideos.findMany({
+        where: whereCondition,
+        orderBy: desc(schema.youtubeVideos.publishedAt),
+        limit,
+        with: {
+          category: true,
+          channel: true
+        }
+      });
+
+      console.log(`Final result: ${videos.length} videos for category ${categoryId} with type ${videoType}`);
+
+      return videos.map(video => ({
+        id: video.id.toString(),
+        videoId: video.videoId,
+        title: video.title,
+        description: video.description,
+        thumbnail: video.thumbnail,
+        publishedAt: video.publishedAt,
+        channelId: video.channelId,
+        categoryId: video.categoryId,
+        category: video.category,
+        channel: video.channel,
+        videoType: video.videoType,
+        duration: video.duration,
+        viewCount: video.viewCount || 0,
+        likeCount: video.likeCount || 0,
+        commentCount: video.commentCount || 0
+      }));
     } catch (error) {
-      console.error('❌ Error fetching all YouTube videos:', error);
+      console.error('Error getting videos by category:', error);
       throw error;
     }
   },
@@ -2014,59 +2048,6 @@ author:{
       await db.delete(schema.favoriteDestinations).where(eq(schema.favoriteDestinations.id, id));
     } catch (error) {
       console.error(`Error deleting favorite destination ${id}:`, error);
-      throw error;
-    }
-  },
-
-  async getVideosByCategory(categoryId: number | null = null, videoType: string = 'all', limit: number = 50) {
-    try {
-      console.log(`Getting videos for category ${categoryId} with limit ${limit} and videoType ${videoType}`);
-
-      // Build where condition based on video type and category
-      let whereCondition;
-
-      if (categoryId === null) {
-        // Get all videos, optionally filtered by type
-        if (videoType === 'all') {
-          whereCondition = undefined;
-        } else {
-          whereCondition = eq(schema.youtubeVideos.videoType, videoType);
-        }
-      } else {
-        // Get videos for specific category
-        if (videoType === 'all') {
-          whereCondition = eq(schema.youtubeVideos.categoryId, categoryId);
-        } else {
-          whereCondition = and(
-            eq(schema.youtubeVideos.categoryId, categoryId),
-            eq(schema.youtubeVideos.videoType, videoType)
-          );
-        }
-      }
-
-      const videos = await db.query.youtubeVideos.findMany({
-        where: whereCondition,
-        with: {
-          channel: true,
-          category: true,
-          blogPost: true
-        },
-        orderBy: [desc(schema.youtubeVideos.publishedAt)],
-        limit: limit
-      });
-
-      console.log(`Sample of available videos:`, videos.slice(0, 10).map(v => ({
-        id: v.id,
-        title: v.title,
-        categoryId: v.categoryId,
-        categoryName: v.category?.name,
-        videoType: v.videoType
-      })));
-
-      console.log(`Found ${videos.length} videos for category ${categoryId} with type ${videoType}`);
-      return videos;
-    } catch (error) {
-      console.error('Error getting videos by category:', error);
       throw error;
     }
   }
