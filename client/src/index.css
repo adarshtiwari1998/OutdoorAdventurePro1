@@ -663,6 +663,7 @@ header {
   .video-modal-overlay {
     background: rgba(0, 0, 0, 0.85);
     backdrop-filter: blur(6px);
+    z-index: 60;
   }
 
   /* Dialog overlay enhancements for video modal */
@@ -670,7 +671,7 @@ header {
     background: rgba(0, 0, 0, 0.9) !important;
     backdrop-filter: blur(6px);
     pointer-events: auto;
-    z-index: 40;
+    z-index: 60;
   }
 
   /* Ensure preview cards have proper pointer events and are clickable */
@@ -688,7 +689,12 @@ header {
     background: transparent !important;
     box-shadow: none !important;
     pointer-events: auto;
-    z-index: 50;
+    z-index: 70;
+  }
+
+  /* Carousel navigation z-index fix */
+  .carousel-navigation {
+    z-index: 30 !important;
   }
 
   /* Ensure modal content has proper pointer events */
