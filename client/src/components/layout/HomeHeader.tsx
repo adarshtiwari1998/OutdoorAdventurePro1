@@ -260,22 +260,24 @@ const HomeHeader = () => {
               <TooltipProvider>
                 <div className="px-4 py-4">
                   <div className="container mx-auto">
-                    {/* Single Row Layout - Logo on left, Activity Circles on right */}
-                    <div className="flex items-center justify-between">
+                    {/* Single Row Layout - Logo on left, Activity Circles centered */}
+                    <div className="flex items-center">
                       {/* Home Logo and Text - Left side */}
-                      <Link href="/" className="flex items-center space-x-3">
-                        <img 
-                          src={headerConfig.logoSrc} 
-                          alt={headerConfig.logoText} 
-                          className="h-14 w-14 object-cover rounded-full shadow-lg"
-                        />
-                        <span className="font-heading font-bold text-xl text-theme whitespace-nowrap">
-                          {headerConfig.logoText}
-                        </span>
-                      </Link>
+                      <div className="flex items-center space-x-3 flex-shrink-0">
+                        <Link href="/" className="flex items-center space-x-3">
+                          <img 
+                            src={headerConfig.logoSrc} 
+                            alt={headerConfig.logoText} 
+                            className="h-14 w-14 object-cover rounded-full shadow-lg"
+                          />
+                          <span className="font-heading font-bold text-xl text-theme whitespace-nowrap">
+                            {headerConfig.logoText}
+                          </span>
+                        </Link>
+                      </div>
 
-                      {/* Activity Circles - Right side, compact layout */}
-                      <div className="flex items-center gap-3">
+                      {/* Activity Circles - Center */}
+                      <div className="flex items-center justify-center gap-3 flex-1">
                         {activities?.slice(0, 6).map((activity) => (
                           <Tooltip key={activity.id}>
                             <TooltipTrigger asChild>
