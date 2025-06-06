@@ -233,9 +233,9 @@ const HomeHeader = () => {
       {/* Activity Circles Section - Top */}
       <div className={`w-full transition-all duration-300 ${!showMainHeader && isScrolled ? 'hidden' : ''}`}>
         <div className="w-full px-4">
-          <div className="flex flex-col items-center py-4 space-y-4">
-            {/* Home Logo and Text - Centered */}
-            <div className="flex items-center justify-center">
+          <div className="py-4 space-y-4">
+            {/* Home Logo and Text - Left aligned */}
+            <div className="flex items-center justify-start">
               <Link href="/" className="flex items-center space-x-3">
                 <img 
                   src={headerConfig.logoSrc} 
@@ -248,7 +248,7 @@ const HomeHeader = () => {
               </Link>
             </div>
 
-            {/* Activity Circles - Centered */}
+            {/* Activity Circles - Centered in separate row */}
             <div className="flex items-center justify-center gap-4">
               {activities?.slice(0, 6).map((activity) => (
                 <Link 
