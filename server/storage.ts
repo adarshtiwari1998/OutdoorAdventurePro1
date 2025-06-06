@@ -946,8 +946,7 @@ export const storage = {
             id: "102",
             title: "Seasonal Fishing Spots in North America",
             excerpt: "A comprehensive guide to the best fishing locations throughout the year, organized by season and target species.",
-            featuredImage: "https://images.unsplash.com/photo-1499242611767-cf8b9e9d4b19?ixlib=rb-4.0.3&auto=format&fit=crop&w=800<previous_generation>```text
-&q=80"
+            featuredImage: "https://images.unsplash.com/photo-1499242611767-cf8b9e9d4b19?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80",
             category: {
               name: "Fishing",
               slug: "fishing",
