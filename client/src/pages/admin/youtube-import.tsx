@@ -2121,7 +2121,7 @@ const YoutubeImport = () => {
               <Select 
                 value={selectedCategoryForImport || "no-category"} 
                 onValueChange={(value) => {
-                  console.log(`Category selection changed to: ${value}`);
+                  console.log("Category selection changed to: " + value);
                   setSelectedCategoryForImport(value === "no-category" ? undefined : value);
                 }}
               >
