@@ -258,60 +258,61 @@ const HomeHeader = () => {
             {/* Desktop Layout */}
             {!isMobile && (
               <TooltipProvider>
-                <div className="px-4 py-6">
+                <div className="px-4 py-4">
                   <div className="container mx-auto">
-                    {/* Home Logo and Text - Left side */}
-                    <div className="flex justify-start mb-4">
+                    {/* Single Row Layout - Logo on left, Activity Circles on right */}
+                    <div className="flex items-center justify-between">
+                      {/* Home Logo and Text - Left side */}
                       <Link href="/" className="flex items-center space-x-3">
                         <img 
                           src={headerConfig.logoSrc} 
                           alt={headerConfig.logoText} 
-                          className="h-16 w-16 object-cover rounded-full shadow-lg"
+                          className="h-14 w-14 object-cover rounded-full shadow-lg"
                         />
-                        <span className="font-heading font-bold text-2xl text-theme whitespace-nowrap">
+                        <span className="font-heading font-bold text-xl text-theme whitespace-nowrap">
                           {headerConfig.logoText}
                         </span>
                       </Link>
-                    </div>
 
-                    {/* Activity Circles - Center Aligned */}
-                    <div className="flex items-center justify-center gap-6">
-                      {activities?.slice(0, 6).map((activity) => (
-                        <Tooltip key={activity.id}>
-                          <TooltipTrigger asChild>
-                            <Link 
-                              href={`/${activity.category}`}
-                              className="flex flex-col items-center group relative"
-                            > 
-                              <div 
-                                className="w-24 h-24 rounded-full overflow-hidden border-4 border-transparent group-hover:border-white group-hover:shadow-2xl transition-all duration-300 transform group-hover:scale-110"
-                                style={{ 
-                                  borderColor: activity.primaryColor,
-                                  boxShadow: `0 8px 32px ${activity.primaryColor}40`
-                                }}
-                              >
-                                <img 
-                                  src={activity.logoSrc} 
-                                  alt={activity.logoText} 
-                                  className="w-full h-full object-cover"
+                      {/* Activity Circles - Right side, compact layout */}
+                      <div className="flex items-center gap-3">
+                        {activities?.slice(0, 6).map((activity) => (
+                          <Tooltip key={activity.id}>
+                            <TooltipTrigger asChild>
+                              <Link 
+                                href={`/${activity.category}`}
+                                className="group relative"
+                              > 
+                                <div 
+                                  className="w-16 h-16 rounded-full overflow-hidden border-3 border-transparent group-hover:border-white group-hover:shadow-xl transition-all duration-300 transform group-hover:scale-110"
+                                  style={{ 
+                                    borderColor: activity.primaryColor,
+                                    boxShadow: `0 4px 20px ${activity.primaryColor}30`
+                                  }}
+                                >
+                                  <img 
+                                    src={activity.logoSrc} 
+                                    alt={activity.logoText} 
+                                    className="w-full h-full object-cover"
+                                  />
+                                </div>
+                                {/* Glow effect on hover */}
+                                <div 
+                                  className="absolute inset-0 rounded-full opacity-0 group-hover:opacity-20 transition-opacity duration-300 blur-lg"
+                                  style={{ backgroundColor: activity.primaryColor }}
                                 />
-                              </div>
-                              {/* Glow effect on hover */}
-                              <div 
-                                className="absolute inset-0 rounded-full opacity-0 group-hover:opacity-30 transition-opacity duration-300 blur-xl"
-                                style={{ backgroundColor: activity.primaryColor }}
-                              />
-                            </Link>
-                          </TooltipTrigger>
-                          <TooltipContent 
-                            side="bottom" 
-                            className="bg-gray-900 text-white border-none shadow-xl"
-                            style={{ backgroundColor: activity.primaryColor }}
-                          >
-                            <p className="font-medium">{activity.logoText}</p>
-                          </TooltipContent>
-                        </Tooltip>
-                      ))}
+                              </Link>
+                            </TooltipTrigger>
+                            <TooltipContent 
+                              side="bottom" 
+                              className="bg-gray-900 text-white border-none shadow-xl"
+                              style={{ backgroundColor: activity.primaryColor }}
+                            >
+                              <p className="font-medium">{activity.logoText}</p>
+                            </TooltipContent>
+                          </Tooltip>
+                        ))}
+                      </div>
                     </div>
                   </div>
                 </div>
