@@ -1343,7 +1343,9 @@ const YoutubeImport = () => {
                             {video.categoryId ? (
                               <div className="flex items-center gap-2">
                                 <Badge variant="outline">
-                                  {blogCategories?.find(cat => cat.id === video.categoryId.toString())?.name || `Category ID: ${video.categoryId}`}
+                                  {blogCategories?.find(cat => cat.id === video.categoryId.toString())?.name || 
+                                   video.category?.name || 
+                                   `Category ID: ${video.categoryId}`}
                                 </Badge>
                                 <Select 
                                   value={video.categoryId.toString()} 

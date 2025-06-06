@@ -2070,14 +2070,19 @@ export const storage = {
           category: {
             columns: {
               id: true,
-              name: true
+              name: true,
+              slug: true
             }
           }
         },
         orderBy: [desc(schema.youtubeVideos.publishedAt)],
       });
 
-      return videos;
+      return videos.map(video => ({
+        ...video,
+        channelName: video.channel?.name,
+        categoryName: video.category?.name
+      }));
     } catch (error) {
       console.error("Error fetching YouTube videos:", error);
       throw error;
