@@ -1002,10 +1002,8 @@ export const storage = {
         },
         author: {
           name: post.author?.fullName || post.author?.username || 'Unknown',
-          avatar:```tool_code
- `https://ui-avatars.com/api/?name=${encodeURIComponent(post.author.fullName)}&background=random`
-            : `https://ui-avatars.com/api/?name=Unknown&background=random`,
-        },
+          avatar:
+ `https://ui-avatars.com/api/?name=${encodeURIComponent(post.author.fullName)}&background=random`},
         publishedAt: post.publishedAt || new Date().toISOString(),
         slug: post.slug,
       }));
